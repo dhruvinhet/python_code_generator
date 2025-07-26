@@ -4,6 +4,8 @@ import subprocess
 import sys
 import shutil
 import zipfile
+import webbrowser
+import time
 from datetime import datetime
 from agents import (
     PlanningAgent, SrDeveloper1Agent, SrDeveloper2Agent, 
@@ -558,4 +560,316 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Error creating zip file: {e}")
             raise
+
+    def determine_run_method(self, project_path):
+        """Determine how to run the project (python or streamlit)"""
+        try:
+            # Check main.py for streamlit imports
+            main_py_path = os.path.join(project_path, 'main.py')
+            if os.path.exists(main_py_path):
+                with open(main_py_path, 'r', encoding='utf-8') as f:
+                    content = f.read().lower()
+                    if 'streamlit' in content or 'st.' in content:
+                        return 'streamlit'
+            
+            # Check requirements.txt for streamlit
+            requirements_path = os.path.join(project_path, 'requirements.txt')
+            if os.path.exists(requirements_path):
+                with open(requirements_path, 'r', encoding='utf-8') as f:
+                    content = f.read().lower()
+                    if 'streamlit' in content:
+                        return 'streamlit'
+            
+            # Default to python
+            return 'python'
+            
+        except Exception as e:
+            print(f"Error determining run method: {e}")
+            return 'python'
+
+    def execute_project(self, project_id, project_path, run_method):
+        """Execute the project and capture output"""
+        original_cwd = os.getcwd()
+        try:
+            self.emit_progress("execution", f"Starting project execution with {run_method}...")
+            
+            # Store process reference for potential termination
+            if not hasattr(self, 'running_processes'):
+                self.running_processes = {}
+            
+            # Change to project directory
+            os.chdir(project_path)
+            
+            # Install dependencies first
+            self.emit_progress("execution", "Installing project dependencies...")
+            requirements_path = os.path.join(project_path, 'requirements.txt')
+            
+            if os.path.exists(requirements_path):
+                try:
+                    # Install requirements
+                    self.emit_progress("execution", "Installing dependencies (this may take a moment)...")
+                    pip_result = subprocess.run([
+                        sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt', '--user', '--quiet'
+                    ], capture_output=True, text=True, timeout=300)
+                    
+                    if pip_result.returncode != 0:
+                        self.emit_progress("execution", f"Warning: Some dependencies may not have installed properly")
+                        self.emit_progress("execution", f"Pip stderr: {pip_result.stderr[:200]}...")
+                        # Continue anyway - many projects can run with partial dependencies
+                    else:
+                        self.emit_progress("execution", "Dependencies installed successfully")
+                        
+                except subprocess.TimeoutExpired:
+                    self.emit_progress("execution", "Warning: Dependency installation timed out, proceeding anyway")
+                except Exception as e:
+                    self.emit_progress("execution", f"Warning: Could not install dependencies: {str(e)[:100]}...")
+            else:
+                self.emit_progress("execution", "No requirements.txt found, proceeding without dependency installation")
+            
+            # Prepare execution command
+            if run_method == 'streamlit':
+                # We'll set the actual command inside the execution block after finding the port
+                pass
+            else:
+                cmd = [sys.executable, 'main.py']
+                self.emit_progress("execution", "Running Python script...")
+            
+            # Execute the project
+            if run_method == 'streamlit':
+                # Clean up any existing Streamlit processes first
+                self.emit_progress("execution", "Cleaning up any existing Streamlit processes...")
+                self.kill_existing_streamlit_processes()
+                
+                # Wait a moment for processes to fully terminate
+                import time
+                time.sleep(1)
+                
+                # Find an available port
+                port = self.find_available_port(8501)
+                cmd = [sys.executable, '-m', 'streamlit', 'run', 'main.py', '--server.headless', 'true', '--server.port', str(port)]
+                self.emit_progress("execution", f"Starting Streamlit application on port {port}...")
+                
+                # For Streamlit, we start it and return immediately with server info
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    cwd=project_path
+                )
+                
+                self.running_processes[project_id] = process
+                
+                # Wait a bit to see if it starts successfully
+                time.sleep(3)
+                
+                if process.poll() is None:  # Process is still running
+                    self.emit_progress("execution", "Streamlit server started successfully!")
+                    
+                    # Automatically open browser after a short delay
+                    def open_browser():
+                        time.sleep(2)  # Give server time to fully start
+                        try:
+                            webbrowser.open(f'http://localhost:{port}')
+                            self.emit_progress("execution", f"Browser opened automatically for Streamlit app on port {port}")
+                        except Exception as e:
+                            self.emit_progress("execution", f"Could not open browser automatically: {str(e)}")
+                    
+                    import threading
+                    browser_thread = threading.Thread(target=open_browser)
+                    browser_thread.daemon = True
+                    browser_thread.start()
+                    
+                    result = {
+                        'success': True,
+                        'method': run_method,
+                        'message': 'Streamlit application started successfully',
+                        'url': f'http://localhost:{port}',
+                        'status': 'running',
+                        'pid': process.pid,
+                        'port': port,
+                        'output': f'Streamlit server is running on http://localhost:{port}\n\nBrowser opened automatically!',
+                        'auto_opened': True
+                    }
+                else:
+                    # Process terminated, get error
+                    stdout, stderr = process.communicate()
+                    result = {
+                        'success': False,
+                        'method': run_method,
+                        'error': f"Streamlit failed to start: {stderr}",
+                        'output': stdout,
+                        'status': 'failed'
+                    }
+            else:
+                # For regular Python scripts, run and capture output
+                try:
+                    result = subprocess.run(
+                        cmd,
+                        capture_output=True,
+                        text=True,
+                        timeout=60,  # 60 second timeout for regular scripts
+                        cwd=project_path
+                    )
+                    
+                    if result.returncode == 0:
+                        execution_result = {
+                            'success': True,
+                            'method': run_method,
+                            'output': result.stdout,
+                            'error': result.stderr if result.stderr else None,
+                            'status': 'completed',
+                            'exit_code': result.returncode
+                        }
+                    else:
+                        execution_result = {
+                            'success': False,
+                            'method': run_method,
+                            'output': result.stdout,
+                            'error': result.stderr,
+                            'status': 'failed',
+                            'exit_code': result.returncode
+                        }
+                    
+                    result = execution_result
+                    
+                except subprocess.TimeoutExpired:
+                    result = {
+                        'success': False,
+                        'method': run_method,
+                        'error': 'Script execution timed out (60 seconds)',
+                        'output': '',
+                        'status': 'timeout'
+                    }
+                except Exception as e:
+                    result = {
+                        'success': False,
+                        'method': run_method,
+                        'error': f"Execution error: {str(e)}",
+                        'output': '',
+                        'status': 'error'
+                    }
+            
+            # Restore original working directory
+            os.chdir(original_cwd)
+            
+            self.emit_progress("execution", f"Project execution completed with status: {result.get('status', 'unknown')}")
+            return result
+            
+        except Exception as e:
+            # Restore original working directory
+            os.chdir(original_cwd)
+            error_result = {
+                'success': False,
+                'method': run_method,
+                'error': f"Execution failed: {str(e)}",
+                'output': '',
+                'status': 'error'
+            }
+            self.emit_progress("execution", f"Project execution failed: {str(e)}")
+            return error_result
+
+    def stop_project_execution(self, project_id):
+        """Stop a running project execution"""
+        try:
+            if not hasattr(self, 'running_processes'):
+                return {'success': False, 'message': 'No running processes found'}
+            
+            if project_id not in self.running_processes:
+                return {'success': False, 'message': 'Project is not currently running'}
+            
+            process = self.running_processes[project_id]
+            
+            if process.poll() is None:  # Process is still running
+                # Immediate termination - don't wait
+                process.terminate()
+                
+                # Force kill immediately for faster response
+                try:
+                    process.kill()
+                except:
+                    pass  # Process might already be dead
+                
+                # Remove from running processes immediately
+                del self.running_processes[project_id]
+                self.emit_progress("execution", "Project execution stopped")
+                return {'success': True, 'message': 'Project execution stopped successfully'}
+            else:
+                del self.running_processes[project_id]
+                return {'success': False, 'message': 'Project was not running'}
+                
+        except Exception as e:
+            # Even if there's an error, remove from running processes to unblock UI
+            if hasattr(self, 'running_processes') and project_id in self.running_processes:
+                del self.running_processes[project_id]
+            return {'success': False, 'error': f"Failed to stop project: {str(e)}"}
+
+    def get_running_projects(self):
+        """Get list of currently running projects"""
+        if not hasattr(self, 'running_processes'):
+            return []
+        
+        running = []
+        for project_id, process in list(self.running_processes.items()):
+            if process.poll() is None:  # Still running
+                running.append({
+                    'project_id': project_id,
+                    'pid': process.pid,
+                    'status': 'running'
+                })
+            else:
+                # Clean up finished process
+                del self.running_processes[project_id]
+        
+        return running
+
+    def find_available_port(self, start_port=8501):
+        """Find an available port starting from start_port"""
+        import socket
+        port = start_port
+        while port <= start_port + 10:  # Try up to 10 ports
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                try:
+                    s.bind(('localhost', port))
+                    return port
+                except OSError:
+                    port += 1
+        return start_port  # Fallback to original port
+
+    def kill_existing_streamlit_processes(self):
+        """Kill any existing Streamlit processes to free up ports"""
+        try:
+            import psutil
+            killed_count = 0
+            for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+                try:
+                    if proc.info['name'] and 'python' in proc.info['name'].lower():
+                        cmdline = proc.info['cmdline']
+                        if cmdline and any('streamlit' in str(cmd).lower() for cmd in cmdline):
+                            proc.kill()
+                            killed_count += 1
+                            self.emit_progress("execution", f"Cleaned up existing Streamlit process: {proc.info['pid']}")
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    pass
+            
+            if killed_count > 0:
+                self.emit_progress("execution", f"Cleaned up {killed_count} existing Streamlit process(es)")
+            
+        except ImportError:
+            # psutil not available, try basic approach
+            import subprocess
+            import sys
+            try:
+                if sys.platform == "win32":
+                    result = subprocess.run(['taskkill', '/f', '/im', 'python.exe'], 
+                                          capture_output=True, check=False)
+                    if result.returncode == 0:
+                        self.emit_progress("execution", "Cleaned up existing Python processes")
+                else:
+                    result = subprocess.run(['pkill', '-f', 'streamlit'], 
+                                          capture_output=True, check=False)
+                    if result.returncode == 0:
+                        self.emit_progress("execution", "Cleaned up existing Streamlit processes")
+            except Exception as e:
+                self.emit_progress("execution", f"Could not clean up processes: {str(e)}")
 

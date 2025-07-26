@@ -137,6 +137,91 @@ def list_projects():
     """List all projects"""
     return jsonify(list(active_projects.values()))
 
+@app.route('/api/projects/history', methods=['GET'])
+def get_project_history():
+    """Get project history with additional metadata"""
+    try:
+        projects = []
+        projects_dir = Config.GENERATED_PROJECTS_DIR
+        
+        if not os.path.exists(projects_dir):
+            return jsonify([])
+        
+        # Scan the filesystem for all project directories
+        for project_folder in os.listdir(projects_dir):
+            project_path = os.path.join(projects_dir, project_folder)
+            if os.path.isdir(project_path):
+                try:
+                    # Initialize default values
+                    project_name = "Python Project"
+                    description = "No description available"
+                    
+                    # Try to read project metadata from README.md
+                    readme_path = os.path.join(project_path, "README.md")
+                    if os.path.exists(readme_path):
+                        try:
+                            with open(readme_path, 'r', encoding='utf-8') as f:
+                                content = f.read()
+                                lines = content.split('\n')
+                                
+                                # Extract project name from first heading
+                                for line in lines:
+                                    if line.strip().startswith('# '):
+                                        project_name = line.strip()[2:]
+                                        break
+                                
+                                # Extract description from content
+                                for i, line in enumerate(lines):
+                                    if line.strip() and not line.startswith('#') and not line.startswith('```'):
+                                        description = line.strip()
+                                        break
+                                        
+                                # Limit description length
+                                if len(description) > 100:
+                                    description = description[:100] + "..."
+                                    
+                        except Exception as e:
+                            print(f"Error reading README for {project_folder}: {e}")
+                    
+                    # Get creation time from directory
+                    creation_time = os.path.getctime(project_path)
+                    created_at = datetime.fromtimestamp(creation_time).strftime('%Y-%m-%d %H:%M:%S')
+                    
+                    # Count files in the project
+                    file_count = 0
+                    for root, dirs, files in os.walk(project_path):
+                        # Skip __pycache__ directories
+                        dirs[:] = [d for d in dirs if d != '__pycache__']
+                        # Count only non-pyc files
+                        file_count += len([f for f in files if not f.endswith('.pyc')])
+                    
+                    # Check if this project is in active_projects (recently generated)
+                    status = 'completed'
+                    if project_folder in active_projects:
+                        status = active_projects[project_folder].get('status', 'completed')
+                    
+                    project_info = {
+                        'id': project_folder,
+                        'name': project_name,
+                        'description': description,
+                        'status': status,
+                        'created_at': created_at,
+                        'file_count': file_count
+                    }
+                    projects.append(project_info)
+                    
+                except Exception as e:
+                    print(f"Error processing project {project_folder}: {e}")
+                    continue
+        
+        # Sort by creation time (newest first)
+        projects.sort(key=lambda x: x['created_at'], reverse=True)
+        return jsonify(projects)
+        
+    except Exception as e:
+        print(f"Error in get_project_history: {e}")
+        return jsonify({"error": f"Failed to get project history: {str(e)}"}), 500
+
 @app.route('/api/projects/<project_id>', methods=['DELETE'])
 def delete_project(project_id):
     """Delete a project"""
@@ -162,6 +247,199 @@ def delete_project(project_id):
     del active_projects[project_id]
     
     return jsonify({"message": "Project deleted successfully"})
+
+@app.route('/api/projects/<project_id>/files', methods=['GET'])
+def get_project_files(project_id):
+    """Get all files in a project"""
+    try:
+        project_path = os.path.join(Config.GENERATED_PROJECTS_DIR, project_id)
+        
+        if not os.path.exists(project_path):
+            return jsonify({"error": "Project not found"}), 404
+        
+        files = []
+        for root, dirs, filenames in os.walk(project_path):
+            # Skip __pycache__ directories
+            dirs[:] = [d for d in dirs if d != '__pycache__']
+            
+            for filename in filenames:
+                if filename.endswith('.pyc'):
+                    continue
+                    
+                file_path = os.path.join(root, filename)
+                relative_path = os.path.relpath(file_path, project_path)
+                
+                files.append({
+                    'name': filename,
+                    'path': relative_path,
+                    'full_path': file_path,
+                    'size': os.path.getsize(file_path)
+                })
+        
+        return jsonify(files)
+        
+    except Exception as e:
+        return jsonify({"error": f"Failed to get project files: {str(e)}"}), 500
+
+@app.route('/api/projects/<project_id>/files/<path:file_path>', methods=['GET'])
+def get_file_content(project_id, file_path):
+    """Get content of a specific file"""
+    try:
+        project_path = os.path.join(Config.GENERATED_PROJECTS_DIR, project_id)
+        full_file_path = os.path.join(project_path, file_path)
+        
+        if not os.path.exists(project_path):
+            return jsonify({"error": "Project not found"}), 404
+            
+        if not os.path.exists(full_file_path):
+            return jsonify({"error": "File not found"}), 404
+        
+        # Security check - ensure file is within project directory
+        if not os.path.abspath(full_file_path).startswith(os.path.abspath(project_path)):
+            return jsonify({"error": "Access denied"}), 403
+        
+        try:
+            with open(full_file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+        except UnicodeDecodeError:
+            # Try with different encoding for binary files
+            try:
+                with open(full_file_path, 'r', encoding='latin-1') as f:
+                    content = f.read()
+            except:
+                content = "[Binary file - cannot display content]"
+        
+        return jsonify({
+            'content': content,
+            'path': file_path,
+            'size': os.path.getsize(full_file_path)
+        })
+        
+    except Exception as e:
+        return jsonify({"error": f"Failed to get file content: {str(e)}"}), 500
+
+@app.route('/api/projects/<project_id>/run', methods=['POST'])
+def run_project(project_id):
+    """Run the project and return execution output"""
+    try:
+        # Check if project exists on filesystem (don't require it to be in active_projects)
+        project_path = os.path.join(Config.GENERATED_PROJECTS_DIR, project_id)
+        
+        if not os.path.exists(project_path):
+            return jsonify({"error": "Project directory not found"}), 404
+        
+        # Check for main.py
+        main_py_path = os.path.join(project_path, 'main.py')
+        if not os.path.exists(main_py_path):
+            return jsonify({"error": "main.py not found in project"}), 404
+        
+        # Determine run method by analyzing main.py and requirements.txt
+        run_method = project_manager.determine_run_method(project_path)
+        
+        # If project is not in active_projects, add a basic entry for execution tracking
+        if project_id not in active_projects:
+            active_projects[project_id] = {
+                "id": project_id,
+                "status": "completed",  # Assume existing projects are completed
+                "created_at": datetime.now().isoformat()
+            }
+        
+        # Start project execution in background
+        def run_project_async():
+            try:
+                result = project_manager.execute_project(project_id, project_path, run_method)
+                active_projects[project_id]["execution"] = result
+                socketio.emit('execution_complete', {
+                    'project_id': project_id,
+                    'result': result
+                })
+            except Exception as e:
+                error_result = {
+                    'success': False,
+                    'error': str(e),
+                    'output': '',
+                    'method': run_method
+                }
+                active_projects[project_id]["execution"] = error_result
+                socketio.emit('execution_error', {
+                    'project_id': project_id,
+                    'error': error_result
+                })
+        
+        thread = threading.Thread(target=run_project_async)
+        thread.daemon = True
+        thread.start()
+        
+        return jsonify({
+            "message": "Project execution started",
+            "run_method": run_method,
+            "project_id": project_id
+        })
+        
+    except Exception as e:
+        return jsonify({"error": f"Failed to run project: {str(e)}"}), 500
+
+@app.route('/api/projects/<project_id>/execution', methods=['GET'])
+def get_execution_status(project_id):
+    """Get current execution status and output"""
+    try:
+        if project_id not in active_projects:
+            return jsonify({"error": "Project not found"}), 404
+        
+        project = active_projects[project_id]
+        execution = project.get("execution", {"status": "not_started"})
+        
+        return jsonify(execution)
+        
+    except Exception as e:
+        return jsonify({"error": f"Failed to get execution status: {str(e)}"}), 500
+
+@app.route('/api/projects/<project_id>/stop', methods=['POST'])
+def stop_project(project_id):
+    """Stop running project"""
+    try:
+        # Stop the project execution
+        result = project_manager.stop_project_execution(project_id)
+        
+        # Also remove from active_projects execution tracking
+        if project_id in active_projects and "execution" in active_projects[project_id]:
+            del active_projects[project_id]["execution"]
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({"error": f"Failed to stop project: {str(e)}"}), 500
+
+@app.route('/api/projects/running', methods=['GET'])
+def get_running_projects():
+    """Get list of currently running projects"""
+    try:
+        running = project_manager.get_running_projects()
+        return jsonify(running)
+    except Exception as e:
+        return jsonify({"error": f"Failed to get running projects: {str(e)}"}), 500
+
+@app.route('/api/projects/<project_id>/is-running', methods=['GET'])
+def is_project_running(project_id):
+    """Check if a specific project is currently running"""
+    try:
+        if not hasattr(project_manager, 'running_processes'):
+            return jsonify({"running": False})
+        
+        if project_id not in project_manager.running_processes:
+            return jsonify({"running": False})
+        
+        process = project_manager.running_processes[project_id]
+        is_running = process.poll() is None
+        
+        if not is_running:
+            # Clean up finished process
+            del project_manager.running_processes[project_id]
+        
+        return jsonify({"running": is_running, "pid": process.pid if is_running else None})
+        
+    except Exception as e:
+        return jsonify({"error": f"Failed to check project status: {str(e)}"}), 500
 
 # WebSocket events
 @socketio.on('connect')

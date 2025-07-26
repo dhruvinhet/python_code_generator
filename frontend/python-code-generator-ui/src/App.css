@@ -1,5 +1,308 @@
 @import "tailwindcss";
 
 body {
-  font-family: 'Inter', 'Poppins', system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', 'SF Pro Display', 'Segoe UI', 'Roboto', system-ui, -apple-system, sans-serif;
+  background: #0f172a;
+  color: #ffffff;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+/* Professional scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(71, 85, 105, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(71, 85, 105, 0.5);
+}
+
+/* Professional animations */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Professional glass morphism */
+.glass-professional {
+  background: rgba(51, 65, 85, 0.1);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(71, 85, 105, 0.2);
+}
+
+/* Corporate color scheme */
+.bg-corporate-primary {
+  background: linear-gradient(135deg, #475569 0%, #334155 100%);
+}
+
+.bg-corporate-secondary {
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+}
+
+.bg-corporate-accent {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+/* Professional text styles */
+.text-corporate-primary {
+  color: #f8fafc;
+}
+
+.text-corporate-secondary {
+  color: #cbd5e1;
+}
+
+.text-corporate-muted {
+  color: #94a3b8;
+}
+
+/* Enhanced focus styles */
+.focus-corporate:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(71, 85, 105, 0.4);
+  border-color: #475569;
+}
+
+/* Professional button styles */
+.btn-corporate {
+  background: linear-gradient(135deg, #475569 0%, #334155 100%);
+  border: 1px solid #475569;
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+
+.btn-corporate:hover {
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+  border-color: #64748b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-corporate-success {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  border: 1px solid #059669;
+}
+
+.btn-corporate-success:hover {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-color: #10b981;
+}
+
+/* Professional card styles */
+.card-corporate {
+  background: rgba(51, 65, 85, 0.2);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(71, 85, 105, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-corporate:hover {
+  background: rgba(51, 65, 85, 0.3);
+  border-color: rgba(71, 85, 105, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Professional line clamp */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Professional loading states */
+.loading-corporate {
+  background: linear-gradient(90deg, rgba(71,85,105,0.1) 0%, rgba(71,85,105,0.2) 50%, rgba(71,85,105,0.1) 100%);
+  background-size: 200px 100%;
+  animation: shimmerCorporate 1.5s infinite;
+  border-radius: 6px;
+}
+
+@keyframes shimmerCorporate {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+/* Typography enhancements */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: #f8fafc;
+}
+
+/* Professional code blocks */
+.code-corporate {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(71, 85, 105, 0.3);
+  border-radius: 6px;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #e2e8f0;
+}
+
+/* Status indicators */
+.status-corporate-success {
+  background: #059669;
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.2);
+}
+
+.status-corporate-error {
+  background: #dc2626;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+}
+
+.status-corporate-warning {
+  background: #d97706;
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2);
+}
+
+.status-corporate-info {
+  background: #0284c7;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+}
+
+/* Professional selection */
+::selection {
+  background: rgba(71, 85, 105, 0.3);
+  color: #f8fafc;
+}
+
+/* Enhanced borders */
+.border-corporate {
+  border-color: rgba(71, 85, 105, 0.3);
+}
+
+.border-corporate-hover:hover {
+  border-color: rgba(71, 85, 105, 0.5);
+}
+
+/* Professional shadows */
+.shadow-corporate {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.shadow-corporate-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.shadow-corporate-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Professional transitions */
+.transition-corporate {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-corporate-slow {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* File tree enhancements */
+.file-tree-corporate {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+}
+
+.file-tree-corporate .folder-icon {
+  color: #94a3b8;
+  transition: color 0.2s ease;
+}
+
+.file-tree-corporate .folder-icon:hover {
+  color: #cbd5e1;
+}
+
+.file-tree-corporate .file-icon {
+  color: #64748b;
+  transition: color 0.2s ease;
+}
+
+.file-tree-corporate .file-selected {
+  background: rgba(71, 85, 105, 0.3);
+  border-color: rgba(71, 85, 105, 0.5);
+}
+
+/* Smooth scrolling */
+.smooth-scroll-corporate {
+  scroll-behavior: smooth;
+}
+
+html {
+  scroll-behavior: smooth;
 }
