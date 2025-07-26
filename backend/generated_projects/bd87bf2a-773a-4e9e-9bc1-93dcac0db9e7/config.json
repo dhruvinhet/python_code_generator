@@ -1,0 +1,6 @@
+{
+    "model_path": "model/crime_detection_model.h5",
+    "frame_width": 640,
+    "class_names": ["person", "knife", "gun", "fight"],
+    "report_frequency": 60
+}
