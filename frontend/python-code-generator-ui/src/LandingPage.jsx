@@ -94,28 +94,73 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 relative overflow-hidden">
-      {/* Clean Modern Background System */}
+      {/* Enhanced Modern Background System */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        {/* Primary Background */}
+        {/* Primary Background with More Depth */}
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900/95 via-blue-900/90 to-gray-900/95"></div>
         
-        {/* Subtle Animated Grid */}
+        {/* Dynamic Animated Grid */}
         <div 
           className="absolute inset-0 opacity-20"
           style={{
             backgroundImage: `
-              linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)
+              linear-gradient(rgba(59, 130, 246, 0.2) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(59, 130, 246, 0.2) 1px, transparent 1px)
             `,
             backgroundSize: '50px 50px',
             animation: 'grid-drift 30s linear infinite'
           }}
         />
 
-        {/* Clean Gradient Orbs */}
-        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-blue-500/20 to-purple-600/20 rounded-full filter blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-20 w-48 h-48 bg-gradient-to-r from-cyan-500/20 to-blue-600/20 rounded-full filter blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-to-r from-purple-500/15 to-pink-600/15 rounded-full filter blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
+        {/* Floating Geometric Shapes */}
+        <div className="absolute inset-0">
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={`geometric-${i}`}
+              className="absolute opacity-30"
+              style={{
+                width: `${30 + Math.random() * 60}px`,
+                height: `${30 + Math.random() * 60}px`,
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                background: `linear-gradient(45deg, 
+                  ${['rgba(59, 130, 246, 0.3)', 'rgba(139, 92, 246, 0.3)', 'rgba(6, 182, 212, 0.3)', 'rgba(16, 185, 129, 0.3)', 'rgba(245, 158, 11, 0.3)'][Math.floor(Math.random() * 5)]}, 
+                  transparent
+                )`,
+                borderRadius: Math.random() > 0.5 ? '50%' : '20%',
+                animation: `geometric-float ${20 + Math.random() * 15}s ease-in-out infinite`,
+                animationDelay: `${Math.random() * 10}s`
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Enhanced Gradient Orbs with Animation */}
+        <div className="absolute top-20 left-20 w-80 h-80 bg-gradient-to-r from-blue-500/25 to-purple-600/25 rounded-full filter blur-3xl animate-pulse-slow"></div>
+        <div className="absolute bottom-20 right-20 w-64 h-64 bg-gradient-to-r from-cyan-500/25 to-blue-600/25 rounded-full filter blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-purple-500/20 to-pink-600/20 rounded-full filter blur-3xl animate-pulse-slow" style={{ animationDelay: '4s' }}></div>
+        <div className="absolute top-10 right-1/4 w-48 h-48 bg-gradient-to-r from-green-500/20 to-emerald-600/20 rounded-full filter blur-3xl animate-pulse-slow" style={{ animationDelay: '6s' }}></div>
+        <div className="absolute bottom-10 left-1/3 w-56 h-56 bg-gradient-to-r from-orange-500/15 to-yellow-600/15 rounded-full filter blur-3xl animate-pulse-slow" style={{ animationDelay: '8s' }}></div>
+
+        {/* Animated Light Rays */}
+        <div className="absolute inset-0">
+          <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-blue-400/20 to-transparent animate-pulse"></div>
+          <div className="absolute top-0 right-1/3 w-px h-full bg-gradient-to-b from-transparent via-purple-400/20 to-transparent animate-pulse" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute top-0 left-2/3 w-px h-full bg-gradient-to-b from-transparent via-cyan-400/20 to-transparent animate-pulse" style={{ animationDelay: '4s' }}></div>
+        </div>
+
+        {/* Diagonal Grid Overlay */}
+        <div 
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: `
+              linear-gradient(45deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+              linear-gradient(-45deg, rgba(139, 92, 246, 0.1) 1px, transparent 1px)
+            `,
+            backgroundSize: '80px 80px',
+            animation: 'diagonal-drift 45s linear infinite reverse'
+          }}
+        />
       </div>
 
       {/* Enhanced Navigation */}
@@ -174,14 +219,14 @@ const LandingPage = () => {
                 
                 {/* Revolutionary Typography */}
                 <div className="space-y-4">
-                  <h1 className="text-4xl lg:text-5xl font-black leading-none">
-                    <span className="block text-white mb-2">
+                  <h1 className="text-4xl lg:text-5xl font-black leading-none" style={{ color: '#ffffff' }}>
+                    <span className="block bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">
                       BUILD
                     </span>
-                    <span className="block bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent">
+                    <span className="block bg-gradient-to-r from-purple-400 via-pink-500 to-orange-400 bg-clip-text text-transparent">
                       ANYTHING
                     </span>
-                    <span className="block text-white">
+                    <span className="block bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
                       INSTANTLY
                     </span>
                   </h1>
@@ -328,7 +373,7 @@ const LandingPage = () => {
                       </span>
                     </div>
                     
-                    <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-blue-300 transition-colors">
+                    <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-blue-300 transition-colors" style={{ color: '#ffffff' }}>
                       CodeCrafter
                     </h3>
                     
@@ -361,7 +406,7 @@ const LandingPage = () => {
                           <Icon className="w-6 h-6 text-white" />
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-lg font-bold text-white group-hover:text-purple-300 transition-colors">
+                          <h3 className="text-lg font-bold text-white group-hover:text-purple-300 transition-colors" style={{ color: '#ffffff' }}>
                             {feature.name}
                           </h3>
                           <span className="bg-gradient-to-r from-orange-500 to-pink-600 text-white text-xs px-2 py-1 rounded-full font-medium">
@@ -400,7 +445,7 @@ const LandingPage = () => {
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-3">
-                              <h3 className="text-xl font-bold text-white group-hover:text-orange-300 transition-colors">
+                              <h3 className="text-xl font-bold text-white group-hover:text-orange-300 transition-colors" style={{ color: '#ffffff' }}>
                                 {feature.name}
                               </h3>
                               <span className="bg-gradient-to-r from-orange-500 to-pink-600 text-white text-xs px-2 py-1 rounded-full font-medium">
@@ -506,7 +551,7 @@ const LandingPage = () => {
                             <Icon className="w-10 h-10 text-white" />
                           </div>
                           
-                          <h3 className="text-xl font-bold text-white mb-4 group-hover:text-blue-300 transition-colors">
+                          <h3 className="text-xl font-bold text-white mb-4 group-hover:text-blue-300 transition-colors" style={{ color: '#ffffff' }}>
                             {step.title}
                           </h3>
                           
@@ -607,11 +652,50 @@ const LandingPage = () => {
         </section>
       </div>
 
-      {/* Custom Animations */}
+      {/* Enhanced Custom Animations */}
       <style jsx>{`
         @keyframes grid-drift {
           0% { transform: translate(0, 0); }
           100% { transform: translate(50px, 50px); }
+        }
+        
+        @keyframes diagonal-drift {
+          0% { transform: translate(0, 0) rotate(0deg); }
+          100% { transform: translate(80px, 80px) rotate(360deg); }
+        }
+        
+        @keyframes geometric-float {
+          0%, 100% { 
+            transform: translate(0, 0) rotate(0deg) scale(1); 
+            opacity: 0.3; 
+          }
+          25% { 
+            transform: translate(20px, -20px) rotate(90deg) scale(1.1); 
+            opacity: 0.5; 
+          }
+          50% { 
+            transform: translate(-15px, -40px) rotate(180deg) scale(0.9); 
+            opacity: 0.4; 
+          }
+          75% { 
+            transform: translate(-30px, -10px) rotate(270deg) scale(1.05); 
+            opacity: 0.6; 
+          }
+        }
+        
+        @keyframes pulse-slow {
+          0%, 100% { 
+            opacity: 0.3; 
+            transform: scale(1); 
+          }
+          50% { 
+            opacity: 0.6; 
+            transform: scale(1.05); 
+          }
+        }
+        
+        .animate-pulse-slow {
+          animation: pulse-slow 6s ease-in-out infinite;
         }
         
         @keyframes float {
