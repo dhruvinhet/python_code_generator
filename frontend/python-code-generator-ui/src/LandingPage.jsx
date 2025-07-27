@@ -17,7 +17,13 @@ import {
   Mail,
   Github,
   Linkedin,
-  Twitter
+  Twitter,
+  Sparkles,
+  Layers,
+  Target,
+  Users,
+  TrendingUp,
+  Award
 } from 'lucide-react';
 
 const LandingPage = () => {
@@ -28,14 +34,12 @@ const LandingPage = () => {
     if (feature === 'codecrafter') {
       navigate('/generator');
     } else {
-      // For other features, show coming soon (you can implement modals or navigate to coming soon pages)
       alert(`${feature} is coming soon! 🚀`);
     }
   };
 
   const handleEmailSignup = (e) => {
     e.preventDefault();
-    // Handle email signup
     alert(`Thanks for your interest! We'll notify you at ${email} when Synexor One launches.`);
     setEmail('');
   };
@@ -47,7 +51,8 @@ const LandingPage = () => {
       icon: Code,
       description: 'Generate production-ready code with AI-powered multi-agent system',
       available: true,
-      color: 'from-blue-500 to-indigo-600'
+      color: 'from-blue-500 to-indigo-600',
+      accent: 'blue'
     },
     {
       id: 'smartslides',
@@ -55,7 +60,8 @@ const LandingPage = () => {
       icon: Presentation,
       description: 'Create stunning PowerPoint presentations with intelligent design',
       available: false,
-      color: 'from-green-500 to-emerald-600'
+      color: 'from-green-500 to-emerald-600',
+      accent: 'green'
     },
     {
       id: 'datawash',
@@ -63,7 +69,8 @@ const LandingPage = () => {
       icon: Database,
       description: 'Clean and preprocess your data with automated AI workflows',
       available: false,
-      color: 'from-purple-500 to-violet-600'
+      color: 'from-purple-500 to-violet-600',
+      accent: 'purple'
     },
     {
       id: 'blogbot',
@@ -71,7 +78,8 @@ const LandingPage = () => {
       icon: PenTool,
       description: 'Write engaging blog content with AI-powered research and writing',
       available: false,
-      color: 'from-orange-500 to-red-600'
+      color: 'from-orange-500 to-red-600',
+      accent: 'orange'
     },
     {
       id: 'examforge',
@@ -79,44 +87,69 @@ const LandingPage = () => {
       icon: GraduationCap,
       description: 'Generate comprehensive quizzes and exams using advanced RAG',
       available: false,
-      color: 'from-pink-500 to-rose-600'
+      color: 'from-pink-500 to-rose-600',
+      accent: 'pink'
     }
   ];
 
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
-      {/* Animated Neural Network Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
-        <div className="absolute top-40 right-20 w-80 h-80 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse animation-delay-2000"></div>
-        <div className="absolute bottom-40 left-40 w-72 h-72 bg-gradient-to-r from-green-100 to-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse animation-delay-4000"></div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 relative overflow-hidden">
+      {/* Clean Modern Background System */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        {/* Primary Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900/95 via-blue-900/90 to-gray-900/95"></div>
+        
+        {/* Subtle Animated Grid */}
+        <div 
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)
+            `,
+            backgroundSize: '50px 50px',
+            animation: 'grid-drift 30s linear infinite'
+          }}
+        />
+
+        {/* Clean Gradient Orbs */}
+        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-blue-500/20 to-purple-600/20 rounded-full filter blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-20 w-48 h-48 bg-gradient-to-r from-cyan-500/20 to-blue-600/20 rounded-full filter blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-to-r from-purple-500/15 to-pink-600/15 rounded-full filter blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
       </div>
 
-      {/* Subtle Grid Pattern */}
-      <div 
-        className="absolute inset-0 opacity-5"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%236366f1' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-        }}
-      ></div>
-
-      {/* Navigation */}
-      <nav className="relative z-10 border-b border-gray-100 bg-white/80 backdrop-blur-lg">
+      {/* Enhanced Navigation */}
+      <nav className="relative z-50 border-b border-white/10 bg-black/20 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg">
-                <Brain className="w-6 h-6 text-white" />
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-purple-600 to-cyan-500 rounded-2xl flex items-center justify-center shadow-2xl">
+                  <Brain className="w-7 h-7 text-white" />
+                </div>
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-pulse"></div>
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                Synexor AI
-              </span>
+              <div>
+                <span className="text-2xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">
+                  Synexor AI
+                </span>
+                <div className="text-xs text-blue-300 font-medium">Next-Gen AI Suite</div>
+              </div>
             </div>
-            <div className="flex items-center space-x-6">
-              <a href="#features" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Features</a>
-              <a href="#how-it-works" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">How It Works</a>
-              <a href="#about" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">About</a>
-              <button className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-6 py-2 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-800 transition-all shadow-lg hover:shadow-xl">
+            <div className="hidden md:flex items-center space-x-8">
+              <a href="#features" className="text-gray-200 hover:text-white font-medium transition-colors relative group">
+                Features
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 transition-all group-hover:w-full"></span>
+              </a>
+              <a href="#how-it-works" className="text-gray-200 hover:text-white font-medium transition-colors relative group">
+                How It Works
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 transition-all group-hover:w-full"></span>
+              </a>
+              <a href="#about" className="text-gray-200 hover:text-white font-medium transition-colors relative group">
+                About
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 transition-all group-hover:w-full"></span>
+              </a>
+              <button className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all transform hover:scale-105">
                 Get Started
               </button>
             </div>
@@ -125,364 +158,469 @@ const LandingPage = () => {
       </nav>
 
       <div className="relative z-10">
-        {/* Hero Section */}
-        <section className="py-20 lg:py-32">
+        {/* Revolutionary Hero Section */}
+        <section className="py-12 lg:py-16 relative">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center max-w-5xl mx-auto">
-              <div className="mb-8">
-                <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                  <Zap className="w-4 h-4 mr-2" />
-                  Powered by Multi-Agent AI System
-                </span>
-              </div>
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
               
-              <h1 className="text-5xl lg:text-7xl font-bold mb-8 leading-tight">
-                <span className="bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
-                  Build Smarter.
-                </span>
-                <br />
-                <span className="bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">
-                  Faster. Limitlessly.
-                </span>
-              </h1>
-              
-              <p className="text-xl lg:text-2xl text-gray-600 mb-12 leading-relaxed max-w-4xl mx-auto">
-                All-in-One AI Suite for Developers, Creators & Analysts.
-                <br />
-                <span className="text-lg text-gray-500">Transform ideas into reality with our intelligent multi-agent workforce.</span>
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-                <button 
-                  onClick={() => handleFeatureClick('codecrafter')}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-8 py-4 rounded-2xl font-semibold text-lg flex items-center gap-3 hover:from-blue-700 hover:to-indigo-800 transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
-                >
-                  Launch Synexor One
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-                <button className="border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-2xl font-semibold text-lg flex items-center gap-3 hover:border-gray-400 hover:bg-gray-50 transition-all">
-                  <Play className="w-5 h-5" />
-                  Watch Demo
-                </button>
-              </div>
-
-              {/* Live Demo Console */}
-              <div className="max-w-4xl mx-auto">
-                <div className="bg-gray-900 rounded-2xl shadow-2xl overflow-hidden">
-                  <div className="bg-gray-800 px-6 py-4 flex items-center gap-2">
-                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                    <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span className="text-gray-400 text-sm ml-4 font-mono">Synexor AI Console</span>
-                  </div>
-                  <div className="p-6 font-mono text-sm">
-                    <div className="text-green-400 mb-2">$ synexor create --prompt "Build a todo app with authentication"</div>
-                    <div className="text-gray-300 mb-2">🤖 Planning Agent: Analyzing requirements...</div>
-                    <div className="text-blue-400 mb-2">📋 Planning Agent: Created project architecture</div>
-                    <div className="text-yellow-400 mb-2">⚡ Developer Agent: Generating backend API...</div>
-                    <div className="text-yellow-400 mb-2">🎨 Developer Agent: Creating frontend components...</div>
-                    <div className="text-purple-400 mb-2">🧪 Tester Agent: Running unit tests...</div>
-                    <div className="text-purple-400 mb-2">✅ Tester Agent: All tests passed</div>
-                    <div className="text-green-400 mb-4">🚀 Project generated successfully!</div>
-                    <div className="text-cyan-400">Ready to deploy your application 🎉</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Features Section */}
-        <section id="features" className="py-20 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl lg:text-5xl font-bold mb-6 text-gray-900">
-                Five Powerful AI Tools
-              </h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Everything you need to accelerate your creative and technical workflows, 
-                powered by intelligent multi-agent systems.
-              </p>
-            </div>
-
-            <div className="grid lg:grid-cols-3 gap-8 mb-12">
-              {features.slice(0, 3).map((feature, index) => {
-                const Icon = feature.icon;
-                return (
-                  <div 
-                    key={feature.id}
-                    onClick={() => handleFeatureClick(feature.id)}
-                    className="group bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer border border-gray-100 hover:border-gray-200 transform hover:-translate-y-2"
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    <div className={`w-16 h-16 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg`}>
-                      <Icon className="w-8 h-8 text-white" />
-                    </div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-2xl font-bold text-gray-900">{feature.name}</h3>
-                      {!feature.available && (
-                        <span className="bg-gradient-to-r from-orange-400 to-pink-500 text-white text-xs px-3 py-1 rounded-full font-semibold">
-                          Coming Soon
-                        </span>
-                      )}
-                      {feature.available && (
-                        <span className="bg-gradient-to-r from-green-400 to-emerald-500 text-white text-xs px-3 py-1 rounded-full font-semibold">
-                          Available
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-gray-600 mb-6 leading-relaxed">
-                      {feature.description}
-                    </p>
-                    <div className="flex items-center text-blue-600 font-semibold group-hover:text-blue-700">
-                      <span>{feature.available ? 'Launch Tool' : 'Get Notified'}</span>
-                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {features.slice(3).map((feature, index) => {
-                const Icon = feature.icon;
-                return (
-                  <div 
-                    key={feature.id}
-                    onClick={() => handleFeatureClick(feature.id)}
-                    className="group bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer border border-gray-100 hover:border-gray-200 transform hover:-translate-y-2"
-                    style={{ animationDelay: `${(index + 3) * 0.1}s` }}
-                  >
-                    <div className={`w-16 h-16 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg`}>
-                      <Icon className="w-8 h-8 text-white" />
-                    </div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-2xl font-bold text-gray-900">{feature.name}</h3>
-                      {!feature.available && (
-                        <span className="bg-gradient-to-r from-orange-400 to-pink-500 text-white text-xs px-3 py-1 rounded-full font-semibold">
-                          Coming Soon
-                        </span>
-                      )}
-                      {feature.available && (
-                        <span className="bg-gradient-to-r from-green-400 to-emerald-500 text-white text-xs px-3 py-1 rounded-full font-semibold">
-                          Available
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-gray-600 mb-6 leading-relaxed">
-                      {feature.description}
-                    </p>
-                    <div className="flex items-center text-blue-600 font-semibold group-hover:text-blue-700">
-                      <span>{feature.available ? 'Launch Tool' : 'Get Notified'}</span>
-                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* How It Works Section */}
-        <section id="how-it-works" className="py-20">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl lg:text-5xl font-bold mb-6 text-gray-900">
-                How Our Multi-Agent System Works
-              </h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                From prompt to production - watch our AI agents collaborate 
-                to deliver exactly what you need.
-              </p>
-            </div>
-
-            <div className="grid lg:grid-cols-4 gap-8 mb-16">
-              {[
-                {
-                  step: "01",
-                  title: "Planning Agent",
-                  description: "Analyzes your prompt and creates a detailed project architecture",
-                  icon: Brain,
-                  color: "from-blue-500 to-indigo-600"
-                },
-                {
-                  step: "02", 
-                  title: "Developer Agent",
-                  description: "Generates clean, production-ready code following best practices",
-                  icon: Code,
-                  color: "from-green-500 to-emerald-600"
-                },
-                {
-                  step: "03",
-                  title: "Tester Agent", 
-                  description: "Runs comprehensive tests and fixes any bugs automatically",
-                  icon: Shield,
-                  color: "from-purple-500 to-violet-600"
-                },
-                {
-                  step: "04",
-                  title: "Delivery",
-                  description: "Provides verified, ready-to-use output with export options",
-                  icon: Download,
-                  color: "from-orange-500 to-red-600"
-                }
-              ].map((step, index) => {
-                const Icon = step.icon;
-                return (
-                  <div key={step.step} className="text-center relative">
-                    <div className={`w-20 h-20 bg-gradient-to-br ${step.color} rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl`}>
-                      <Icon className="w-10 h-10 text-white" />
-                    </div>
-                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-gray-900 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                      {step.step}
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-4">{step.title}</h3>
-                    <p className="text-gray-600 leading-relaxed">{step.description}</p>
-                    {index < 3 && (
-                      <div className="hidden lg:block absolute top-10 left-full w-full">
-                        <ArrowRight className="w-6 h-6 text-gray-300 mx-auto" />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* Why Choose Us Section */}
-        <section className="py-20 bg-gradient-to-br from-blue-50 to-indigo-100">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl lg:text-5xl font-bold mb-6 text-gray-900">
-                Why Synexor AI?
-              </h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Experience the future of AI-powered productivity with features 
-                designed for professionals and creators.
-              </p>
-            </div>
-
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              {/* Left Column - Content */}
               <div className="space-y-8">
-                {[
-                  "Multi-agent orchestration for complex tasks",
-                  "Natural language prompt interface", 
-                  "Automated testing and bug fixing",
-                  "Production-ready output every time",
-                  "Export to multiple formats",
-                  "Continuous learning and improvement"
-                ].map((feature, index) => (
-                  <div key={index} className="flex items-center space-x-4">
-                    <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0" />
-                    <span className="text-lg text-gray-700 font-medium">{feature}</span>
+                {/* Status Badge */}
+                <div className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 backdrop-blur-sm">
+                  <Sparkles className="w-4 h-4 mr-2 text-blue-400" />
+                  <span className="text-blue-200 text-sm font-medium">Powered by Multi-Agent AI</span>
+                  <div className="ml-3 w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                </div>
+                
+                {/* Revolutionary Typography */}
+                <div className="space-y-4">
+                  <h1 className="text-4xl lg:text-5xl font-black leading-none">
+                    <span className="block text-white mb-2">
+                      BUILD
+                    </span>
+                    <span className="block bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent">
+                      ANYTHING
+                    </span>
+                    <span className="block text-white">
+                      INSTANTLY
+                    </span>
+                  </h1>
+                  
+                  <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+                  
+                  <p className="text-lg lg:text-xl text-white leading-relaxed max-w-xl">
+                    The world's first <span className="text-blue-300 font-semibold">multi-agent AI workforce</span> that transforms 
+                    ideas into production-ready solutions in minutes, not months.
+                  </p>
+                </div>
+
+                {/* Enhanced CTA Section */}
+                <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                  <button 
+                    onClick={() => handleFeatureClick('codecrafter')}
+                    className="group bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 hover:shadow-xl hover:shadow-blue-500/25 transition-all transform hover:scale-105 relative overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <span className="relative z-10">Launch Synexor One</span>
+                    <ArrowRight className="w-6 h-6 relative z-10 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  
+                  <button className="group border-2 border-white/20 text-white px-8 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 hover:bg-white/10 hover:border-white/40 transition-all backdrop-blur-sm">
+                    <Play className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                    Watch Demo
+                  </button>
+                </div>
+
+                {/* Trust Indicators */}
+                <div className="flex items-center gap-8 pt-8">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-5 h-5 text-blue-400" />
+                    <span className="text-white text-sm">10,000+ Developers</span>
                   </div>
-                ))}
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-green-400" />
+                    <span className="text-white text-sm">99.9% Uptime</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Award className="w-5 h-5 text-yellow-400" />
+                    <span className="text-white text-sm">AI Innovation Award</span>
+                  </div>
+                </div>
               </div>
-              
-              <div className="bg-white rounded-2xl p-8 shadow-xl">
-                <div className="text-center">
-                  <Star className="w-16 h-16 text-yellow-500 mx-auto mb-6" />
-                  <blockquote className="text-lg text-gray-700 mb-6 italic">
-                    "Synexor AI has revolutionized how we approach development. 
-                    What used to take days now takes minutes, and the quality 
-                    is consistently exceptional."
-                  </blockquote>
-                  <div className="text-gray-900 font-semibold">Sarah Chen</div>
-                  <div className="text-gray-500">Lead Developer, TechCorp</div>
+
+              {/* Right Column - Interactive Demo */}
+              <div className="relative">
+                {/* Floating Cards */}
+                <div className="relative">
+                  {/* Main Console */}
+                  <div className="bg-black/40 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/10 transform rotate-3 hover:rotate-0 transition-transform duration-500">
+                    {/* Console Header */}
+                    <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-6 py-4 flex items-center gap-3 border-b border-white/10">
+                      <div className="flex gap-2">
+                        <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                        <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      </div>
+                      <span className="text-blue-300 font-mono text-sm">Synexor AI Console</span>
+                      <div className="ml-auto flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
+                        <span className="text-green-400 text-xs font-medium">LIVE</span>
+                      </div>
+                    </div>
+                    
+                    {/* Console Content */}
+                    <div className="p-6 font-mono text-sm space-y-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-400">$</span>
+                        <span className="text-white">synexor create --prompt "E-commerce platform"</span>
+                      </div>
+                      <div className="text-blue-300">🧠 Planning Agent: Analyzing requirements...</div>
+                      <div className="text-cyan-400">📐 Architecture Agent: Designing system...</div>
+                      <div className="text-yellow-400">⚡ Developer Agent: Generating code...</div>
+                      <div className="text-purple-400">🧪 Tester Agent: Running tests...</div>
+                      <div className="text-green-400 font-bold">✅ Platform deployed successfully!</div>
+                      <div className="text-gray-400">🌐 Live at: https://your-store.synexor.ai</div>
+                    </div>
+                  </div>
+
+                  {/* Floating Stats Cards */}
+                  <div className="absolute -top-8 -left-8 bg-white/10 backdrop-blur-xl rounded-2xl p-4 border border-white/20 transform -rotate-12 hover:rotate-0 transition-transform duration-300">
+                    <div className="text-2xl font-bold text-white">99.9%</div>
+                    <div className="text-xs text-gray-300">Success Rate</div>
+                  </div>
+
+                  <div className="absolute -bottom-8 -right-8 bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-xl rounded-2xl p-4 border border-blue-500/30 transform rotate-12 hover:rotate-0 transition-transform duration-300">
+                    <div className="text-2xl font-bold text-white">2.3s</div>
+                    <div className="text-xs text-gray-300">Avg Response</div>
+                  </div>
+
+                  <div className="absolute top-1/2 -right-12 bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-xl rounded-2xl p-4 border border-green-500/30 transform rotate-6 hover:rotate-0 transition-transform duration-300">
+                    <div className="text-2xl font-bold text-white">5M+</div>
+                    <div className="text-xs text-gray-300">Lines Generated</div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Email Signup Section */}
-        <section className="py-20">
+        {/* Redesigned Features Section */}
+        <section id="features" className="py-12 relative">
+          <div className="max-w-7xl mx-auto px-6">
+            {/* Section Header */}
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 backdrop-blur-sm mb-4">
+                <Layers className="w-4 h-4 mr-2 text-purple-400" />
+                <span className="text-purple-200 text-sm font-medium">Five Powerful Tools</span>
+              </div>
+              
+              <h2 className="text-3xl lg:text-4xl font-black mb-4">
+                <span className="block text-white mb-1">ONE PLATFORM</span>
+                <span className="block bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">INFINITE POSSIBILITIES</span>
+              </h2>
+              
+              <p className="text-lg text-white max-w-3xl mx-auto leading-relaxed">
+                From code generation to content creation, our AI agents work together 
+                to deliver professional results across every domain.
+              </p>
+            </div>
+
+            {/* Asymmetrical Feature Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Featured Tool - CodeCrafter */}
+              <div className="lg:col-span-8 group cursor-pointer" onClick={() => handleFeatureClick('codecrafter')}>
+                <div className="bg-gradient-to-br from-blue-500/10 to-indigo-500/10 backdrop-blur-xl rounded-3xl p-6 border border-blue-500/20 hover:border-blue-400/40 transition-all duration-500 h-full relative overflow-hidden">
+                  {/* Background Pattern */}
+                  <div className="absolute inset-0 opacity-10">
+                    <div className="absolute inset-0" style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%233b82f6' fill-opacity='0.4'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                      backgroundSize: '30px 30px'
+                    }}></div>
+                  </div>
+                  
+                  <div className="relative z-10">
+                    <div className="flex items-start justify-between mb-6">
+                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+                        <Code className="w-8 h-8 text-white" />
+                      </div>
+                      <span className="bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs px-3 py-1 rounded-full font-bold">
+                        AVAILABLE NOW
+                      </span>
+                    </div>
+                    
+                    <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-blue-300 transition-colors">
+                      CodeCrafter
+                    </h3>
+                    
+                    <p className="text-white text-lg mb-4 leading-relaxed">
+                      Generate production-ready applications with our advanced multi-agent system. 
+                      From simple scripts to complex architectures, CodeCrafter delivers clean, 
+                      tested, and documented code every time.
+                    </p>
+                    
+                    <div className="flex items-center text-blue-400 font-bold group-hover:text-blue-300 transition-colors">
+                      <span>Launch Tool</span>
+                      <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-2 transition-transform" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Secondary Tools */}
+              <div className="lg:col-span-4 space-y-6">
+                {features.slice(1, 3).map((feature) => {
+                  const Icon = feature.icon;
+                  return (
+                    <div 
+                      key={feature.id}
+                      onClick={() => handleFeatureClick(feature.id)}
+                      className="group bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer relative overflow-hidden"
+                    >
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className={`w-12 h-12 bg-gradient-to-br ${feature.color} rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                          <Icon className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-bold text-white group-hover:text-purple-300 transition-colors">
+                            {feature.name}
+                          </h3>
+                          <span className="bg-gradient-to-r from-orange-500 to-pink-600 text-white text-xs px-2 py-1 rounded-full font-medium">
+                            Coming Soon
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <p className="text-white text-sm leading-relaxed mb-4">
+                        {feature.description}
+                      </p>
+                      
+                      <div className="flex items-center text-purple-400 font-semibold text-sm group-hover:text-purple-300 transition-colors">
+                        <span>Get Notified</span>
+                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Bottom Row */}
+              <div className="lg:col-span-12">
+                <div className="grid lg:grid-cols-2 gap-6">
+                  {features.slice(3).map((feature) => {
+                    const Icon = feature.icon;
+                    return (
+                      <div 
+                        key={feature.id}
+                        onClick={() => handleFeatureClick(feature.id)}
+                        className="group bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer"
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className={`w-14 h-14 bg-gradient-to-br ${feature.color} rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                            <Icon className="w-7 h-7 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-3">
+                              <h3 className="text-xl font-bold text-white group-hover:text-orange-300 transition-colors">
+                                {feature.name}
+                              </h3>
+                              <span className="bg-gradient-to-r from-orange-500 to-pink-600 text-white text-xs px-2 py-1 rounded-full font-medium">
+                                Coming Soon
+                              </span>
+                            </div>
+                            
+                            <p className="text-white leading-relaxed mb-4">
+                              {feature.description}
+                            </p>
+                            
+                            <div className="flex items-center text-orange-400 font-semibold group-hover:text-orange-300 transition-colors">
+                              <span>Get Notified</span>
+                              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Enhanced How It Works Section */}
+        <section id="how-it-works" className="py-12 relative">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 backdrop-blur-sm mb-4">
+                <Target className="w-4 h-4 mr-2 text-cyan-400" />
+                <span className="text-cyan-200 text-sm font-medium">Multi-Agent System</span>
+              </div>
+              
+              <h2 className="text-3xl lg:text-4xl font-black mb-4">
+                <span className="block text-white mb-1">FROM IDEA</span>
+                <span className="block bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">TO REALITY</span>
+              </h2>
+              
+              <p className="text-lg text-white max-w-3xl mx-auto leading-relaxed">
+                Watch our specialized AI agents collaborate in real-time to transform 
+                your vision into production-ready solutions.
+              </p>
+            </div>
+
+            {/* Process Flow */}
+            <div className="relative">
+              {/* Connection Lines */}
+              <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500/50 via-purple-500/50 to-cyan-500/50 transform -translate-y-1/2"></div>
+              
+              <div className="grid lg:grid-cols-4 gap-8 relative z-10">
+                {[
+                  {
+                    step: "01",
+                    title: "Planning Agent",
+                    description: "Analyzes your prompt and creates detailed project architecture with best practices",
+                    icon: Brain,
+                    color: "from-blue-500 to-indigo-600",
+                    accent: "blue"
+                  },
+                  {
+                    step: "02", 
+                    title: "Developer Agent",
+                    description: "Generates clean, production-ready code following industry standards and patterns",
+                    icon: Code,
+                    color: "from-green-500 to-emerald-600",
+                    accent: "green"
+                  },
+                  {
+                    step: "03",
+                    title: "Tester Agent", 
+                    description: "Runs comprehensive tests, identifies bugs, and automatically fixes issues",
+                    icon: Shield,
+                    color: "from-purple-500 to-violet-600",
+                    accent: "purple"
+                  },
+                  {
+                    step: "04",
+                    title: "Delivery Agent",
+                    description: "Packages and delivers verified, ready-to-deploy solutions with documentation",
+                    icon: Download,
+                    color: "from-orange-500 to-red-600",
+                    accent: "orange"
+                  }
+                ].map((step) => {
+                  const Icon = step.icon;
+                  return (
+                    <div key={step.step} className="group text-center relative">
+                      {/* Step Card */}
+                      <div className="bg-white/5 backdrop-blur-xl rounded-3xl p-6 border border-white/10 group-hover:border-white/20 transition-all duration-500 relative overflow-hidden">
+                        {/* Background Glow */}
+                        <div className={`absolute inset-0 bg-gradient-to-br ${step.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
+                        
+                        <div className="relative z-10">
+                          {/* Step Number */}
+                          <div className="absolute -top-4 -right-4 w-8 h-8 bg-gradient-to-br from-gray-700 to-gray-800 text-white rounded-full flex items-center justify-center text-sm font-bold border border-gray-600 shadow-lg">
+                            {step.step}
+                          </div>
+                          
+                          {/* Icon */}
+                          <div className={`w-20 h-20 bg-gradient-to-br ${step.color} rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl group-hover:scale-110 transition-transform duration-300`}>
+                            <Icon className="w-10 h-10 text-white" />
+                          </div>
+                          
+                          <h3 className="text-xl font-bold text-white mb-4 group-hover:text-blue-300 transition-colors">
+                            {step.title}
+                          </h3>
+                          
+                          <p className="text-white leading-relaxed group-hover:text-gray-100 transition-colors">
+                            {step.description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Enhanced CTA Section */}
+        <section className="py-12 relative">
           <div className="max-w-4xl mx-auto px-6 text-center">
-            <h2 className="text-4xl lg:text-5xl font-bold mb-6 text-gray-900">
-              Ready to Transform Your Workflow?
-            </h2>
-            <p className="text-xl text-gray-600 mb-12">
-              Join thousands of professionals already using Synexor AI. 
-              Get early access to new features and exclusive updates.
-            </p>
-            
-            <form onSubmit={handleEmailSignup} className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email address"
-                className="flex-1 px-6 py-4 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none text-lg"
-                required
-              />
-              <button
-                type="submit"
-                className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-indigo-800 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
-              >
-                <Mail className="w-5 h-5" />
-                Get Early Access
-              </button>
-            </form>
+            <div className="bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-cyan-500/10 backdrop-blur-xl rounded-3xl p-8 border border-white/10 relative overflow-hidden">
+              {/* Background Pattern */}
+              <div className="absolute inset-0 opacity-20">
+                <div className="absolute inset-0" style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M20 20c0-11.046-8.954-20-20-20v20h20z'/%3E%3C/g%3E%3C/svg%3E")`,
+                  backgroundSize: '40px 40px'
+                }}></div>
+              </div>
+              
+              <div className="relative z-10">
+                <div className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 backdrop-blur-sm mb-8">
+                  <Sparkles className="w-4 h-4 mr-2 text-green-400" />
+                  <span className="text-green-200 text-sm font-medium">Ready to Transform Your Workflow?</span>
+                </div>
+                
+                <h2 className="text-3xl lg:text-4xl font-black mb-4">
+                  <span className="block text-white mb-1">JOIN THE</span>
+                  <span className="block bg-gradient-to-r from-green-400 to-cyan-400 bg-clip-text text-transparent">AI REVOLUTION</span>
+                </h2>
+                
+                <p className="text-lg text-white mb-8 max-w-2xl mx-auto leading-relaxed">
+                  Be among the first to experience the future of AI-powered development. 
+                  Get early access and exclusive updates.
+                </p>
+                
+                {/* Enhanced Email Form */}
+                <div className="max-w-md mx-auto">
+                  <form onSubmit={handleEmailSignup} className="space-y-6">
+                    <div className="relative">
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter your email address"
+                        required
+                        className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm text-center"
+                      />
+                    </div>
+                    
+                    <button
+                      type="submit"
+                      className="w-full bg-gradient-to-r from-green-600 to-cyan-600 hover:from-green-700 hover:to-cyan-700 text-white font-bold py-4 px-8 rounded-2xl shadow-xl hover:shadow-green-500/25 transition-all duration-300 transform hover:scale-105 relative overflow-hidden group"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                      <span className="relative z-10 flex items-center justify-center">
+                        <Mail className="w-5 h-5 mr-2" />
+                        Get Early Access
+                      </span>
+                    </button>
+                  </form>
+
+                  {/* Trust Indicators */}
+                  <div className="grid grid-cols-3 gap-6 mt-8 pt-8 border-t border-white/10">
+                    <div className="text-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mx-auto mb-2">
+                        <Shield className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="text-sm text-white">Privacy Protected</div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mx-auto mb-2">
+                        <Zap className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="text-sm text-white">Instant Access</div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mx-auto mb-2">
+                        <Star className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="text-sm text-white">Premium Features</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </div>
 
-      {/* Footer */}
-      <footer id="about" className="bg-gray-900 text-white py-16">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-4 gap-8 mb-12">
-            <div className="lg:col-span-2">
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center">
-                  <Brain className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-2xl font-bold">Synexor AI</span>
-              </div>
-              <p className="text-gray-400 text-lg leading-relaxed mb-6">
-                Empowering creators, developers, and analysts with intelligent 
-                AI tools that understand context and deliver exceptional results.
-              </p>
-              <div className="flex space-x-4">
-                <Github className="w-6 h-6 text-gray-400 hover:text-white cursor-pointer transition-colors" />
-                <Linkedin className="w-6 h-6 text-gray-400 hover:text-white cursor-pointer transition-colors" />
-                <Twitter className="w-6 h-6 text-gray-400 hover:text-white cursor-pointer transition-colors" />
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-semibold mb-6">Products</h3>
-              <div className="space-y-3">
-                <a href="#" className="block text-gray-400 hover:text-white transition-colors">CodeCrafter</a>
-                <a href="#" className="block text-gray-400 hover:text-white transition-colors">SmartSlides</a>
-                <a href="#" className="block text-gray-400 hover:text-white transition-colors">DataWash</a>
-                <a href="#" className="block text-gray-400 hover:text-white transition-colors">BlogBot</a>
-                <a href="#" className="block text-gray-400 hover:text-white transition-colors">ExamForge</a>
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-semibold mb-6">Company</h3>
-              <div className="space-y-3">
-                <a href="#" className="block text-gray-400 hover:text-white transition-colors">About</a>
-                <a href="#" className="block text-gray-400 hover:text-white transition-colors">Blog</a>
-                <a href="#" className="block text-gray-400 hover:text-white transition-colors">Contact</a>
-                <a href="#" className="block text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
-                <a href="#" className="block text-gray-400 hover:text-white transition-colors">Terms of Service</a>
-              </div>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-800 pt-8 flex flex-col sm:flex-row justify-between items-center">
-            <p className="text-gray-400 mb-4 sm:mb-0">
-              © 2025 Synexor AI. All rights reserved.
-            </p>
-            <p className="text-gray-400">
-              Built with ❤️ for the future of work
-            </p>
-          </div>
-        </div>
-      </footer>
+      {/* Custom Animations */}
+      <style jsx>{`
+        @keyframes grid-drift {
+          0% { transform: translate(0, 0); }
+          100% { transform: translate(50px, 50px); }
+        }
+        
+        @keyframes float {
+          0%, 100% { transform: translate(0, 0) rotate(0deg); }
+          25% { transform: translate(10px, -10px) rotate(90deg); }
+          50% { transform: translate(-10px, -20px) rotate(180deg); }
+          75% { transform: translate(-20px, -10px) rotate(270deg); }
+        }
+      `}</style>
     </div>
   );
 };
