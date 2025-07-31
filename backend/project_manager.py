@@ -12,18 +12,30 @@ from agents import (
     PlanningAgent, SrDeveloper1Agent, SrDeveloper2Agent, 
     TesterAgent, DetailedTesterAgent, DocumentCreatorAgent
 )
+from web_agents import (
+    WebPlanningAgent, FrontendDeveloperAgent, BackendAPIAgent,
+    FullStackIntegratorAgent, WebTesterAgent
+)
 from config import Config
 from json_parser import json_parser
 
 class ProjectManager:
     def __init__(self, socketio=None):
         self.socketio = socketio
+        # Python application agents
         self.planning_agent = PlanningAgent()
         self.sr_developer1 = SrDeveloper1Agent()
         self.sr_developer2 = SrDeveloper2Agent()
         self.tester = TesterAgent()
         self.detailed_tester = DetailedTesterAgent()
         self.document_creator = DocumentCreatorAgent()
+        
+        # Web application agents
+        self.web_planning_agent = WebPlanningAgent()
+        self.frontend_developer = FrontendDeveloperAgent()
+        self.backend_api_developer = BackendAPIAgent()
+        self.fullstack_integrator = FullStackIntegratorAgent()
+        self.web_tester = WebTesterAgent()
         
         # Set up logging
         logging.basicConfig(level=logging.INFO)
@@ -45,12 +57,12 @@ class ProjectManager:
         print(f"[{stage}] {message}")
     
     def generate_project(self, user_prompt, project_id):
-        """Main method to generate a complete Python project"""
+        """Main method to generate a complete project (Python or Web Application)"""
         try:
             project_dir = os.path.join(Config.GENERATED_PROJECTS_DIR, project_id)
             os.makedirs(project_dir, exist_ok=True)
             
-            # Stage 1: Planning
+            # Stage 1: Planning - Determine project type and create plan
             self.emit_progress("planning", "Analyzing requirements and creating project plan...")
             plan_result = self.planning_agent.create_plan(user_prompt)
             
@@ -58,7 +70,7 @@ class ProjectManager:
             self.logger.info(f"Parsing plan result, type: {type(plan_result)}, length: {len(str(plan_result)) if plan_result else 0}")
             project_plan = json_parser.parse_json_response(
                 plan_result, 
-                expected_keys=['project_name', 'description', 'files', 'main_file'],
+                expected_keys=['project_name', 'description', 'project_type'],
                 agent_type="planning",
                 project_id=project_id
             )
@@ -70,7 +82,36 @@ class ProjectManager:
             else:
                 self.logger.info("Plan parsed successfully")
             
-            self.emit_progress("planning", "Project plan created successfully", project_plan)
+            # Determine project type and route to appropriate generation method
+            project_type = project_plan.get('project_type', 'python_application')
+            
+            if project_type == 'web_application':
+                return self.generate_web_application(user_prompt, project_id, project_plan)
+            else:
+                return self.generate_python_application(user_prompt, project_id, project_plan)
+                
+        except Exception as e:
+            self.logger.error(f"Error in generate_project: {str(e)}")
+            self.emit_progress("error", f"Project generation failed: {str(e)}")
+            return None
+    
+    def generate_python_application(self, user_prompt, project_id, project_plan=None):
+        """Generate a Python application (existing logic)"""
+        try:
+            project_dir = os.path.join(Config.GENERATED_PROJECTS_DIR, project_id)
+            
+            if not project_plan:
+                # Create plan if not provided
+                self.emit_progress("planning", "Creating Python application plan...")
+                plan_result = self.planning_agent.create_plan(user_prompt)
+                project_plan = json_parser.parse_json_response(
+                    plan_result, 
+                    expected_keys=['project_name', 'description', 'files', 'main_file'],
+                    agent_type="planning",
+                    project_id=project_id
+                )
+            
+            self.emit_progress("planning", "Python application plan created successfully", project_plan)
             
             # Stage 2: Code Generation
             self.emit_progress("coding", "Generating Python code...")
@@ -215,7 +256,159 @@ class ProjectManager:
             }
             
         except Exception as e:
-            self.emit_progress("error", f"Project generation failed: {str(e)}")
+            self.emit_progress("error", f"Python application generation failed: {str(e)}")
+            return {"success": False, "error": str(e)}
+    
+    def generate_web_application(self, user_prompt, project_id, project_plan=None):
+        """Generate a web application with HTML, CSS, JavaScript and backend API"""
+        try:
+            project_dir = os.path.join(Config.GENERATED_PROJECTS_DIR, project_id)
+            
+            if not project_plan:
+                # Create web-specific plan if not provided
+                self.emit_progress("planning", "Creating web application plan...")
+                plan_result = self.web_planning_agent.create_web_plan(user_prompt)
+                project_plan = json_parser.parse_json_response(
+                    plan_result, 
+                    expected_keys=['project_name', 'description', 'project_type', 'frontend_framework'],
+                    agent_type="web_planning",
+                    project_id=project_id
+                )
+                
+                if not project_plan:
+                    self.logger.warning("Web plan parsing failed, using fallback plan")
+                    project_plan = self._create_fallback_web_plan(user_prompt)
+            
+            self.emit_progress("planning", "Web application plan created successfully", project_plan)
+            
+            # Stage 2: Frontend Generation
+            self.emit_progress("frontend", "Generating frontend code (HTML, CSS, JavaScript)...")
+            frontend_result = self.frontend_developer.generate_frontend_code(json.dumps(project_plan))
+            
+            frontend_code = json_parser.parse_json_response(
+                frontend_result,
+                expected_keys=['files'],
+                agent_type="frontend",
+                project_id=project_id
+            )
+            
+            if not frontend_code:
+                self.logger.warning("Frontend parsing failed, using fallback")
+                frontend_code = self._create_fallback_frontend(project_plan)
+            
+            self.emit_progress("frontend", "Frontend code generated successfully")
+            
+            # Stage 3: Backend API Generation
+            self.emit_progress("backend", "Generating backend API...")
+            backend_result = self.backend_api_developer.generate_backend_code(json.dumps(project_plan))
+            
+            backend_code = json_parser.parse_json_response(
+                backend_result,
+                expected_keys=['files'],
+                agent_type="backend",
+                project_id=project_id
+            )
+            
+            if not backend_code:
+                self.logger.warning("Backend parsing failed, using fallback")
+                backend_code = self._create_fallback_backend(project_plan)
+            
+            self.emit_progress("backend", "Backend API generated successfully")
+            
+            # Stage 4: Full-Stack Integration
+            self.emit_progress("integration", "Integrating frontend and backend...")
+            integration_result = self.fullstack_integrator.integrate_fullstack(
+                json.dumps(project_plan),
+                json.dumps(frontend_code),
+                json.dumps(backend_code)
+            )
+            
+            integrated_code = json_parser.parse_json_response(
+                integration_result,
+                expected_keys=['files'],
+                agent_type="integration",
+                project_id=project_id
+            )
+            
+            if integrated_code:
+                final_files = integrated_code.get('files', [])
+                self.emit_progress("integration", "Integration completed successfully")
+            else:
+                # Combine frontend and backend files if integration fails
+                final_files = frontend_code.get('files', []) + backend_code.get('files', [])
+                self.emit_progress("integration", "Using combined files due to integration parsing error")
+            
+            # Stage 5: Write files to disk
+            self.emit_progress("writing", "Writing web application files...")
+            self._write_project_files(project_dir, final_files)
+            
+            # Create web-specific directories if they don't exist
+            self._create_web_directories(project_dir)
+            
+            self.emit_progress("writing", "Web application files written successfully")
+            
+            # Stage 6: Web Application Testing
+            self.emit_progress("testing", "Testing web application...")
+            test_result = self.web_tester.test_web_application(
+                json.dumps({"files": final_files}),
+                json.dumps(project_plan)
+            )
+            
+            web_test_results = json_parser.parse_json_response(
+                test_result,
+                expected_keys=['test_results'],
+                agent_type="web_testing",
+                project_id=project_id
+            )
+            
+            if web_test_results:
+                self.emit_progress("testing", "Web application testing completed", web_test_results)
+            else:
+                self.emit_progress("testing", "Testing completed with parsing issues")
+            
+            # Stage 7: Create web documentation
+            self.emit_progress("documenting", "Creating web application documentation...")
+            documentation = self.document_creator.create_documentation(
+                json.dumps(project_plan), 
+                json.dumps({"files": final_files})
+            )
+            
+            # Write documentation to file
+            doc_path = os.path.join(project_dir, "README.md")
+            try:
+                doc_content = str(documentation) if documentation else self._create_web_readme(project_plan)
+                with open(doc_path, 'w', encoding='utf-8', errors='replace') as f:
+                    f.write(doc_content)
+            except Exception as e:
+                print(f"Error writing web documentation: {e}")
+                # Create basic web README
+                with open(doc_path, 'w', encoding='utf-8', errors='replace') as f:
+                    f.write(self._create_web_readme(project_plan))
+            
+            self.emit_progress("documenting", "Web documentation created successfully")
+            
+            # Stage 8: Create web-specific configuration files
+            self._create_web_config_files(project_dir, project_plan)
+            
+            # Stage 9: Package web project
+            self.emit_progress("packaging", "Packaging web application...")
+            zip_path = self._create_project_zip(project_dir, project_id)
+            self.emit_progress("packaging", "Web application packaged successfully")
+            
+            return {
+                "success": True,
+                "project_id": project_id,
+                "project_type": "web_application",
+                "project_plan": project_plan,
+                "frontend_framework": project_plan.get('frontend_framework', 'vanilla_js'),
+                "backend_framework": project_plan.get('backend_framework', 'flask'),
+                "test_results": web_test_results,
+                "zip_path": zip_path,
+                "project_dir": project_dir
+            }
+            
+        except Exception as e:
+            self.emit_progress("error", f"Web application generation failed: {str(e)}")
             return {"success": False, "error": str(e)}
     
     def _create_fallback_plan(self, user_prompt):
@@ -875,4 +1068,1544 @@ if __name__ == "__main__":
                         self.emit_progress("execution", "Cleaned up existing Streamlit processes")
             except Exception as e:
                 self.emit_progress("execution", f"Could not clean up processes: {str(e)}")
+
+    # Web Application Helper Methods
+    
+    def _create_fallback_web_plan(self, user_prompt):
+        """Create a basic fallback web plan if AI planning fails"""
+        return {
+            "project_name": "web_application",
+            "description": f"Web application based on: {user_prompt}",
+            "project_type": "web_application",
+            "frontend_framework": "vanilla_js",
+            "backend_framework": "flask",
+            "database": "none",
+            "features": ["responsive design", "interactive interface"],
+            "pages": [
+                {
+                    "name": "Home",
+                    "route": "/",
+                    "purpose": "Main landing page",
+                    "components": ["header", "main content", "footer"]
+                }
+            ],
+            "api_endpoints": [
+                {
+                    "method": "GET",
+                    "route": "/api/data",
+                    "purpose": "Get application data",
+                    "data": "JSON response"
+                }
+            ],
+            "files": [
+                {
+                    "path": "index.html",
+                    "type": "html",
+                    "purpose": "Main HTML page",
+                    "dependencies": ["style.css", "script.js"]
+                },
+                {
+                    "path": "static/css/style.css",
+                    "type": "css",
+                    "purpose": "Main stylesheet",
+                    "dependencies": []
+                },
+                {
+                    "path": "static/js/script.js",
+                    "type": "js",
+                    "purpose": "Main JavaScript file",
+                    "dependencies": []
+                },
+                {
+                    "path": "app.py",
+                    "type": "py",
+                    "purpose": "Backend API server",
+                    "dependencies": ["flask", "flask-cors"]
+                }
+            ],
+            "styling": "css",
+            "responsive": True,
+            "main_file": "app.py"
+        }
+    
+    def _create_fallback_frontend(self, project_plan):
+        """Create basic frontend files if generation fails"""
+        project_name = project_plan.get('project_name', 'Web Application')
+        
+        html_content = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{project_name}</title>
+    <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+    <header>
+        <h1>{project_name}</h1>
+    </header>
+    <main>
+        <div class="container">
+            <h2>Welcome to {project_name}</h2>
+            <p>This is a web application generated by the Python Code Generator.</p>
+            <button id="actionBtn">Click Me</button>
+            <div id="result"></div>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2025 {project_name}</p>
+    </footer>
+    <script src="static/js/script.js"></script>
+</body>
+</html>'''
+
+        css_content = '''/* Modern CSS Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+header {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 1rem 0;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+header h1 {
+    color: white;
+    font-size: 2.5rem;
+    font-weight: 300;
+}
+
+main {
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 160px);
+}
+
+.container {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    max-width: 600px;
+    width: 100%;
+}
+
+.container h2 {
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.container p {
+    color: #666;
+    margin-bottom: 2rem;
+}
+
+#actionBtn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: transform 0.3s ease;
+}
+
+#actionBtn:hover {
+    transform: translateY(-2px);
+}
+
+#result {
+    margin-top: 2rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 5px;
+    min-height: 50px;
+}
+
+footer {
+    background: rgba(0, 0, 0, 0.2);
+    color: white;
+    text-align: center;
+    padding: 1rem;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 2rem;
+    }
+    
+    main {
+        padding: 1rem;
+    }
+    
+    .container {
+        padding: 1.5rem;
+    }
+}'''
+
+        js_content = '''// Modern JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    const actionBtn = document.getElementById('actionBtn');
+    const result = document.getElementById('result');
+    
+    actionBtn.addEventListener('click', async function() {
+        try {
+            // Show loading state
+            result.innerHTML = '<p>Loading...</p>';
+            
+            // Simulate API call
+            const response = await fetch('/api/data');
+            
+            if (response.ok) {
+                const data = await response.json();
+                result.innerHTML = `<h3>API Response:</h3><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } else {
+                result.innerHTML = '<p style="color: red;">Error: Could not fetch data from API</p>';
+            }
+        } catch (error) {
+            result.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+        }
+    });
+});'''
+
+        return {
+            "files": [
+                {
+                    "path": "index.html",
+                    "content": html_content
+                },
+                {
+                    "path": "static/css/style.css",
+                    "content": css_content
+                },
+                {
+                    "path": "static/js/script.js",
+                    "content": js_content
+                }
+            ]
+        }
+    
+    def _create_fallback_backend(self, project_plan):
+        """Create basic backend files if generation fails"""
+        project_name = project_plan.get('project_name', 'Web Application')
+        
+        app_content = f'''from flask import Flask, jsonify, send_from_directory
+from flask_cors import CORS
+import os
+
+app = Flask(__name__)
+CORS(app)
+
+# Serve static files
+@app.route('/')
+def index():
+    return send_from_directory('.', 'index.html')
+
+@app.route('/static/<path:filename>')
+def static_files(filename):
+    return send_from_directory('static', filename)
+
+# API endpoints
+@app.route('/api/data')
+def get_data():
+    return jsonify({{
+        "message": "Hello from {project_name} API!",
+        "status": "success",
+        "data": {{
+            "timestamp": "2025-01-01T00:00:00Z",
+            "version": "1.0.0"
+        }}
+    }})
+
+@app.route('/api/health')
+def health_check():
+    return jsonify({{
+        "status": "healthy",
+        "service": "{project_name}"
+    }})
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)'''
+
+        requirements_content = '''Flask==2.3.3
+Flask-CORS==4.0.0'''
+
+        return {
+            "files": [
+                {
+                    "path": "app.py",
+                    "content": app_content
+                },
+                {
+                    "path": "requirements.txt",
+                    "content": requirements_content
+                }
+            ]
+        }
+    
+    def _create_web_directories(self, project_dir):
+        """Create necessary directories for web projects"""
+        directories = [
+            os.path.join(project_dir, 'static'),
+            os.path.join(project_dir, 'static', 'css'),
+            os.path.join(project_dir, 'static', 'js'),
+            os.path.join(project_dir, 'static', 'images'),
+            os.path.join(project_dir, 'templates')
+        ]
+        
+        for directory in directories:
+            os.makedirs(directory, exist_ok=True)
+    
+    def _create_web_readme(self, project_plan):
+        """Create README content for web applications"""
+        project_name = project_plan.get('project_name', 'Web Application')
+        description = project_plan.get('description', 'A web application')
+        frontend_framework = project_plan.get('frontend_framework', 'vanilla_js')
+        backend_framework = project_plan.get('backend_framework', 'flask')
+        
+        return f'''# {project_name}
+
+{description}
+
+## Project Structure
+
+This is a full-stack web application built with:
+- **Frontend**: {frontend_framework.title()}
+- **Backend**: {backend_framework.title()}
+
+## Getting Started
+
+### Prerequisites
+- Python 3.7+
+- pip (Python package manager)
+
+### Installation
+
+1. Clone or extract the project files
+2. Navigate to the project directory
+3. Install Python dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+### Running the Application
+
+1. Start the backend server:
+   ```bash
+   python app.py
+   ```
+
+2. Open your web browser and go to:
+   ```
+   http://localhost:5000
+   ```
+
+## Project Structure
+
+```
+{project_name}/
+├── index.html          # Main HTML page
+├── app.py             # Backend Flask server
+├── requirements.txt   # Python dependencies
+├── static/
+│   ├── css/
+│   │   └── style.css  # Stylesheets
+│   ├── js/
+│   │   └── script.js  # JavaScript files
+│   └── images/        # Image assets
+└── README.md          # This file
+```
+
+## Features
+
+{chr(10).join([f"- {feature}" for feature in project_plan.get('features', ['Responsive design', 'Interactive interface'])])}
+
+## API Endpoints
+
+{chr(10).join([f"- {endpoint.get('method', 'GET')} {endpoint.get('route', '/')}: {endpoint.get('purpose', 'API endpoint')}" for endpoint in project_plan.get('api_endpoints', [])])}
+
+## Development
+
+To modify the application:
+1. Edit HTML in `index.html`
+2. Update styles in `static/css/style.css`
+3. Modify JavaScript in `static/js/script.js`
+4. Add API endpoints in `app.py`
+
+## Deployment
+
+For production deployment:
+1. Set `debug=False` in `app.py`
+2. Use a production WSGI server like Gunicorn
+3. Configure environment variables for sensitive data
+
+## Generated by Python Code Generator
+
+This project was automatically generated by the AI-powered Python Code Generator system.
+'''
+    
+    def _create_web_config_files(self, project_dir, project_plan):
+        """Create configuration files for web applications"""
+        # Create .env.example file
+        env_example_path = os.path.join(project_dir, '.env.example')
+        env_content = '''# Environment Variables
+FLASK_ENV=development
+FLASK_DEBUG=True
+SECRET_KEY=your-secret-key-here
+DATABASE_URL=sqlite:///app.db
+API_BASE_URL=http://localhost:5000/api
+'''
+        
+        try:
+            with open(env_example_path, 'w', encoding='utf-8') as f:
+                f.write(env_content)
+        except Exception as e:
+            print(f"Error creating .env.example: {e}")
+        
+        # Create run.py for easy development
+        run_py_path = os.path.join(project_dir, 'run.py')
+        run_content = '''#!/usr/bin/env python3
+"""
+Development server runner for the web application.
+Run this file to start the development server.
+"""
+
+import os
+import sys
+from app import app
+
+if __name__ == '__main__':
+    print("Starting web application development server...")
+    print("Open your browser and go to: http://localhost:5000")
+    print("Press Ctrl+C to stop the server")
+    
+    try:
+        app.run(debug=True, host='0.0.0.0', port=5000)
+    except KeyboardInterrupt:
+        print("\\nServer stopped.")
+    except Exception as e:
+        print(f"Error starting server: {e}")
+        sys.exit(1)
+'''
+        
+        try:
+            with open(run_py_path, 'w', encoding='utf-8') as f:
+                f.write(run_content)
+        except Exception as e:
+            print(f"Error creating run.py: {e}")
+
+    # Web Application Helper Methods
+    
+    def _create_fallback_web_plan(self, user_prompt):
+        """Create a basic fallback plan for web applications"""
+        return {
+            "project_name": "web_application",
+            "description": f"Web application based on: {user_prompt}",
+            "project_type": "web_application",
+            "frontend_framework": "vanilla_js",
+            "backend_framework": "flask",
+            "database": "sqlite",
+            "features": ["home page", "responsive design", "API endpoints"],
+            "pages": [
+                {
+                    "name": "Home",
+                    "route": "/",
+                    "purpose": "Main landing page",
+                    "components": ["header", "hero section", "content area", "footer"]
+                }
+            ],
+            "api_endpoints": [
+                {
+                    "method": "GET",
+                    "route": "/api/health",
+                    "purpose": "Health check endpoint"
+                }
+            ],
+            "files": [
+                {
+                    "path": "index.html",
+                    "type": "html",
+                    "purpose": "Main HTML page"
+                },
+                {
+                    "path": "static/css/style.css",
+                    "type": "css", 
+                    "purpose": "Main stylesheet"
+                },
+                {
+                    "path": "static/js/script.js",
+                    "type": "js",
+                    "purpose": "Main JavaScript file"
+                },
+                {
+                    "path": "app.py",
+                    "type": "py",
+                    "purpose": "Flask backend application"
+                }
+            ],
+            "styling": "css",
+            "responsive": True,
+            "main_file": "app.py"
+        }
+    
+    def _create_fallback_frontend(self, project_plan):
+        """Create fallback frontend files if generation fails"""
+        return {
+            "files": [
+                {
+                    "path": "index.html",
+                    "content": self._get_fallback_html(project_plan)
+                },
+                {
+                    "path": "static/css/style.css",
+                    "content": self._get_fallback_css()
+                },
+                {
+                    "path": "static/js/script.js", 
+                    "content": self._get_fallback_js()
+                }
+            ]
+        }
+    
+    def _create_fallback_backend(self, project_plan):
+        """Create fallback backend files if generation fails"""
+        return {
+            "files": [
+                {
+                    "path": "database.py",
+                    "content": self._get_fallback_database()
+                },
+                {
+                    "path": "models.py",
+                    "content": self._get_fallback_models()
+                },
+                {
+                    "path": "routes.py",
+                    "content": self._get_fallback_routes()
+                },
+                {
+                    "path": "app.py",
+                    "content": self._get_fallback_app()
+                },
+                {
+                    "path": "run.py",
+                    "content": self._get_fallback_run()
+                },
+                {
+                    "path": "requirements.txt",
+                    "content": "Flask==2.3.2\\nFlask-SQLAlchemy==3.1.1\\nFlask-CORS==4.0.0\\nWerkzeug==2.3.7"
+                }
+            ]
+        }
+    
+    def _create_web_directories(self, project_dir):
+        """Create necessary directories for web application"""
+        directories = [
+            os.path.join(project_dir, 'static'),
+            os.path.join(project_dir, 'static', 'css'),
+            os.path.join(project_dir, 'static', 'js'),
+            os.path.join(project_dir, 'static', 'images'),
+            os.path.join(project_dir, 'templates')
+        ]
+        
+        for directory in directories:
+            os.makedirs(directory, exist_ok=True)
+    
+    def _create_web_config_files(self, project_dir, project_plan):
+        """Create web-specific configuration files"""
+        # Create .env.example
+        env_content = """# Environment Variables for Web Application
+FLASK_ENV=development
+FLASK_DEBUG=True
+SECRET_KEY=your-secret-key-here
+DATABASE_URL=sqlite:///app.db
+API_BASE_URL=http://localhost:8080/api
+"""
+        env_path = os.path.join(project_dir, '.env.example')
+        try:
+            with open(env_path, 'w', encoding='utf-8') as f:
+                f.write(env_content)
+        except Exception as e:
+            print(f"Error creating .env.example: {e}")
+    
+    def _create_web_readme(self, project_plan):
+        """Create README content for web applications"""
+        project_name = project_plan.get('project_name', 'Web Application')
+        description = project_plan.get('description', 'A web application')
+        
+        return f"""# {project_name}
+
+{description}
+
+## Quick Start
+
+1. **Install Dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Run the Application:**
+   ```bash
+   python run.py
+   ```
+
+3. **Open Your Browser:**
+   ```
+   http://localhost:8080
+   ```
+
+## Features
+
+- Responsive web design
+- Modern HTML, CSS, and JavaScript
+- Flask backend with REST API
+- SQLite database integration
+- Cross-browser compatibility
+
+## API Endpoints
+
+- `GET /api/health` - Health check
+- `GET /api/vehicles` - List vehicles
+- `POST /api/bookings` - Create booking
+
+## Development
+
+- **Frontend**: HTML, CSS, JavaScript
+- **Backend**: Flask with SQLAlchemy
+- **Database**: SQLite
+- **Port**: 8080
+
+## Project Structure
+
+```
+{project_name.lower().replace(' ', '_')}/
+├── index.html              # Main HTML page
+├── app.py                  # Flask backend
+├── run.py                  # Development server
+├── database.py             # Database configuration
+├── models.py               # Database models
+├── routes.py               # API routes
+├── requirements.txt        # Dependencies
+├── .env.example           # Environment variables
+├── static/
+│   ├── css/style.css      # Stylesheets
+│   ├── js/script.js       # JavaScript
+│   └── images/            # Images
+└── templates/             # HTML templates
+```
+
+## Troubleshooting
+
+If you encounter any issues:
+
+1. **Port Already in Use**: Try changing the port in `run.py`
+2. **API Connection Failed**: Check that the backend is running
+3. **Database Issues**: Delete the database file and restart
+
+## Next Steps
+
+1. Customize the styling in `static/css/style.css`
+2. Add more features in `static/js/script.js`
+3. Extend the API in `routes.py`
+4. Deploy to a web server for production use
+"""
+
+    def _get_fallback_html(self, project_plan):
+        """Get fallback HTML content"""
+        project_name = project_plan.get('project_name', 'Web Application')
+        return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{project_name}">
+    <title>{project_name}</title>
+    <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <h1>{project_name}</h1>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home" class="hero">
+            <h2>Welcome to {project_name}</h2>
+            <p>A modern web application built with HTML, CSS, JavaScript, and Flask.</p>
+            <button onclick="testAPI()">Test API Connection</button>
+        </section>
+
+        <section id="content">
+            <h3>Features</h3>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>Responsive Design</h4>
+                    <p>Works on all devices and screen sizes.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Modern Tech Stack</h4>
+                    <p>Built with the latest web technologies.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>RESTful API</h4>
+                    <p>Clean and efficient backend API.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 {project_name}. All rights reserved.</p>
+    </footer>
+
+    <script src="static/js/script.js"></script>
+</body>
+</html>"""
+
+    def _get_fallback_css(self):
+        """Get fallback CSS content"""
+        return """/* Modern CSS Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f8f9fa;
+}
+
+/* Header and Navigation */
+header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+nav {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+}
+
+nav h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+nav ul {
+    display: flex;
+    list-style: none;
+    gap: 2rem;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    transition: opacity 0.3s ease;
+}
+
+nav a:hover {
+    opacity: 0.8;
+}
+
+/* Main Content */
+main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.hero {
+    text-align: center;
+    padding: 4rem 0;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    margin-bottom: 3rem;
+}
+
+.hero h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: #2c3e50;
+}
+
+.hero p {
+    font-size: 1.2rem;
+    color: #7f8c8d;
+    margin-bottom: 2rem;
+}
+
+button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+/* Feature Grid */
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.feature-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+}
+
+.feature-card h4 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.feature-card p {
+    color: #7f8c8d;
+}
+
+/* Footer */
+footer {
+    background: #2c3e50;
+    color: white;
+    text-align: center;
+    padding: 2rem 0;
+    margin-top: 3rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    nav {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    nav ul {
+        gap: 1rem;
+    }
+    
+    .hero h2 {
+        font-size: 2rem;
+    }
+    
+    main {
+        padding: 1rem;
+    }
+    
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Loading and Success States */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.success {
+    background: #27ae60 !important;
+}
+
+.error {
+    background: #e74c3c !important;
+}"""
+
+    def _get_fallback_js(self):
+        """Get fallback JavaScript content"""
+        return """// Main JavaScript for Web Application
+
+// Configuration
+const API_BASE_URL = 'http://localhost:8080/api';
+
+// Initialize application when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Web Application Loaded Successfully');
+    initializeApp();
+});
+
+// Initialize application features
+function initializeApp() {
+    setupNavigation();
+    setupAPITesting();
+    loadContent();
+}
+
+// Setup smooth navigation
+function setupNavigation() {
+    const navLinks = document.querySelectorAll('nav a[href^="#"]');
+    
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href').substring(1);
+            const targetElement = document.getElementById(targetId);
+            
+            if (targetElement) {
+                targetElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+}
+
+// Setup API testing functionality
+function setupAPITesting() {
+    // API test button already exists in HTML
+    console.log('API testing ready');
+}
+
+// Load dynamic content
+async function loadContent() {
+    try {
+        // Try to load any dynamic content from API
+        await testAPIConnection();
+    } catch (error) {
+        console.log('Using static content (API not available)');
+    }
+}
+
+// Test API connection
+async function testAPI() {
+    const button = event.target;
+    const originalText = button.textContent;
+    
+    // Show loading state
+    button.textContent = 'Testing...';
+    button.classList.add('loading');
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/health`);
+        
+        if (response.ok) {
+            const data = await response.json();
+            button.textContent = 'API Connected!';
+            button.classList.remove('loading');
+            button.classList.add('success');
+            
+            // Show success message
+            showMessage(`API Status: ${data.message || 'Connected'}`, 'success');
+            
+            // Reset button after 3 seconds
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.classList.remove('success');
+            }, 3000);
+            
+        } else {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+    } catch (error) {
+        button.textContent = 'Connection Failed';
+        button.classList.remove('loading');
+        button.classList.add('error');
+        
+        // Show error message
+        showMessage(`API Connection Failed: ${error.message}`, 'error');
+        
+        // Reset button after 3 seconds
+        setTimeout(() => {
+            button.textContent = originalText;
+            button.classList.remove('error');
+        }, 3000);
+    }
+}
+
+// Show user messages
+function showMessage(message, type = 'info') {
+    // Create message element
+    const messageEl = document.createElement('div');
+    messageEl.textContent = message;
+    messageEl.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 5px;
+        color: white;
+        font-weight: 500;
+        z-index: 1000;
+        max-width: 300px;
+        word-wrap: break-word;
+        background: ${type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : '#3498db'};
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        animation: slideIn 0.3s ease;
+    `;
+    
+    document.body.appendChild(messageEl);
+    
+    // Remove message after 5 seconds
+    setTimeout(() => {
+        messageEl.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => {
+            document.body.removeChild(messageEl);
+        }, 300);
+    }, 5000);
+}
+
+// Add CSS animations for messages
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+// Utility function for API calls
+async function apiCall(endpoint, options = {}) {
+    try {
+        const url = `${API_BASE_URL}${endpoint}`;
+        const response = await fetch(url, {
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            },
+            ...options
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('API call failed:', error);
+        throw error;
+    }
+}
+
+// Test API connection (can be called programmatically)
+async function testAPIConnection() {
+    try {
+        const data = await apiCall('/health');
+        console.log('API connected:', data);
+        return true;
+    } catch (error) {
+        console.log('API not available:', error.message);
+        return false;
+    }
+}"""
+
+    def _get_fallback_database(self):
+        """Get fallback database.py content"""
+        return """\"\"\"
+Database configuration and initialization module.
+This module creates the SQLAlchemy instance to avoid circular imports.
+\"\"\"
+
+from flask_sqlalchemy import SQLAlchemy
+
+# Create the database instance
+db = SQLAlchemy()
+
+def init_db(app):
+    \"\"\"Initialize the database with the Flask app.\"\"\"
+    db.init_app(app)
+    with app.app_context():
+        # Import models here to ensure they are registered
+        from models import User, Vehicle, Booking
+        db.create_all()
+        
+        # Add sample data if tables are empty
+        if Vehicle.query.count() == 0:
+            add_sample_data()
+
+def add_sample_data():
+    \"\"\"Add sample data for testing\"\"\"
+    from models import Vehicle, User
+    
+    # Sample vehicles
+    vehicles = [
+        Vehicle(
+            make='Toyota',
+            model='Camry',
+            year=2023,
+            rental_price=45.00,
+            availability=True,
+            image_url='https://via.placeholder.com/300x200',
+            description='A comfortable sedan for everyday use.'
+        ),
+        Vehicle(
+            make='Honda',
+            model='CR-V',
+            year=2023,
+            rental_price=65.00,
+            availability=True,
+            image_url='https://via.placeholder.com/300x200',
+            description='A spacious SUV for family adventures.'
+        ),
+        Vehicle(
+            make='Ford',
+            model='F-150',
+            year=2022,
+            rental_price=85.00,
+            availability=False,
+            image_url='https://via.placeholder.com/300x200',
+            description='A rugged truck for heavy-duty tasks.'
+        )
+    ]
+    
+    for vehicle in vehicles:
+        db.session.add(vehicle)
+    
+    # Sample user
+    sample_user = User(
+        username='demo_user',
+        email='demo@example.com'
+    )
+    sample_user.set_password('demo123')
+    db.session.add(sample_user)
+    
+    db.session.commit()
+    print('Sample data added successfully!')"""
+
+    def _get_fallback_models(self):
+        """Get fallback models.py content"""
+        return """\"\"\"
+Database models for the web application.
+\"\"\"
+
+from database import db
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
+
+class User(db.Model):
+    \"\"\"User model for authentication and bookings\"\"\"
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    bookings = db.relationship('Booking', backref='user', lazy=True)
+
+    def set_password(self, password):
+        \"\"\"Set password hash\"\"\"
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        \"\"\"Check password against hash\"\"\"
+        return check_password_hash(self.password_hash, password)
+
+    def to_dict(self):
+        \"\"\"Convert to dictionary\"\"\"
+        return {
+            'id': self.id,
+            'username': self.username,
+            'email': self.email,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
+class Vehicle(db.Model):
+    \"\"\"Vehicle model for rental inventory\"\"\"
+    id = db.Column(db.Integer, primary_key=True)
+    make = db.Column(db.String(50), nullable=False)
+    model = db.Column(db.String(50), nullable=False)
+    year = db.Column(db.Integer, nullable=False)
+    rental_price = db.Column(db.Float, nullable=False)
+    availability = db.Column(db.Boolean, default=True)
+    image_url = db.Column(db.String(200))
+    description = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    bookings = db.relationship('Booking', backref='vehicle', lazy=True)
+
+    def to_dict(self):
+        \"\"\"Convert to dictionary\"\"\"
+        return {
+            'id': self.id,
+            'make': self.make,
+            'model': self.model,
+            'year': self.year,
+            'rental_price': self.rental_price,
+            'availability': self.availability,
+            'image_url': self.image_url,
+            'description': self.description,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
+class Booking(db.Model):
+    \"\"\"Booking model for rental transactions\"\"\"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id'), nullable=False)
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
+    total_cost = db.Column(db.Float, nullable=False)
+    status = db.Column(db.String(20), default='confirmed')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        \"\"\"Convert to dictionary\"\"\"
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'vehicle_id': self.vehicle_id,
+            'start_date': self.start_date.isoformat() if self.start_date else None,
+            'end_date': self.end_date.isoformat() if self.end_date else None,
+            'total_cost': self.total_cost,
+            'status': self.status,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }"""
+
+    def _get_fallback_routes(self):
+        """Get fallback routes.py content"""
+        return """\"\"\"
+API routes for the web application.
+\"\"\"
+
+from flask import Blueprint, request, jsonify
+from database import db
+from models import User, Vehicle, Booking
+from datetime import datetime, date
+from werkzeug.security import generate_password_hash, check_password_hash
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Define the blueprint
+api = Blueprint('api', __name__, url_prefix='/api')
+
+@api.route('/health', methods=['GET'])
+def health_check():
+    \"\"\"Health check endpoint\"\"\"
+    return jsonify({
+        'status': 'healthy',
+        'message': 'Backend API is running successfully',
+        'timestamp': datetime.utcnow().isoformat()
+    })
+
+@api.route('/vehicles', methods=['GET'])
+def get_vehicles():
+    \"\"\"Get all vehicles\"\"\"
+    try:
+        vehicles = Vehicle.query.all()
+        return jsonify([vehicle.to_dict() for vehicle in vehicles])
+    except Exception as e:
+        logger.error(f'Error fetching vehicles: {e}')
+        return jsonify({'error': 'Failed to fetch vehicles'}), 500
+
+@api.route('/vehicles/<int:vehicle_id>', methods=['GET'])
+def get_vehicle(vehicle_id):
+    \"\"\"Get specific vehicle\"\"\"
+    try:
+        vehicle = Vehicle.query.get_or_404(vehicle_id)
+        return jsonify(vehicle.to_dict())
+    except Exception as e:
+        logger.error(f'Error fetching vehicle {vehicle_id}: {e}')
+        return jsonify({'error': 'Vehicle not found'}), 404
+
+@api.route('/vehicles', methods=['POST'])
+def create_vehicle():
+    \"\"\"Create new vehicle\"\"\"
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['make', 'model', 'year', 'rental_price']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+        
+        vehicle = Vehicle(
+            make=data['make'],
+            model=data['model'],
+            year=int(data['year']),
+            rental_price=float(data['rental_price']),
+            availability=data.get('availability', True),
+            image_url=data.get('image_url'),
+            description=data.get('description')
+        )
+        
+        db.session.add(vehicle)
+        db.session.commit()
+        
+        return jsonify(vehicle.to_dict()), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f'Error creating vehicle: {e}')
+        return jsonify({'error': 'Failed to create vehicle'}), 500
+
+@api.route('/bookings', methods=['GET'])
+def get_bookings():
+    \"\"\"Get all bookings\"\"\"
+    try:
+        bookings = Booking.query.all()
+        return jsonify([booking.to_dict() for booking in bookings])
+    except Exception as e:
+        logger.error(f'Error fetching bookings: {e}')
+        return jsonify({'error': 'Failed to fetch bookings'}), 500
+
+@api.route('/bookings', methods=['POST'])
+def create_booking():
+    \"\"\"Create new booking\"\"\"
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['vehicle_id', 'start_date', 'end_date', 'user_id']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+        
+        # Check if vehicle exists and is available
+        vehicle = Vehicle.query.get(data['vehicle_id'])
+        if not vehicle:
+            return jsonify({'error': 'Vehicle not found'}), 404
+        
+        if not vehicle.availability:
+            return jsonify({'error': 'Vehicle not available'}), 400
+        
+        # Parse dates
+        start_date = datetime.strptime(data['start_date'], '%Y-%m-%d').date()
+        end_date = datetime.strptime(data['end_date'], '%Y-%m-%d').date()
+        
+        # Calculate total cost
+        days = (end_date - start_date).days
+        if days <= 0:
+            return jsonify({'error': 'Invalid date range'}), 400
+        
+        total_cost = days * vehicle.rental_price
+        
+        booking = Booking(
+            user_id=data['user_id'],
+            vehicle_id=data['vehicle_id'],
+            start_date=start_date,
+            end_date=end_date,
+            total_cost=total_cost
+        )
+        
+        db.session.add(booking)
+        db.session.commit()
+        
+        return jsonify(booking.to_dict()), 201
+        
+    except ValueError as e:
+        return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f'Error creating booking: {e}')
+        return jsonify({'error': 'Failed to create booking'}), 500
+
+@api.route('/users', methods=['POST'])
+def create_user():
+    \"\"\"Create new user\"\"\"
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['username', 'email', 'password']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+        
+        # Check if user already exists
+        if User.query.filter_by(username=data['username']).first():
+            return jsonify({'error': 'Username already exists'}), 400
+        
+        if User.query.filter_by(email=data['email']).first():
+            return jsonify({'error': 'Email already exists'}), 400
+        
+        user = User(
+            username=data['username'],
+            email=data['email']
+        )
+        user.set_password(data['password'])
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        return jsonify(user.to_dict()), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f'Error creating user: {e}')
+        return jsonify({'error': 'Failed to create user'}), 500
+
+# Error handlers
+@api.errorhandler(404)
+def not_found(error):
+    return jsonify({'error': 'Resource not found'}), 404
+
+@api.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    return jsonify({'error': 'Internal server error'}), 500"""
+
+    def _get_fallback_app(self):
+        """Get fallback app.py content"""
+        return """\"\"\"
+Flask web application with frontend and API routes.
+\"\"\"
+
+from flask import Flask, render_template, send_from_directory
+from flask_cors import CORS
+import os
+from database import db, init_db
+
+# Initialize Flask application with template and static folders
+app = Flask(__name__, 
+            template_folder='.',  # Look for templates in current directory
+            static_folder='static')  # Static files in static folder
+
+# Configure the database
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'app.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+
+# Initialize database
+init_db(app)
+
+# Enable CORS for all routes
+CORS(app)
+
+# Import and register routes after db is initialized
+from routes import api
+app.register_blueprint(api)
+
+# Frontend routes
+@app.route('/')
+def index():
+    \"\"\"Serve the main HTML page\"\"\"
+    return render_template('index.html')
+
+@app.route('/favicon.ico')
+def favicon():
+    \"\"\"Handle favicon requests\"\"\"
+    return send_from_directory(app.static_folder, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
+# Basic API route for testing
+@app.route('/test')
+def test_backend():
+    \"\"\"Test endpoint to verify backend is running\"\"\"
+    return {
+        'message': 'Backend is running successfully!',
+        'status': 'ok',
+        'framework': 'Flask'
+    }
+
+# Error handlers
+@app.errorhandler(404)
+def page_not_found(e):
+    \"\"\"Handle 404 errors\"\"\"
+    return {'error': 'Page not found'}, 404
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    \"\"\"Handle 500 errors\"\"\"
+    return {'error': 'Internal server error'}, 500
+
+# Run the application if this script is executed
+if __name__ == '__main__':
+    app.run(debug=True, host='127.0.0.1', port=8080)"""
+
+    def _get_fallback_run(self):
+        """Get fallback run.py content"""
+        return """#!/usr/bin/env python3
+\"\"\"
+Development server runner for the web application.
+Run this file to start the development server.
+\"\"\"
+
+import os
+import sys
+from app import app
+
+def main():
+    \"\"\"Main function to run the development server\"\"\"
+    print("Starting web application development server...")
+    print("Open your browser and go to: http://localhost:8080")
+    print("Press Ctrl+C to stop the server")
+    print("-" * 50)
+    
+    try:
+        # Run the Flask development server
+        app.run(
+            debug=True,
+            host='127.0.0.1',
+            port=8080,
+            use_reloader=True,
+            use_debugger=True
+        )
+    except KeyboardInterrupt:
+        print("\\nServer stopped by user.")
+    except OSError as e:
+        if "Address already in use" in str(e):
+            print("\\nError: Port 8080 is already in use.")
+            print("Try running on a different port:")
+            print("python -c \\"from app import app; app.run(debug=True, port=8081)\\"")
+        else:
+            print(f"\\nError starting server: {e}")
+    except Exception as e:
+        print(f"\\nUnexpected error: {e}")
+        sys.exit(1)
+
+if __name__ == '__main__':
+    main()"""
 

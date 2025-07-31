@@ -37,30 +37,64 @@ class PlanningAgent(BaseAgent):
     def __init__(self):
         super().__init__(
             role='Project Planning Specialist',
-            goal='Analyze user requirements and create comprehensive project plans for Python applications',
-            backstory="""You are an expert software architect with years of experience in Python development. 
+            goal='Analyze user requirements and create comprehensive project plans for both Python applications and web applications',
+            backstory="""You are an expert software architect with years of experience in both Python development and web development. 
             You excel at breaking down complex requirements into structured, implementable plans. You understand 
-            the nuances of different Python frameworks and can recommend the best approach for any given project."""
+            the nuances of different Python frameworks, web frameworks, and can determine whether a project needs 
+            a simple Python application, a web application with HTML/CSS/JS, or a full-stack solution."""
         )
     
     def create_plan(self, user_prompt):
         description = f"""
-        Analyze the following user requirement and create a comprehensive project plan:
+        Analyze the following user requirement and determine the appropriate project type and create a comprehensive plan:
         
         User Requirement: {user_prompt}
         
-        Create a detailed plan in JSON format that includes:
+        First, determine the project type:
+        - If it mentions "website", "web app", "webpage", "HTML", "CSS", "JavaScript", "frontend", "backend", "API", "responsive", "browser", "online", or similar web-related terms, classify as 'web_application'
+        - If it's a simple utility, data processing, automation, or desktop application, classify as 'python_application'
+        
+        For PYTHON APPLICATIONS, create a detailed plan in JSON format that includes:
         1. project_name: A suitable name for the project
         2. description: Brief description of what the project does
-        3. dependencies: List of Python packages needed
-        4. gui_framework: 'streamlit', 'tkinter', or 'none'
-        5. files: Array of file objects with:
+        3. project_type: 'python_application'
+        4. dependencies: List of Python packages needed
+        5. gui_framework: 'streamlit', 'tkinter', or 'none'
+        6. files: Array of file objects with:
            - path: relative file path
            - purpose: what this file does
            - functions: list of main functions to implement
            - imports: list of required imports
-        6. main_file: ALWAYS set this to "main.py"
-        7. architecture: brief description of the project structure
+        7. main_file: ALWAYS set this to "main.py"
+        8. architecture: brief description of the project structure
+        
+        For WEB APPLICATIONS, create a detailed plan in JSON format that includes:
+        1. project_name: A suitable name for the project
+        2. description: Brief description of what the web application does
+        3. project_type: 'web_application'
+        4. frontend_framework: 'react', 'vue', 'vanilla_js' based on complexity
+        5. backend_framework: 'flask', 'fastapi', 'django' based on needs
+        6. database: 'sqlite', 'json_file', 'mongodb', or 'none'
+        7. features: Array of main features to implement
+        8. pages: Array of page objects with:
+           - name: page name
+           - route: URL route
+           - purpose: what this page does
+           - components: list of UI components needed
+        9. api_endpoints: Array of API endpoint objects with:
+           - method: GET, POST, PUT, DELETE
+           - route: API route
+           - purpose: what this endpoint does
+           - data: expected data format
+        10. files: Array of file objects with:
+           - path: relative file path
+           - type: 'html', 'css', 'js', 'py', 'json'
+           - purpose: what this file does
+           - dependencies: list of required imports/includes
+        11. styling: 'css', 'tailwind', 'bootstrap' based on requirements
+        12. responsive: true/false for mobile responsiveness
+        13. main_file: Set to "app.py" for backend entry point
+        14. architecture: brief description of the web application structure
         
         IMPORTANT: Always include main.py as the entry point. The system will auto-generate this file to handle different application types (Streamlit, Tkinter, console) appropriately.
         

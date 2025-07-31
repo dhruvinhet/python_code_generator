@@ -1,9 +1,20 @@
 # Python Code Generator - AI-Powered Multi-Agent System
 
-A complete multi-agent AI-based Python code generator system that uses CrewAI and Google's Gemini API to automatically plan, generate, test, and package Python projects based on natural language descriptions.
+A complete multi-agent AI-based code generator system that uses Google's Gemini API to automatically plan, generate, test, and package both **Python applications** and **web applications** based on natural language descriptions.
+
+## 🆕 Web Application Support
+
+The system now supports full-stack web development! You can generate:
+- **Complete web applications** with HTML, CSS, JavaScript frontend
+- **Backend APIs** using Flask or FastAPI  
+- **Responsive, modern web interfaces**
+- **Full-stack integration** between frontend and backend
+
+See [WEB_APPLICATION_SUPPORT.md](WEB_APPLICATION_SUPPORT.md) for detailed documentation.
 
 ## Features
 
+### Python Applications
 - **Multi-Agent Architecture**: Uses specialized AI agents for different tasks:
   - **Planning Agent**: Analyzes requirements and creates comprehensive project plans
   - **Sr. Developer 1 Agent**: Generates high-quality Python code
@@ -12,22 +23,48 @@ A complete multi-agent AI-based Python code generator system that uses CrewAI an
   - **Detailed Tester Agent**: Conducts functional testing
   - **Document Creator Agent**: Generates comprehensive documentation
 
+### Web Applications
+- **Web Development Agents**: Specialized agents for web development:
+  - **Web Planning Agent**: Creates comprehensive web application plans
+  - **Frontend Developer Agent**: Generates HTML, CSS, JavaScript code
+  - **Backend API Agent**: Creates Flask/FastAPI backend servers
+  - **Full-Stack Integrator Agent**: Combines frontend and backend components
+  - **Web Tester Agent**: Tests web applications for functionality and responsiveness
+
+### General Features
+- **Intelligent Project Detection**: Automatically determines if you want a Python app or web app
 - **Real-time Progress Tracking**: WebSocket-based live updates showing agent progress
 - **Professional UI**: Dark-themed React interface with modern design
-- **Complete Project Generation**: Generates entire Python projects with proper structure
+- **Complete Project Generation**: Generates entire projects with proper structure
 - **Automatic Testing**: Runtime and functional testing of generated code
 - **Documentation Generation**: Automatic README and setup instructions
 - **Project Packaging**: Downloads projects as ZIP files
 
+## Project Types Supported
+
+### Python Applications
+- **Streamlit apps**: Interactive data applications and dashboards
+- **Tkinter desktop apps**: GUI applications for desktop use
+- **Console applications**: Command-line tools and utilities
+- **Data processing scripts**: Pandas, NumPy, data analysis tools
+
+### Web Applications
+- **Full-stack web apps**: Complete web applications with frontend and backend
+- **Responsive websites**: Mobile-first, modern web interfaces
+- **REST APIs**: Backend services with database integration
+- **Interactive web tools**: Dynamic web applications with real-time features
+
 ## System Architecture
 
 ```
-Frontend (React)     Backend (Flask)     AI Agents (CrewAI)
-     |                      |                    |
-     |-- WebSocket ---------|                    |
-     |-- REST API ----------|-- Agent Manager ---|
-     |                      |                    |
-     |                      |-- Project Files ---|
+Frontend (React)     Backend (Flask)     AI Agents (Multi-Agent)
+     |                      |                         |
+     |-- WebSocket ---------|                         |
+     |-- REST API ----------|-- Project Manager ------|
+     |                      |                         |
+     |                      |-- Python Agents -------|
+     |                      |-- Web Agents -----------|
+     |                      |-- Project Files --------|
      |                      |-- ZIP Generation   |
 ```
 

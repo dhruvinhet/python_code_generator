@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Rental App</title>
+    <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="#" class="logo">Vehicle Rental</a>
+            <ul>
+                <li><a href="#vehicles">Vehicles</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li><a href="login.html">Login</a></li>
+                <li><a href="register.html">Register</a></li>
+                <li><button id="test-api-connection">Test API Connection</button></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="hero">
+            <h1>Find Your Perfect Ride</h1>
+            <p>Explore our wide selection of vehicles and book your rental today!</p>
+            <input type="text" id="search-input" placeholder="Search for vehicles...">
+            <button id="search-button">Search</button>
+        </section>
+
+        <section id="vehicles">
+            <h2>Available Vehicles</h2>
+            <div class="vehicle-list" id="vehicle-list">
+                <!-- Vehicle cards will be dynamically added here -->
+                <div class="loading">Loading vehicles...</div>
+            </div>
+        </section>
+
+        <section id="about">
+            <h2>About Us</h2>
+            <p>We are a leading vehicle rental company providing reliable and affordable transportation solutions.</p>
+        </section>
+
+        <section id="contact">
+            <h2>Contact Us</h2>
+            <p>Email: info@vehiclerental.com</p>
+            <p>Phone: 1-800-VEHICLE</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Vehicle Rental App</p>
+    </footer>
+
+    <script src="static/js/script.js"></script>
+</body>
+</html>
