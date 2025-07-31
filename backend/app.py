@@ -8,6 +8,7 @@ import zipfile
 from datetime import datetime
 from project_manager import ProjectManager
 from config import Config
+from parsing_debugger import debug_logger
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = Config.SECRET_KEY
@@ -459,6 +460,15 @@ def handle_join_project(data):
         from flask_socketio import join_room
         join_room(project_id)
         emit('joined_project', {'project_id': project_id})
+
+@app.route('/api/debug/parsing-stats', methods=['GET'])
+def get_parsing_stats():
+    """Get JSON parsing failure statistics for debugging"""
+    try:
+        stats = debug_logger.get_failure_stats()
+        return jsonify(stats)
+    except Exception as e:
+        return jsonify({"error": f"Failed to get parsing stats: {str(e)}"}), 500
 
 if __name__ == '__main__':
     print("Starting Python Code Generator API...")

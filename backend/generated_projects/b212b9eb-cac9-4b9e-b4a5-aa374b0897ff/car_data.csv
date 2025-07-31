@@ -1,0 +1,16 @@
+car_id,model,daily_rate,is_available
+CAR001,Toyota Camry,45.00,True
+CAR002,Honda Civic,40.00,True
+CAR003,Ford Mustang,75.00,True
+CAR004,BMW 3 Series,85.00,True
+CAR005,Mercedes C-Class,90.00,True
+CAR006,Audi A4,80.00,True
+CAR007,Nissan Altima,42.00,True
+CAR008,Chevrolet Malibu,38.00,True
+CAR009,Hyundai Elantra,35.00,True
+CAR010,Volkswagen Jetta,48.00,True
+CAR011,Tesla Model 3,120.00,True
+CAR012,Jeep Cherokee,65.00,True
+CAR013,Subaru Outback,55.00,True
+CAR014,Mazda CX-5,50.00,True
+CAR015,Kia Optima,43.00,True

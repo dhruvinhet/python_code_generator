@@ -6,12 +6,14 @@ import shutil
 import zipfile
 import webbrowser
 import time
+import logging
 from datetime import datetime
 from agents import (
     PlanningAgent, SrDeveloper1Agent, SrDeveloper2Agent, 
     TesterAgent, DetailedTesterAgent, DocumentCreatorAgent
 )
 from config import Config
+from json_parser import json_parser
 
 class ProjectManager:
     def __init__(self, socketio=None):
@@ -22,6 +24,10 @@ class ProjectManager:
         self.tester = TesterAgent()
         self.detailed_tester = DetailedTesterAgent()
         self.document_creator = DocumentCreatorAgent()
+        
+        # Set up logging
+        logging.basicConfig(level=logging.INFO)
+        self.logger = logging.getLogger(__name__)
         
         # Ensure directories exist
         os.makedirs(Config.GENERATED_PROJECTS_DIR, exist_ok=True)
@@ -48,23 +54,21 @@ class ProjectManager:
             self.emit_progress("planning", "Analyzing requirements and creating project plan...")
             plan_result = self.planning_agent.create_plan(user_prompt)
             
-            # Parse the plan result
-            try:
-                if isinstance(plan_result, str):
-                    # Extract JSON from the result if it's wrapped in text
-                    start_idx = plan_result.find('{')
-                    end_idx = plan_result.rfind('}') + 1
-                    if start_idx != -1 and end_idx != 0:
-                        plan_json = plan_result[start_idx:end_idx]
-                        project_plan = json.loads(plan_json)
-                    else:
-                        raise ValueError("No valid JSON found in plan result")
-                else:
-                    project_plan = plan_result
-            except (json.JSONDecodeError, ValueError) as e:
-                self.emit_progress("planning", f"Error parsing plan: {str(e)}")
-                # Create a fallback plan
-                project_plan = self._create_fallback_plan(user_prompt)
+            # Parse the plan result using robust parser
+            self.logger.info(f"Parsing plan result, type: {type(plan_result)}, length: {len(str(plan_result)) if plan_result else 0}")
+            project_plan = json_parser.parse_json_response(
+                plan_result, 
+                expected_keys=['project_name', 'description', 'files', 'main_file'],
+                agent_type="planning",
+                project_id=project_id
+            )
+            
+            if not project_plan:
+                self.logger.warning("Plan parsing failed, using fallback plan")
+                self.emit_progress("planning", "Error parsing plan - using fallback plan")
+                project_plan = json_parser.create_fallback_structure("project_plan", user_prompt)
+            else:
+                self.logger.info("Plan parsed successfully")
             
             self.emit_progress("planning", "Project plan created successfully", project_plan)
             
@@ -72,21 +76,23 @@ class ProjectManager:
             self.emit_progress("coding", "Generating Python code...")
             code_result = self.sr_developer1.generate_code(json.dumps(project_plan))
             
-            # Parse the code result
-            try:
-                if isinstance(code_result, str):
-                    start_idx = code_result.find('{')
-                    end_idx = code_result.rfind('}') + 1
-                    if start_idx != -1 and end_idx != 0:
-                        code_json = code_result[start_idx:end_idx]
-                        generated_code = json.loads(code_json)
-                    else:
-                        raise ValueError("No valid JSON found in code result")
-                else:
-                    generated_code = code_result
-            except (json.JSONDecodeError, ValueError) as e:
-                self.emit_progress("coding", f"Error parsing generated code: {str(e)}")
-                return {"success": False, "error": f"Code generation failed: {str(e)}"}
+            # Parse the code result using robust parser
+            self.logger.info(f"Parsing code result, type: {type(code_result)}, length: {len(str(code_result)) if code_result else 0}")
+            generated_code = json_parser.parse_json_response(
+                code_result,
+                expected_keys=['files'],
+                agent_type="coding",
+                project_id=project_id
+            )
+            
+            if not generated_code:
+                self.logger.warning("Code parsing failed, using fallback code")
+                self.emit_progress("coding", "Error parsing generated code - using fallback")
+                generated_code = json_parser.create_fallback_structure("code_files", str(code_result)[:500])
+                if not generated_code:
+                    return {"success": False, "error": "Code generation failed: Unable to parse or create fallback code"}
+            else:
+                self.logger.info("Code parsed successfully")
             
             self.emit_progress("coding", "Code generated successfully")
             
@@ -97,23 +103,21 @@ class ProjectManager:
                 json.dumps(generated_code)
             )
             
-            # Parse the fixed code result
-            try:
-                if isinstance(fixed_code_result, str):
-                    start_idx = fixed_code_result.find('{')
-                    end_idx = fixed_code_result.rfind('}') + 1
-                    if start_idx != -1 and end_idx != 0:
-                        fixed_code_json = fixed_code_result[start_idx:end_idx]
-                        fixed_code = json.loads(fixed_code_json)
-                    else:
-                        raise ValueError("No valid JSON found in fixed code result")
-                else:
-                    fixed_code = fixed_code_result
-                
-                # Use the fixed code, fallback to original if parsing fails
+            # Parse the fixed code result using robust parser
+            fixed_code = json_parser.parse_json_response(
+                fixed_code_result,
+                expected_keys=['files'],
+                agent_type="review",
+                project_id=project_id
+            )
+            
+            if fixed_code:
+                # Use the fixed code
                 final_code = fixed_code.get('files', generated_code.get('files', []))
-            except (json.JSONDecodeError, ValueError) as e:
-                self.emit_progress("reviewing", f"Using original code due to parsing error: {str(e)}")
+                self.emit_progress("reviewing", "Code review and fixes applied successfully")
+            else:
+                # Fallback to original code if parsing fails
+                self.emit_progress("reviewing", "Using original code due to parsing error in fixed code")
                 final_code = generated_code.get('files', [])
             
             self.emit_progress("reviewing", "Code review completed")
@@ -141,20 +145,19 @@ class ProjectManager:
                     error_traceback
                 )
                 
-                try:
-                    if isinstance(fixed_code_result, str):
-                        start_idx = fixed_code_result.find('{')
-                        end_idx = fixed_code_result.rfind('}') + 1
-                        if start_idx != -1 and end_idx != 0:
-                            fixed_code_json = fixed_code_result[start_idx:end_idx]
-                            fixed_code = json.loads(fixed_code_json)
-                            final_code = fixed_code.get('files', final_code)
-                            
-                            # Rewrite files and test again
-                            self._write_project_files(project_dir, final_code)
-                            runtime_success, error_traceback = self._test_runtime(project_dir, main_file)
-                except (json.JSONDecodeError, ValueError):
-                    pass
+                # Parse the runtime-fixed code using robust parser
+                fixed_code = json_parser.parse_json_response(
+                    fixed_code_result,
+                    expected_keys=['files'],
+                    agent_type="runtime_fix",
+                    project_id=project_id
+                )
+                
+                if fixed_code:
+                    final_code = fixed_code.get('files', final_code)
+                    # Rewrite files and test again
+                    self._write_project_files(project_dir, final_code)
+                    runtime_success, error_traceback = self._test_runtime(project_dir, main_file)
             
             if runtime_success:
                 self.emit_progress("testing", "Runtime testing passed")

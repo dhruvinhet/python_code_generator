@@ -64,6 +64,13 @@ class PlanningAgent(BaseAgent):
         
         IMPORTANT: Always include main.py as the entry point. The system will auto-generate this file to handle different application types (Streamlit, Tkinter, console) appropriately.
         
+        CRITICAL JSON FORMAT REQUIREMENTS:
+        - Return ONLY valid JSON, no additional text or markdown
+        - Escape all backslashes in strings (use \\\\ instead of \\)
+        - Escape all quotes in strings (use \\" instead of ")
+        - Do NOT include any code examples or multi-line strings in the JSON
+        - Keep all content simple and JSON-safe
+        
         Return ONLY valid JSON, no additional text.
         """
         
@@ -111,6 +118,14 @@ class SrDeveloper1Agent(BaseAgent):
         - For console apps: main.py should run the application logic
         - The main.py should handle different execution contexts automatically
         
+        CRITICAL JSON FORMAT REQUIREMENTS:
+        - Return ONLY valid JSON, no additional text or markdown
+        - Escape all backslashes in code strings (use \\\\ for each \\)
+        - Escape all quotes in code strings (use \\" for each ")
+        - Be extra careful with escape sequences in Python code
+        - Test JSON validity before returning
+        - Do NOT wrap in markdown code blocks
+        
         Return ONLY valid JSON, no additional text.
         """
         
@@ -157,6 +172,14 @@ class SrDeveloper2Agent(BaseAgent):
                 ...
             ]
         }}
+        
+        CRITICAL JSON FORMAT REQUIREMENTS:
+        - Return ONLY valid JSON, no additional text or markdown
+        - Escape all backslashes in code strings (use \\\\ for each \\)
+        - Escape all quotes in code strings (use \\" for each ")
+        - Be extra careful with escape sequences in Python code
+        - Test JSON validity before returning
+        - Do NOT wrap in markdown code blocks
         
         Return ONLY valid JSON, no additional text.
         """
