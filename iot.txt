@@ -1,0 +1,1 @@
+to interface any sensor any actuators such as DC/ Servo / Stepper motor,relays etc. with raspberry pi-pico/ESP8266 boards/ Arduino Uno.
