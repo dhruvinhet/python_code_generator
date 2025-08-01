@@ -7,4 +7,5 @@ flask-socketio
 python-socketio
 eventlet
 python-dotenv
+psutil
 

@@ -1,0 +1,21 @@
+{
+  "timestamp": "2025-08-01T00:57:16.888774",
+  "agent_type": "review",
+  "project_id": "4336fdb8-7882-49de-ab77-25511e0dbfed",
+  "error_message": "All parsing strategies failed",
+  "response_length": 371,
+  "response_type": "str",
+  "response_preview": "Error executing task: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. [violations {\n}\n, links {\n  description: \"Learn more about Gemini API quotas\"\n  url: \"https://ai.google.dev/gemini-api/docs/rate-limits\"\n}\n, retry_delay {\n  seconds: 42\n}\n]",
+  "full_response": "Error executing task: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. [violations {\n}\n, links {\n  description: \"Learn more about Gemini API quotas\"\n  url: \"https://ai.google.dev/gemini-api/docs/rate-limits\"\n}\n, retry_delay {\n  seconds: 42\n}\n]",
+  "analysis": {
+    "has_json_brackets": true,
+    "has_markdown_wrapper": false,
+    "has_unescaped_quotes": 4,
+    "has_unescaped_backslashes": 0,
+    "line_count": 10,
+    "potential_json_start": 211,
+    "potential_json_end": 368,
+    "contains_code_keywords": false,
+    "likely_issue": "unescaped_quotes"
+  }
+}

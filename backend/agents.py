@@ -13,7 +13,7 @@ class BaseAgent:
         self.role = role
         self.goal = goal
         self.backstory = backstory
-        self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
     
     def execute_task(self, description):
         """Execute a task using the Gemini model"""

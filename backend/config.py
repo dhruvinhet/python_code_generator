@@ -10,7 +10,7 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
     
     # CrewAI Configuration
-    CREWAI_MODEL = "gemini/gemini-2.0-flash-exp"
+    CREWAI_MODEL = "gemini/gemini-2.5-flash"
     
     # Project Generation Settings
     MAX_PROJECT_SIZE = 50  # Maximum number of files

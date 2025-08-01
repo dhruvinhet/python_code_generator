@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AVL Tree Visualizer</title>
+    <meta name="description" content="Visualize AVL tree creation step-by-step with interactive input.">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50%25' y='50%25' font-size='80' text-anchor='middle' dominant-baseline='central'%3E%E2%97%86%3C/text%3E%3C/svg%3E" type="image/svg+xml">
+</head>
+<body>
+    <header class="site-header">
+        <h1 class="site-title"><a href="/" aria-label="Home - AVL Tree Visualizer">AVL Tree Visualizer</a></h1>
+        <nav aria-label="Main navigation">
+            <ul class="main-nav-list">
+                <li><a href="#input-section" aria-label="Go to Input Section">Home</a></li>
+                <li><a href="#instructions" aria-label="Go to Instructions Section">About</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <section id="instructions" class="card">
+            <h2 class="section-title">About This Visualizer</h2>
+            <p>Welcome to the AVL Tree Visualizer! This tool allows you to input a sequence of numbers and watch as they are inserted into an AVL tree. The AVL tree is a self-balancing binary search tree, which maintains its balance factor (the difference in height between left and right subtrees) to be -1, 0, or 1. This ensures that tree operations (insertion, deletion, search) remain efficient, even for large datasets.</p>
+            <p>To get started, simply enter numbers into the input field below, separated by commas. Click "Build Tree" to visualize the resulting AVL tree.</p>
+        </section>
+
+        <section id="input-section" class="card">
+            <h2 class="section-title">Enter Numbers</h2>
+            <form id="tree-input-form" class="input-form">
+                <div class="form-group">
+                    <label for="numbers-input">Numbers (comma-separated):</label>
+                    <input type="text" id="numbers-input" placeholder="e.g., 10, 5, 15, 3, 7, 12, 18" aria-label="Enter numbers separated by commas" required>
+                </div>
+                <div class="button-group">
+                    <button type="submit" id="build-tree-btn" class="btn btn-primary">Build Tree</button>
+                    <button type="button" id="clear-tree-btn" class="btn btn-secondary">Clear</button>
+                    <button type="button" id="test-api-btn" class="btn btn-info">Test API Connection</button>
+                </div>
+                <div id="message-area" class="message-area" role="status" aria-live="polite"></div>
+            </form>
+        </section>
+
+        <section id="visualization-section" class="card">
+            <h2 class="section-title">AVL Tree Visualization</h2>
+            <div id="loading-indicator" class="loading-indicator" aria-hidden="true">
+                <div class="spinner"></div>
+                <p>Building tree...</p>
+            </div>
+            <div id="tree-visualization" class="tree-visualization" aria-label="AVL Tree display area"></div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; 2023 AVL Tree Visualizer. All rights reserved.</p>
+    </footer>
+
+    <script src="/static/js/script.js"></script>
+</body>
+</html>

@@ -13,7 +13,7 @@ class BaseWebAgent:
         self.role = role
         self.goal = goal
         self.backstory = backstory
-        self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
     
     def execute_task(self, description):
         """Execute a task using the Gemini model"""
@@ -116,22 +116,30 @@ class FrontendDeveloperAgent(BaseWebAgent):
         
         CRITICAL REQUIREMENTS FOR PRODUCTION-READY CODE:
 
-        1. HTML REQUIREMENTS:
+        1. **COMPLETE PROJECT STRUCTURE** - Generate ALL necessary files:
+        - Main index.html with navigation to ALL pages mentioned
+        - Create ACTUAL HTML files for every navigation link (about.html, contact.html, login.html, etc.)
+        - Each page must have identical navigation and relevant content
+        - All pages must be fully functional, not placeholder pages
+
+        2. **HTML REQUIREMENTS**:
         - Use semantic HTML5 elements (header, nav, main, section, article, footer)
         - Include proper DOCTYPE and meta tags for responsive design
         - Add accessibility attributes (alt text, ARIA labels, proper headings)
         - Ensure all images have fallback alt text
         - Use proper form validation attributes where needed
+        - Every navigation link MUST have a corresponding HTML file
 
-        2. CSS REQUIREMENTS:
+        3. **CSS REQUIREMENTS**:
         - Create mobile-first responsive design with proper breakpoints
         - Use modern CSS features (Flexbox, Grid, CSS Variables)
         - Include hover states and smooth transitions
         - Ensure proper contrast ratios for accessibility
         - Add loading states and visual feedback for user interactions
-        - Style vehicle cards, buttons, forms with professional appearance
+        - ALL CSS classes must exactly match HTML class names
+        - ALL CSS IDs must exactly match HTML element IDs
 
-        3. JAVASCRIPT REQUIREMENTS:
+        4. **JAVASCRIPT REQUIREMENTS**:
         - Use modern ES6+ syntax (async/await, arrow functions, const/let)
         - Implement proper error handling with try-catch blocks
         - Add loading states during API calls
@@ -141,7 +149,7 @@ class FrontendDeveloperAgent(BaseWebAgent):
         - Add console logging for debugging
         - Include form validation and user feedback
 
-        4. API INTEGRATION REQUIREMENTS:
+        5. **API INTEGRATION REQUIREMENTS**:
         - Configure API base URL as http://localhost:8080/api
         - Implement GET /api/vehicles endpoint calls
         - Add error handling for network failures
@@ -149,13 +157,27 @@ class FrontendDeveloperAgent(BaseWebAgent):
         - Provide fallback sample data if API is unavailable
         - Add proper HTTP status code handling
 
-        5. USER EXPERIENCE REQUIREMENTS:
+        6. **USER EXPERIENCE REQUIREMENTS**:
         - Add smooth scrolling navigation
         - Include interactive buttons and hover effects
         - Provide clear visual feedback for user actions
-        - Display vehicle information clearly (make, model, price, availability)
-        - Add "Rent Now" functionality with proper event handling
+        - Display information clearly
+        - Add functional buttons with proper event handling
         - Include a test API connection button for debugging
+
+        **MANDATORY: COMPLETE PAGE GENERATION**
+        If your navigation includes links like:
+        - "About" -> create about.html
+        - "Contact" -> create contact.html  
+        - "Services" -> create services.html
+        - "Login" -> create login.html
+        - "Register" -> create register.html
+
+        Each page must have:
+        - Same navigation as index.html
+        - Relevant content for that page
+        - Same CSS styling
+        - Professional appearance
 
         Generate complete, functional frontend code in JSON format with this structure:
         {{
@@ -163,6 +185,14 @@ class FrontendDeveloperAgent(BaseWebAgent):
                 {{
                     "path": "index.html",
                     "content": "COMPLETE HTML with proper structure, meta tags, and semantic elements"
+                }},
+                {{
+                    "path": "about.html",
+                    "content": "COMPLETE about page with same navigation and relevant content"
+                }},
+                {{
+                    "path": "contact.html",
+                    "content": "COMPLETE contact page with same navigation and contact form"
                 }},
                 {{
                     "path": "static/css/style.css", 
@@ -175,17 +205,6 @@ class FrontendDeveloperAgent(BaseWebAgent):
             ]
         }}
         
-        MANDATORY CODE QUALITY REQUIREMENTS:
-        - All code must be production-ready and immediately functional
-        - Include comprehensive error handling in JavaScript
-        - Add proper loading states and user feedback
-        - Ensure cross-browser compatibility
-        - Include responsive design for mobile, tablet, and desktop
-        - Add proper accessibility features
-        - Include detailed comments explaining functionality
-        - Test all user interactions and API calls
-        - Provide graceful fallbacks for API failures
-
         CRITICAL JSON FORMAT REQUIREMENTS:
         - Return ONLY valid JSON, no additional text or markdown
         - Escape all backslashes in code strings (use \\\\ for each \\)

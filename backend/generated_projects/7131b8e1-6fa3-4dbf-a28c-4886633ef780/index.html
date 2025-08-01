@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="GKQuizWeb - Practice General Knowledge questions.">
+    <title>GKQuizWeb - Home</title>
+    <link rel="stylesheet" href="static/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❓</text></svg>">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="login.html">Login</a></li>
+                <li><a href="register.html">Register</a></li>
+                <li><a href="services.html">Services</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Welcome to GKQuizWeb</h1>
+            <p>Practice your General Knowledge with our interactive quiz platform.</p>
+        </section>
+
+        <section class="quiz-options">
+            <h2>Start a Quiz</h2>
+            <label for="category">Category:</label>
+            <select id="category" name="category">
+                <option value="general">General Knowledge</option>
+                <option value="science">Science</option>
+                <option value="history">History</option>
+            </select>
+
+            <label for="difficulty">Difficulty:</label>
+            <select id="difficulty" name="difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+            </select>
+
+            <button id="startQuiz">Start Quiz</button>
+            <button id="testApi">Test API Connection</button>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 GKQuizWeb</p>
+    </footer>
+
+    <script src="static/js/script.js"></script>
+</body>
+</html>

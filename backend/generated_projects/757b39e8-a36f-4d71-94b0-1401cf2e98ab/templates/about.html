@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Learn more about GlassEffectLogin and our mission.">
+    <title>About Us | GlassEffectLogin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+</head>
+<body>
+    <header class="main-header">
+        <nav class="main-nav" aria-label="Main Navigation">
+            <div class="nav-brand"><a href="{{ url_for('home_page') }}">GlassLogin</a></div>
+            <button class="nav-toggle" aria-controls="main-menu" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="toggle-icon"></span>
+                <span class="toggle-icon"></span>
+                <span class="toggle-icon"></span>
+            </button>
+            <ul class="nav-menu" id="main-menu" role="menu">
+                <li role="none"><a href="{{ url_for('home_page') }}" class="nav-link" role="menuitem">Home</a></li>
+                <li role="none"><a href="{{ url_for('about_page') }}" class="nav-link current" role="menuitem">About</a></li>
+                <li role="none"><a href="{{ url_for('contact_page') }}" class="nav-link" role="menuitem">Contact</a></li>
+                <li role="none"><a href="{{ url_for('register_page') }}" class="nav-link" role="menuitem">Register</a></li>
+                <li role="none"><a href="{{ url_for('login_page') }}" class="nav-link" role="menuitem">Login</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <section class="about-section glass-container" aria-labelledby="about-heading">
+            <h1 id="about-heading">About GlassEffectLogin</h1>
+            <p>GlassEffectLogin is a demonstration project showcasing modern frontend development techniques, focusing on the popular glassmorphism UI trend combined with a dynamic, live background experience.</p>
+            <p>Our goal is to provide developers and designers with a tangible example of how to implement these advanced visual effects using clean HTML, efficient CSS (including Flexbox and Grid), and vanilla JavaScript for interactive elements and client-side validation.</p>
+            <p>We believe in creating web interfaces that are not only aesthetically pleasing but also highly functional, accessible, and performant. This project embodies those principles, offering a responsive design that looks great on any device.</p>
+            <p>Beyond the visual appeal, the project also highlights best practices in frontend architecture, including modular CSS and JavaScript, proper accessibility attributes, and robust form handling with API integration in mind.</p>
+        </section>
+
+        <section class="team-section glass-container" aria-labelledby="team-heading">
+            <h2 id="team-heading">Our Mission</h2>
+            <p>Our mission is to empower creators with the tools and knowledge to build stunning, user-centric web applications. We strive to push the boundaries of web design and development, making complex UI patterns approachable and replicable.</p>
+            <p>Through projects like GlassEffectLogin, we aim to inspire innovation and demonstrate the power of modern web technologies when applied with attention to detail and user experience.</p>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <p>&copy; 2023 GlassEffectLogin. All rights reserved. Designed with <span aria-hidden="true">&hearts;</span>.</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

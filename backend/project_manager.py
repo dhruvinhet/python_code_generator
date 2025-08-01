@@ -7,6 +7,8 @@ import zipfile
 import webbrowser
 import time
 import logging
+import psutil
+import signal
 from datetime import datetime
 from agents import (
     PlanningAgent, SrDeveloper1Agent, SrDeveloper2Agent, 
@@ -44,6 +46,74 @@ class ProjectManager:
         # Ensure directories exist
         os.makedirs(Config.GENERATED_PROJECTS_DIR, exist_ok=True)
         os.makedirs(Config.TEMP_DIR, exist_ok=True)
+        
+        # Clean up any leftover processes on startup
+        self.cleanup_leftover_processes()
+    
+    def cleanup_leftover_processes(self):
+        """Clean up any leftover Streamlit or web server processes"""
+        try:
+            self.logger.info("Cleaning up any leftover processes...")
+            
+            # Kill any processes on commonly used ports
+            ports_to_clean = [8501, 8502, 8503, 8504, 8080]
+            for port in ports_to_clean:
+                self.kill_processes_on_port(port)
+                
+        except Exception as e:
+            self.logger.warning(f"Could not clean up leftover processes: {e}")
+    
+    def kill_processes_on_port(self, port):
+        """Kill any processes using the specified port"""
+        try:
+            if hasattr(self, 'emit_progress'):
+                self.emit_progress("execution", f"Checking for processes on port {port}...")
+            else:
+                self.logger.info(f"Checking for processes on port {port}...")
+                
+            killed_any = False
+            
+            for proc in psutil.process_iter(['pid', 'name']):
+                try:
+                    # Get connections for this process
+                    connections = proc.connections()
+                    if connections:
+                        for conn in connections:
+                            if hasattr(conn, 'laddr') and conn.laddr and conn.laddr.port == port:
+                                message = f"Killing process {proc.info['name']} (PID: {proc.info['pid']}) using port {port}"
+                                if hasattr(self, 'emit_progress'):
+                                    self.emit_progress("execution", message)
+                                else:
+                                    self.logger.info(message)
+                                proc.kill()
+                                killed_any = True
+                                break
+                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                    continue
+                except Exception as e:
+                    continue
+            
+            if killed_any:
+                time.sleep(2)  # Give killed processes time to clean up
+                message = f"Cleaned up processes on port {port}"
+                if hasattr(self, 'emit_progress'):
+                    self.emit_progress("execution", message)
+                else:
+                    self.logger.info(message)
+            else:
+                message = f"Port {port} is available"
+                if hasattr(self, 'emit_progress'):
+                    self.emit_progress("execution", message)
+                else:
+                    self.logger.info(message)
+                
+        except Exception as e:
+            message = f"Warning: Could not check port {port}: {str(e)}"
+            if hasattr(self, 'emit_progress'):
+                self.emit_progress("execution", message)
+            else:
+                self.logger.warning(message)
+            # Continue anyway - this is not critical
     
     def emit_progress(self, stage, message, data=None):
         """Emit progress updates to frontend via WebSocket"""
@@ -757,9 +827,630 @@ if __name__ == "__main__":
             print(f"Error creating zip file: {e}")
             raise
 
-    def determine_run_method(self, project_path):
-        """Determine how to run the project (python or streamlit)"""
+    def analyze_project_structure(self, project_path):
+        """
+        Dynamically analyze project structure and determine the best execution method.
+        This method inspects the actual files and creates appropriate run configurations.
+        """
         try:
+            analysis = {
+                'project_type': 'unknown',
+                'entry_points': [],
+                'frameworks': [],
+                'structure': {},
+                'run_method': 'python',
+                'recommended_command': None,
+                'port': None
+            }
+            
+            # Get all files in the project
+            all_files = []
+            for root, dirs, files in os.walk(project_path):
+                for file in files:
+                    if file.endswith(('.py', '.html', '.js', '.css', '.json', '.txt', '.md')):
+                        rel_path = os.path.relpath(os.path.join(root, file), project_path)
+                        all_files.append(rel_path)
+            
+            analysis['structure']['all_files'] = all_files
+            
+            # Analyze Python files for frameworks and patterns
+            python_files = [f for f in all_files if f.endswith('.py')]
+            html_files = [f for f in all_files if f.endswith('.html')]
+            js_files = [f for f in all_files if f.endswith('.js')]
+            css_files = [f for f in all_files if f.endswith('.css')]
+            
+            analysis['structure']['python_files'] = python_files
+            analysis['structure']['html_files'] = html_files
+            analysis['structure']['js_files'] = js_files
+            analysis['structure']['css_files'] = css_files
+            
+            # Check for specific framework indicators
+            frameworks_found = set()
+            entry_points = []
+            
+            for py_file in python_files:
+                file_path = os.path.join(project_path, py_file)
+                try:
+                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        content = f.read().lower()
+                        
+                        # Framework detection
+                        if 'streamlit' in content or 'st.' in content:
+                            frameworks_found.add('streamlit')
+                            entry_points.append({'file': py_file, 'type': 'streamlit'})
+                        
+                        if 'fastapi' in content:
+                            frameworks_found.add('fastapi')
+                            entry_points.append({'file': py_file, 'type': 'fastapi'})
+                        
+                        if 'flask' in content:
+                            frameworks_found.add('flask')
+                            entry_points.append({'file': py_file, 'type': 'flask'})
+                        
+                        if 'django' in content:
+                            frameworks_found.add('django')
+                            entry_points.append({'file': py_file, 'type': 'django'})
+                        
+                        if 'tkinter' in content or 'tk' in content:
+                            frameworks_found.add('tkinter')
+                            entry_points.append({'file': py_file, 'type': 'tkinter'})
+                        
+                        if 'pygame' in content:
+                            frameworks_found.add('pygame')
+                            entry_points.append({'file': py_file, 'type': 'pygame'})
+                        
+                        # Check for uvicorn.run calls (FastAPI)
+                        if 'uvicorn.run' in content:
+                            frameworks_found.add('fastapi')
+                            entry_points.append({'file': py_file, 'type': 'fastapi_uvicorn'})
+                        
+                        # Check for app.run calls (Flask)
+                        if 'app.run(' in content:
+                            frameworks_found.add('flask')
+                            entry_points.append({'file': py_file, 'type': 'flask_run'})
+                            
+                except Exception as e:
+                    continue
+            
+            analysis['frameworks'] = list(frameworks_found)
+            analysis['entry_points'] = entry_points
+            
+            # Determine project type and run method
+            if 'streamlit' in frameworks_found:
+                analysis['project_type'] = 'streamlit'
+                analysis['run_method'] = 'streamlit'
+                # Find the main streamlit file
+                streamlit_files = [ep['file'] for ep in entry_points if ep['type'] == 'streamlit']
+                if streamlit_files:
+                    analysis['recommended_command'] = f"streamlit run {streamlit_files[0]}"
+                    analysis['port'] = 8501
+                    
+            elif 'fastapi' in frameworks_found:
+                analysis['project_type'] = 'fastapi'
+                analysis['run_method'] = 'fastapi'
+                # Check for uvicorn runner files
+                fastapi_files = [ep['file'] for ep in entry_points if 'fastapi' in ep['type']]
+                if fastapi_files:
+                    # Look for run.py or main.py with uvicorn
+                    if 'run.py' in all_files:
+                        analysis['recommended_command'] = "python run.py"
+                    else:
+                        # Try to determine the app location
+                        app_location = self._find_fastapi_app_location(project_path, fastapi_files[0])
+                        analysis['recommended_command'] = f"uvicorn {app_location} --reload --port 8080"
+                    analysis['port'] = 8080
+                    
+            elif 'flask' in frameworks_found:
+                analysis['project_type'] = 'flask'
+                analysis['run_method'] = 'web'
+                # Check for run.py or app.py
+                if 'run.py' in all_files:
+                    analysis['recommended_command'] = "python run.py"
+                elif 'app.py' in all_files:
+                    analysis['recommended_command'] = "python app.py"
+                analysis['port'] = 8080
+                
+            elif 'django' in frameworks_found:
+                analysis['project_type'] = 'django'
+                analysis['run_method'] = 'django'
+                analysis['recommended_command'] = "python manage.py runserver"
+                analysis['port'] = 8000
+                
+            elif html_files and (js_files or css_files):
+                analysis['project_type'] = 'web_frontend'
+                analysis['run_method'] = 'static'
+                # Static web project
+                if 'index.html' in all_files:
+                    analysis['recommended_command'] = "serve index.html"
+                    
+            elif 'tkinter' in frameworks_found or 'pygame' in frameworks_found:
+                analysis['project_type'] = 'desktop'
+                analysis['run_method'] = 'python'
+                # Desktop application
+                desktop_files = [ep['file'] for ep in entry_points if ep['type'] in ['tkinter', 'pygame']]
+                if desktop_files:
+                    analysis['recommended_command'] = f"python {desktop_files[0]}"
+                    
+            else:
+                # Generic Python project
+                analysis['project_type'] = 'python'
+                analysis['run_method'] = 'python'
+                # Look for main.py, run.py, or app.py
+                if 'main.py' in all_files:
+                    analysis['recommended_command'] = "python main.py"
+                elif 'run.py' in all_files:
+                    analysis['recommended_command'] = "python run.py"
+                elif 'app.py' in all_files:
+                    analysis['recommended_command'] = "python app.py"
+                elif python_files:
+                    analysis['recommended_command'] = f"python {python_files[0]}"
+            
+            return analysis
+            
+        except Exception as e:
+            self.logger.error(f"Error analyzing project structure: {e}")
+            return {
+                'project_type': 'python',
+                'run_method': 'python',
+                'error': str(e)
+            }
+    
+    def _find_fastapi_app_location(self, project_path, main_file):
+        """Find the FastAPI app instance location for uvicorn"""
+        try:
+            file_path = os.path.join(project_path, main_file)
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+                
+                # Look for app = FastAPI() or similar patterns
+                import re
+                app_patterns = [
+                    r'(\w+)\s*=\s*FastAPI\(',
+                    r'app\s*=\s*FastAPI\(',
+                ]
+                
+                for pattern in app_patterns:
+                    match = re.search(pattern, content)
+                    if match:
+                        app_name = match.group(1) if match.groups() else 'app'
+                        # Convert file path to module path
+                        module_path = main_file.replace('.py', '').replace('/', '.').replace('\\', '.')
+                        return f"{module_path}:{app_name}"
+                
+                # Default assumption
+                module_path = main_file.replace('.py', '').replace('/', '.').replace('\\', '.')
+                return f"{module_path}:app"
+                
+        except Exception:
+            return "app:app"
+    
+    def create_dynamic_run_script(self, project_path, analysis):
+        """
+        Create a dynamic run script based on project analysis.
+        This replaces hardcoded run.py files with intelligent, adaptive scripts.
+        """
+        try:
+            project_type = analysis.get('project_type', 'python')
+            frameworks = analysis.get('frameworks', [])
+            entry_points = analysis.get('entry_points', [])
+            
+            if project_type == 'streamlit':
+                return self._create_streamlit_runner(project_path, analysis)
+            elif project_type == 'fastapi':
+                return self._create_fastapi_runner(project_path, analysis)
+            elif project_type == 'flask':
+                return self._create_flask_runner(project_path, analysis)
+            elif project_type == 'django':
+                return self._create_django_runner(project_path, analysis)
+            elif project_type == 'web_frontend':
+                return self._create_static_web_runner(project_path, analysis)
+            elif project_type == 'desktop':
+                return self._create_desktop_runner(project_path, analysis)
+            else:
+                return self._create_generic_python_runner(project_path, analysis)
+                
+        except Exception as e:
+            self.logger.error(f"Error creating dynamic run script: {e}")
+            return self._create_fallback_runner(project_path)
+    
+    def _create_streamlit_runner(self, project_path, analysis):
+        """Create a Streamlit-specific runner"""
+        entry_points = [ep for ep in analysis.get('entry_points', []) if ep['type'] == 'streamlit']
+        main_file = entry_points[0]['file'] if entry_points else 'main.py'
+        
+        runner_content = f'''#!/usr/bin/env python3
+"""
+Auto-generated Streamlit application runner
+Project Type: Streamlit Web App
+"""
+
+import os
+import sys
+import subprocess
+import time
+import webbrowser
+import threading
+
+def main():
+    """Run the Streamlit application"""
+    print("Starting Streamlit application...")
+    print("Dashboard will open automatically in your browser")
+    print("-" * 50)
+    
+    try:
+        # Import streamlit to check if it's available
+        import streamlit
+        
+        # Define the streamlit file to run
+        streamlit_file = "{main_file}"
+        
+        # Start streamlit server
+        cmd = [
+            sys.executable, '-m', 'streamlit', 'run', streamlit_file,
+            '--server.port', '8501',
+            '--server.headless', 'false'
+        ]
+        
+        print(f"Running: {{' '.join(cmd)}}")
+        
+        # Open browser after a delay
+        def open_browser():
+            time.sleep(3)
+            webbrowser.open('http://localhost:8501')
+        
+        browser_thread = threading.Thread(target=open_browser)
+        browser_thread.daemon = True
+        browser_thread.start()
+        
+        # Run streamlit
+        process = subprocess.Popen(cmd, cwd=os.path.dirname(__file__))
+        process.wait()
+        
+    except ImportError:
+        print("Streamlit not found. Installing...")
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'streamlit'])
+        print("Please run again after installation.")
+    except KeyboardInterrupt:
+        print("\\nApplication stopped by user.")
+    except Exception as e:
+        print(f"Error running Streamlit app: {{e}}")
+        return 1
+    
+    return 0
+
+if __name__ == "__main__":
+    exit(main())
+'''
+        
+        run_py_path = os.path.join(project_path, 'run.py')
+        with open(run_py_path, 'w', encoding='utf-8') as f:
+            f.write(runner_content)
+        
+        return {'success': True, 'runner_type': 'streamlit', 'entry_file': main_file}
+    
+    def _create_fastapi_runner(self, project_path, analysis):
+        """Create a FastAPI-specific runner"""
+        entry_points = [ep for ep in analysis.get('entry_points', []) if 'fastapi' in ep['type']]
+        
+        # Check if run.py already exists and is properly configured
+        existing_run = os.path.join(project_path, 'run.py')
+        if os.path.exists(existing_run):
+            try:
+                with open(existing_run, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    if 'uvicorn' in content and 'fastapi' in content.lower():
+                        # Existing run.py looks good, just ensure __init__.py exists
+                        self._ensure_package_structure(project_path)
+                        return {'success': True, 'runner_type': 'fastapi_existing', 'entry_file': 'run.py'}
+            except Exception:
+                pass
+        
+        # Create new FastAPI runner
+        app_location = analysis.get('recommended_command', 'app:app')
+        if 'uvicorn' in app_location:
+            app_location = app_location.split()[-1]  # Extract just the app location
+        
+        runner_content = f'''#!/usr/bin/env python3
+"""
+Auto-generated FastAPI application runner
+Project Type: FastAPI Web API
+"""
+
+import os
+import sys
+import subprocess
+import time
+import webbrowser
+import threading
+
+def main():
+    """Run the FastAPI application"""
+    print("Starting FastAPI application...")
+    print("API will be available at http://localhost:8080")
+    print("Documentation at http://localhost:8080/docs")
+    print("-" * 50)
+    
+    try:
+        # Add current directory to Python path
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        if current_dir not in sys.path:
+            sys.path.insert(0, current_dir)
+        
+        # Try to import required modules
+        try:
+            import uvicorn
+            import fastapi
+        except ImportError as e:
+            print(f"Missing dependencies: {{e}}")
+            print("Installing required packages...")
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'fastapi', 'uvicorn[standard]'])
+        
+        # Start FastAPI server
+        app_location = "{app_location}"
+        
+        print(f"Starting server with app: {{app_location}}")
+        
+        # Open browser after a delay
+        def open_browser():
+            time.sleep(3)
+            webbrowser.open('http://localhost:8080/docs')
+        
+        browser_thread = threading.Thread(target=open_browser)
+        browser_thread.daemon = True
+        browser_thread.start()
+        
+        # Run uvicorn
+        uvicorn.run(app_location, host="0.0.0.0", port=8080, reload=True)
+        
+    except KeyboardInterrupt:
+        print("\\nApplication stopped by user.")
+    except Exception as e:
+        print(f"Error running FastAPI app: {{e}}")
+        print("Trying alternative startup method...")
+        try:
+            # Fallback method
+            cmd = [sys.executable, '-m', 'uvicorn', app_location, '--host', '0.0.0.0', '--port', '8080', '--reload']
+            subprocess.run(cmd, cwd=current_dir)
+        except Exception as e2:
+            print(f"Fallback method failed: {{e2}}")
+            return 1
+    
+    return 0
+
+if __name__ == "__main__":
+    exit(main())
+'''
+        
+        run_py_path = os.path.join(project_path, 'run.py')
+        with open(run_py_path, 'w', encoding='utf-8') as f:
+            f.write(runner_content)
+        
+        # Ensure package structure
+        self._ensure_package_structure(project_path)
+        
+        return {'success': True, 'runner_type': 'fastapi', 'app_location': app_location}
+    
+    def _create_flask_runner(self, project_path, analysis):
+        """Create a Flask-specific runner using WSGI server for Windows compatibility"""
+        entry_points = [ep for ep in analysis.get('entry_points', []) if ep['type'] in ['flask', 'flask_run']]
+        
+        # Find the Flask app
+        app_file = 'app.py'
+        if entry_points:
+            app_file = entry_points[0]['file']
+        elif 'app.py' in analysis.get('structure', {}).get('python_files', []):
+            app_file = 'app.py'
+        
+        # Check if it's using app factory pattern
+        app_import = "from app import app"
+        app_obj = "app"
+        
+        try:
+            app_path = os.path.join(project_path, app_file)
+            if os.path.exists(app_path):
+                with open(app_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    content = f.read()
+                    if 'def create_app(' in content:
+                        app_import = "from app import create_app"
+                        app_obj = "create_app()"
+        except Exception:
+            pass
+        
+        runner_content = f'''#!/usr/bin/env python3
+"""
+Auto-generated Flask application runner
+Project Type: Flask Web Application
+Uses WSGI server for Windows compatibility
+"""
+
+import os
+import sys
+import time
+import webbrowser
+import threading
+from wsgiref.simple_server import make_server, WSGIServer
+
+class QuietWSGIServer(WSGIServer):
+    """A quieter WSGI server"""
+    def log_message(self, format, *args):
+        pass
+
+def main():
+    """Run the Flask application"""
+    print("Starting Flask web application...")
+    print("Application will be available at http://localhost:8080")
+    print("-" * 50)
+    
+    try:
+        # Add current directory to Python path
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        if current_dir not in sys.path:
+            sys.path.insert(0, current_dir)
+        
+        # Import the Flask app
+        {app_import}
+        app = {app_obj}
+        
+        port = 8080
+        host = '0.0.0.0'
+        
+        # Create WSGI server
+        with make_server(host, port, app, server_class=QuietWSGIServer) as httpd:
+            print(f"Server started successfully on http://localhost:{{port}}")
+            
+            # Open browser after delay
+            def open_browser():
+                time.sleep(2)
+                webbrowser.open(f'http://localhost:{{port}}')
+            
+            browser_thread = threading.Thread(target=open_browser)
+            browser_thread.daemon = True
+            browser_thread.start()
+            
+            # Serve forever
+            httpd.serve_forever()
+            
+    except ImportError as e:
+        print(f"Import error: {{e}}")
+        print("Installing Flask...")
+        import subprocess
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'flask'])
+        print("Please run again after installation.")
+    except KeyboardInterrupt:
+        print("\\nApplication stopped by user.")
+    except Exception as e:
+        print(f"Error running Flask app: {{e}}")
+        return 1
+    
+    return 0
+
+if __name__ == "__main__":
+    exit(main())
+'''
+        
+        run_py_path = os.path.join(project_path, 'run.py')
+        with open(run_py_path, 'w', encoding='utf-8') as f:
+            f.write(runner_content)
+        
+        return {'success': True, 'runner_type': 'flask', 'app_file': app_file}
+    
+    def _ensure_package_structure(self, project_path):
+        """Ensure proper Python package structure with __init__.py files"""
+        try:
+            # Find all directories with Python files
+            python_dirs = set()
+            for root, dirs, files in os.walk(project_path):
+                if any(f.endswith('.py') for f in files):
+                    rel_dir = os.path.relpath(root, project_path)
+                    if rel_dir != '.':
+                        python_dirs.add(rel_dir)
+            
+            # Create __init__.py files
+            for py_dir in python_dirs:
+                init_path = os.path.join(project_path, py_dir, '__init__.py')
+                if not os.path.exists(init_path):
+                    with open(init_path, 'w', encoding='utf-8') as f:
+                        f.write('# This file makes the directory a Python package\\n')
+                        
+        except Exception as e:
+            self.logger.warning(f"Could not ensure package structure: {e}")
+
+    def determine_run_method(self, project_path):
+        """
+        New intelligent project detection system.
+        Uses dynamic analysis instead of hardcoded patterns.
+        """
+        try:
+            # First, analyze the project structure dynamically
+            analysis = self.analyze_project_structure(project_path)
+            
+            # Create or update the run script based on analysis
+            runner_result = self.create_dynamic_run_script(project_path, analysis)
+            
+            # Log the analysis for debugging
+            self.logger.info(f"Project analysis for {project_path}:")
+            self.logger.info(f"  Type: {analysis.get('project_type', 'unknown')}")
+            self.logger.info(f"  Frameworks: {analysis.get('frameworks', [])}")
+            self.logger.info(f"  Run method: {analysis.get('run_method', 'python')}")
+            self.logger.info(f"  Recommended command: {analysis.get('recommended_command', 'N/A')}")
+            
+            return analysis.get('run_method', 'python')
+            
+        except Exception as e:
+            self.logger.error(f"Error in dynamic project analysis: {e}")
+            # Fallback to simple detection
+            return self._fallback_run_method_detection(project_path)
+    
+    def _fallback_run_method_detection(self, project_path):
+        """Fallback method for when dynamic analysis fails"""
+        try:
+            # Simple file-based detection as fallback
+            files = os.listdir(project_path)
+            
+            # Check for streamlit
+            for file in files:
+                if file.endswith('.py'):
+                    try:
+                        with open(os.path.join(project_path, file), 'r', encoding='utf-8', errors='ignore') as f:
+                            content = f.read().lower()
+                            if 'streamlit' in content:
+                                return 'streamlit'
+                    except:
+                        continue
+            
+            # Check for web applications
+            has_templates = 'templates' in files or any('template' in f for f in files)
+            has_static = 'static' in files
+            has_html = any(f.endswith('.html') for f in files)
+            has_app_py = 'app.py' in files
+            has_run_py = 'run.py' in files
+            
+            if (has_app_py or has_run_py) and (has_templates or has_static or has_html):
+                return 'web'
+            
+            # Default to python
+            return 'python'
+            
+        except Exception as e:
+            self.logger.error(f"Error in fallback detection: {e}")
+            return 'python'
+        """Determine how to run the project (python, streamlit, or web)"""
+        try:
+            # Check if it's a web application first
+            run_py_path = os.path.join(project_path, 'run.py')
+            app_py_path = os.path.join(project_path, 'app.py')
+            index_html_path = os.path.join(project_path, 'index.html')
+            templates_dir = os.path.join(project_path, 'templates')
+            static_dir = os.path.join(project_path, 'static')
+            
+            # Enhanced web application detection
+            has_run_py = os.path.exists(run_py_path)
+            has_app_py = os.path.exists(app_py_path)
+            has_templates = os.path.exists(templates_dir)
+            has_static = os.path.exists(static_dir)
+            has_index_html = os.path.exists(index_html_path)
+            
+            # Check if it's a Flask web application
+            if has_run_py and has_app_py and (has_templates or has_static or has_index_html):
+                try:
+                    with open(app_py_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        content = f.read().lower()
+                        if 'flask' in content:
+                            return 'web'
+                except:
+                    pass
+            
+            # Alternative web detection - check if run.py imports app and app.py contains Flask
+            if has_run_py and has_app_py:
+                try:
+                    # Check if app.py contains Flask
+                    with open(app_py_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        app_content = f.read().lower()
+                        if 'flask' in app_content and ('routes' in app_content or 'blueprint' in app_content or '@app.route' in app_content):
+                            return 'web'
+                except:
+                    pass
+            
             # Check main.py for streamlit imports
             main_py_path = os.path.join(project_path, 'main.py')
             if os.path.exists(main_py_path):
@@ -784,14 +1475,36 @@ if __name__ == "__main__":
             return 'python'
 
     def execute_project(self, project_id, project_path, run_method):
-        """Execute the project and capture output"""
+        """Execute the project and capture output with dynamic detection"""
         original_cwd = os.getcwd()
         try:
-            self.emit_progress("execution", f"Starting project execution with {run_method}...")
+            self.emit_progress("execution", f"Analyzing project structure...")
+            
+            # Dynamically analyze the project structure
+            analysis = self.analyze_project_structure(project_path)
+            actual_run_method = analysis.get('run_method', run_method)
+            project_type = analysis.get('project_type', 'python')
+            
+            self.emit_progress("execution", f"Detected project type: {project_type}")
+            self.emit_progress("execution", f"Using run method: {actual_run_method}")
+            
+            # Create or update dynamic run script
+            runner_result = self.create_dynamic_run_script(project_path, analysis)
+            
+            if runner_result.get('success'):
+                self.emit_progress("execution", f"Created dynamic runner: {runner_result.get('runner_type', 'generic')}")
+            else:
+                self.emit_progress("execution", "Using existing project structure")
             
             # Store process reference for potential termination
             if not hasattr(self, 'running_processes'):
                 self.running_processes = {}
+            
+            # Stop any existing process for this project first
+            if project_id in self.running_processes:
+                self.emit_progress("execution", "Stopping existing process for this project...")
+                self.stop_project_execution(project_id)
+                time.sleep(1)  # Give it a moment to clean up
             
             # Change to project directory
             os.chdir(project_path)
@@ -822,52 +1535,295 @@ if __name__ == "__main__":
             else:
                 self.emit_progress("execution", "No requirements.txt found, proceeding without dependency installation")
             
-            # Prepare execution command
-            if run_method == 'streamlit':
-                # We'll set the actual command inside the execution block after finding the port
-                pass
-            else:
-                cmd = [sys.executable, 'main.py']
-                self.emit_progress("execution", "Running Python script...")
             
-            # Execute the project
-            if run_method == 'streamlit':
-                # Clean up any existing Streamlit processes first
-                self.emit_progress("execution", "Cleaning up any existing Streamlit processes...")
-                self.kill_existing_streamlit_processes()
+        except Exception as e:
+            self.emit_progress("execution", f"Execution failed: {str(e)}")
+            return {
+                'success': False,
+                'method': actual_run_method,
+                'error': str(e),
+                'output': '',
+                'status': 'failed'
+            }
+        finally:
+            # Restore original working directory
+            try:
+                os.chdir(original_cwd)
+            except Exception:
+                pass
+        """Execute project using the dynamically determined method"""
+        try:
+            recommended_command = analysis.get('recommended_command', 'python run.py')
+            port = analysis.get('port', 8080)
+            
+            self.emit_progress("execution", f"Executing: {recommended_command}")
+            
+            # Always try to run run.py first (our dynamic runner)
+            run_py_path = os.path.join(project_path, 'run.py')
+            if os.path.exists(run_py_path):
+                cmd = [sys.executable, 'run.py']
+                self.emit_progress("execution", f"Starting with dynamic runner: {' '.join(cmd)}")
                 
-                # Wait a moment for processes to fully terminate
-                import time
-                time.sleep(1)
-                
-                # Find an available port
-                port = self.find_available_port(8501)
-                cmd = [sys.executable, '-m', 'streamlit', 'run', 'main.py', '--server.headless', 'true', '--server.port', str(port)]
-                self.emit_progress("execution", f"Starting Streamlit application on port {port}...")
-                
-                # For Streamlit, we start it and return immediately with server info
+                # Start the process
                 process = subprocess.Popen(
                     cmd,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,
+                    bufsize=1,
+                    universal_newlines=True,
                     cwd=project_path
                 )
                 
                 self.running_processes[project_id] = process
                 
-                # Wait a bit to see if it starts successfully
-                time.sleep(3)
+                # Monitor process startup
+                startup_checks = 5
+                for i in range(startup_checks):
+                    time.sleep(1)
+                    
+                    # Check if process terminated early
+                    if process.poll() is not None:
+                        stdout, stderr = process.communicate()
+                        self.emit_progress("execution", f"Process failed to start. Exit code: {process.returncode}")
+                        if stdout:
+                            self.emit_progress("execution", f"Stdout: {stdout[:500]}")
+                        if stderr:
+                            self.emit_progress("execution", f"Stderr: {stderr[:500]}")
+                        return {
+                            'success': False,
+                            'method': run_method,
+                            'error': f"Process failed to start: {stderr or 'Process terminated unexpectedly'}",
+                            'output': stdout or '',
+                            'status': 'failed'
+                        }
+                    
+                    self.emit_progress("execution", f"Checking startup... ({i+1}/{startup_checks})")
                 
                 if process.poll() is None:  # Process is still running
-                    self.emit_progress("execution", "Streamlit server started successfully!")
+                    self.emit_progress("execution", f"Application started successfully!")
+                    
+                    # For web applications, test connectivity and open browser
+                    if run_method in ['web', 'streamlit', 'fastapi', 'flask']:
+                        try:
+                            time.sleep(2)  # Give server time to be ready
+                            self.emit_progress("execution", f"Server should be available on port {port}")
+                            
+                            # Open browser automatically
+                            def open_browser():
+                                time.sleep(1)
+                                url = f'http://localhost:{port}'
+                                if run_method == 'fastapi':
+                                    url += '/docs'  # Open API docs for FastAPI
+                                webbrowser.open(url)
+                                self.emit_progress("execution", f"Browser opened automatically: {url}")
+                            
+                            import threading
+                            browser_thread = threading.Thread(target=open_browser)
+                            browser_thread.daemon = True
+                            browser_thread.start()
+                            
+                        except Exception as e:
+                            self.emit_progress("execution", f"Could not open browser automatically: {str(e)}")
+                    
+                    return {
+                        'success': True,
+                        'method': run_method,
+                        'message': f'{analysis.get("project_type", "Application").title()} started successfully',
+                        'url': f'http://localhost:{port}' if port else None,
+                        'status': 'running',
+                        'pid': process.pid,
+                        'port': port,
+                        'output': f'Application is running on port {port}' if port else 'Application started successfully',
+                        'auto_opened': True,
+                        'project_type': analysis.get('project_type', 'unknown')
+                    }
+                else:
+                    # Final check - process terminated after startup monitoring
+                    stdout, stderr = process.communicate()
+                    self.emit_progress("execution", f"Application stopped unexpectedly after startup")
+                    return {
+                        'success': False,
+                        'method': run_method,
+                        'error': f"Application stopped unexpectedly: {stderr or 'Unknown error'}",
+                        'output': stdout or '',
+                        'status': 'failed'
+                    }
+            else:
+                # No run.py found, try direct execution based on analysis
+                return self._execute_direct_command(project_id, project_path, recommended_command, analysis)
+                
+        except Exception as e:
+            self.emit_progress("execution", f"Dynamic execution failed: {str(e)}")
+            return {
+                'success': False,
+                'method': run_method,
+                'error': str(e),
+                'output': '',
+                'status': 'failed'
+            }
+    
+    def _execute_direct_command(self, project_id, project_path, command, analysis):
+        """Execute project using direct command when no run.py is available"""
+        try:
+            # Parse the command
+            if isinstance(command, str):
+                cmd_parts = command.split()
+            else:
+                cmd_parts = command
+            
+            self.emit_progress("execution", f"Direct execution: {' '.join(cmd_parts)}")
+            
+            # Start the process
+            process = subprocess.Popen(
+                cmd_parts,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                bufsize=1,
+                universal_newlines=True,
+                cwd=project_path
+            )
+            
+            self.running_processes[project_id] = process
+            
+            # For quick-running scripts, get output
+            if analysis.get('project_type') in ['python', 'desktop']:
+                try:
+                    stdout, stderr = process.communicate(timeout=30)
+                    return {
+                        'success': process.returncode == 0,
+                        'method': analysis.get('run_method', 'python'),
+                        'error': stderr if process.returncode != 0 else None,
+                        'output': stdout,
+                        'status': 'completed',
+                        'exit_code': process.returncode
+                    }
+                except subprocess.TimeoutExpired:
+                    # Long-running process
+                    return {
+                        'success': True,
+                        'method': analysis.get('run_method', 'python'),
+                        'message': 'Long-running application started',
+                        'status': 'running',
+                        'pid': process.pid
+                    }
+            else:
+                # Web applications - monitor like before
+                time.sleep(3)
+                if process.poll() is None:
+                    return {
+                        'success': True,
+                        'method': analysis.get('run_method', 'web'),
+                        'message': 'Web application started',
+                        'status': 'running',
+                        'pid': process.pid,
+                        'port': analysis.get('port', 8080)
+                    }
+                else:
+                    stdout, stderr = process.communicate()
+                    return {
+                        'success': False,
+                        'method': analysis.get('run_method', 'web'),
+                        'error': stderr,
+                        'output': stdout,
+                        'status': 'failed'
+                    }
+                    
+        except Exception as e:
+            return {
+                'success': False,
+                'method': analysis.get('run_method', 'python'),
+                'error': str(e),
+                'output': '',
+                'status': 'failed'
+            }
+            
+            if os.path.exists(requirements_path):
+                try:
+                    # Install requirements
+                    self.emit_progress("execution", "Installing dependencies (this may take a moment)...")
+                    pip_result = subprocess.run([
+                        sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt', '--user', '--quiet'
+                    ], capture_output=True, text=True, timeout=300)
+                    
+                    if pip_result.returncode != 0:
+                        self.emit_progress("execution", f"Warning: Some dependencies may not have installed properly")
+                        self.emit_progress("execution", f"Pip stderr: {pip_result.stderr[:200]}...")
+                        # Continue anyway - many projects can run with partial dependencies
+                    else:
+                        self.emit_progress("execution", "Dependencies installed successfully")
+                        
+                except subprocess.TimeoutExpired:
+                    self.emit_progress("execution", "Warning: Dependency installation timed out, proceeding anyway")
+                except Exception as e:
+                    self.emit_progress("execution", f"Warning: Could not install dependencies: {str(e)[:100]}...")
+            else:
+                self.emit_progress("execution", "No requirements.txt found, proceeding without dependency installation")
+            
+            # Prepare execution command
+            if run_method == 'web':
+                # Web application - use run.py
+                # Kill any existing processes on port 8080
+                self.kill_processes_on_port(8080)
+                
+                cmd = [sys.executable, 'run.py']
+                self.emit_progress("execution", f"Starting Flask web server with command: {' '.join(cmd)}")
+                
+                # Start the web server as a background process
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    bufsize=1,
+                    universal_newlines=True,
+                    cwd=project_path
+                )
+                
+                self.running_processes[project_id] = process
+                
+                # Monitor process startup with better error handling
+                startup_checks = 5
+                for i in range(startup_checks):
+                    time.sleep(1)
+                    
+                    # Check if process terminated early
+                    if process.poll() is not None:
+                        stdout, stderr = process.communicate()
+                        self.emit_progress("execution", f"Web server failed to start. Exit code: {process.returncode}")
+                        if stdout:
+                            self.emit_progress("execution", f"Stdout: {stdout[:500]}")
+                        if stderr:
+                            self.emit_progress("execution", f"Stderr: {stderr[:500]}")
+                        return {
+                            'success': False,
+                            'method': run_method,
+                            'error': f"Web server failed to start: {stderr or 'Process terminated unexpectedly'}",
+                            'output': stdout or '',
+                            'status': 'failed'
+                        }
+                    
+                    self.emit_progress("execution", f"Checking web server startup... ({i+1}/{startup_checks})")
+                
+                if process.poll() is None:  # Process is still running
+                    self.emit_progress("execution", "Web server started successfully!")
+                    
+                    # Test if the server is actually responding
+                    try:
+                        import requests
+                        time.sleep(2)  # Give server time to be ready
+                        response = requests.get('http://localhost:8080', timeout=5)
+                        self.emit_progress("execution", f"Server responding with status: {response.status_code}")
+                    except Exception as e:
+                        self.emit_progress("execution", f"Server may still be starting up: {str(e)}")
                     
                     # Automatically open browser after a short delay
                     def open_browser():
                         time.sleep(2)  # Give server time to fully start
                         try:
-                            webbrowser.open(f'http://localhost:{port}')
-                            self.emit_progress("execution", f"Browser opened automatically for Streamlit app on port {port}")
+                            webbrowser.open('http://localhost:8080')
+                            self.emit_progress("execution", "Browser opened automatically for web application on port 8080")
                         except Exception as e:
                             self.emit_progress("execution", f"Could not open browser automatically: {str(e)}")
                     
@@ -879,26 +1835,142 @@ if __name__ == "__main__":
                     result = {
                         'success': True,
                         'method': run_method,
-                        'message': 'Streamlit application started successfully',
-                        'url': f'http://localhost:{port}',
+                        'message': 'Web application started successfully',
+                        'url': 'http://localhost:8080',
                         'status': 'running',
                         'pid': process.pid,
-                        'port': port,
-                        'output': f'Streamlit server is running on http://localhost:{port}\n\nBrowser opened automatically!',
+                        'port': 8080,
+                        'output': f'Web server is running on http://localhost:8080\n\nBrowser opened automatically!',
                         'auto_opened': True
                     }
                 else:
-                    # Process terminated, get error
+                    # Final check - process terminated after startup monitoring
                     stdout, stderr = process.communicate()
+                    self.emit_progress("execution", f"Web server stopped unexpectedly after startup")
                     result = {
+                        'success': False,
+                        'method': run_method,
+                        'error': f"Web server stopped unexpectedly: {stderr or 'Unknown error'}",
+                        'output': stdout or '',
+                        'status': 'failed'
+                    }
+            elif run_method == 'streamlit':
+                # Streamlit application
+                # Find the main streamlit file
+                streamlit_file = 'main.py'
+                for file in os.listdir(project_path):
+                    if file.endswith('.py') and file != 'main.py':
+                        with open(os.path.join(project_path, file), 'r', encoding='utf-8', errors='ignore') as f:
+                            content = f.read().lower()
+                            if 'streamlit' in content or 'st.' in content:
+                                streamlit_file = file
+                                break
+                
+                # Check if streamlit file exists
+                if not os.path.exists(os.path.join(project_path, streamlit_file)):
+                    self.emit_progress("execution", f"Error: {streamlit_file} not found in project directory")
+                    return {
+                        'success': False,
+                        'method': run_method,
+                        'error': f"Main file {streamlit_file} not found",
+                        'status': 'failed'
+                    }
+                
+                # Check if streamlit is installed
+                try:
+                    import streamlit
+                    self.emit_progress("execution", f"Found Streamlit version {streamlit.__version__}")
+                except ImportError:
+                    self.emit_progress("execution", "Installing Streamlit...")
+                    try:
+                        subprocess.run([sys.executable, '-m', 'pip', 'install', 'streamlit', '--user'], 
+                                     check=True, capture_output=True, text=True)
+                        self.emit_progress("execution", "Streamlit installed successfully")
+                    except subprocess.CalledProcessError as e:
+                        return {
+                            'success': False,
+                            'method': run_method,
+                            'error': f"Failed to install Streamlit: {e.stderr}",
+                            'status': 'failed'
+                        }
+                
+                # Always use port 8501 for consistency and kill any existing processes
+                port = 8501
+                self.emit_progress("execution", f"Checking for processes on port {port}...")
+                self.kill_processes_on_port(port)
+                
+                cmd = [
+                    sys.executable, '-m', 'streamlit', 'run', streamlit_file,
+                    '--server.headless', 'true',
+                    '--server.port', str(port),
+                    '--server.address', '127.0.0.1',
+                    '--server.enableCORS', 'false',
+                    '--server.enableXsrfProtection', 'false'
+                ]
+                
+                self.emit_progress("execution", f"Starting Streamlit server with command: {' '.join(cmd)}")
+                
+                # Start streamlit as a background process
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    bufsize=1,
+                    universal_newlines=True,
+                    cwd=project_path
+                )
+                
+                self.running_processes[project_id] = process
+                
+                # Give process a moment to start
+                time.sleep(1)
+                
+                # Check if process started successfully
+                if process.poll() is not None:
+                    # Process terminated early, get error
+                    stdout, stderr = process.communicate()
+                    self.emit_progress("execution", f"Streamlit failed to start. Exit code: {process.returncode}")
+                    self.emit_progress("execution", f"Stderr: {stderr}")
+                    return {
                         'success': False,
                         'method': run_method,
                         'error': f"Streamlit failed to start: {stderr}",
                         'output': stdout,
                         'status': 'failed'
                     }
+                
+                self.emit_progress("execution", "Streamlit server started successfully!")
+                
+                # Automatically open browser
+                def open_browser():
+                    time.sleep(2)  # Brief delay for server to be ready
+                    try:
+                        webbrowser.open(f'http://localhost:{port}')
+                        self.emit_progress("execution", f"Browser opened automatically for Streamlit app on port {port}")
+                    except Exception as e:
+                        self.emit_progress("execution", f"Could not open browser automatically: {str(e)}")
+                
+                import threading
+                browser_thread = threading.Thread(target=open_browser)
+                browser_thread.daemon = True
+                browser_thread.start()
+                
+                result = {
+                    'success': True,
+                    'method': run_method,
+                    'message': 'Streamlit application started successfully',
+                    'url': f'http://localhost:{port}',
+                    'status': 'running',
+                    'pid': process.pid,
+                    'port': port,
+                    'output': f'Streamlit server is running on http://localhost:{port}\n\nBrowser opened automatically!',
+                    'auto_opened': True
+                }
+            
             else:
                 # For regular Python scripts, run and capture output
+                cmd = [sys.executable, 'main.py']
                 try:
                     result = subprocess.run(
                         cmd,
@@ -926,44 +1998,232 @@ if __name__ == "__main__":
                             'status': 'failed',
                             'exit_code': result.returncode
                         }
-                    
+                        
                     result = execution_result
                     
                 except subprocess.TimeoutExpired:
                     result = {
                         'success': False,
                         'method': run_method,
-                        'error': 'Script execution timed out (60 seconds)',
-                        'output': '',
+                        'error': 'Execution timed out after 60 seconds',
                         'status': 'timeout'
                     }
                 except Exception as e:
                     result = {
                         'success': False,
-                        'method': run_method,
-                        'error': f"Execution error: {str(e)}",
-                        'output': '',
+                        'method': analysis.get('run_method', 'python'),
+                        'error': str(e),
                         'status': 'error'
                     }
             
-            # Restore original working directory
-            os.chdir(original_cwd)
-            
-            self.emit_progress("execution", f"Project execution completed with status: {result.get('status', 'unknown')}")
             return result
+    
+    def _execute_with_dynamic_method(self, project_id, project_path, run_method, analysis):
+        """Execute project using the dynamically determined method"""
+        try:
+            recommended_command = analysis.get('recommended_command', 'python run.py')
+            port = analysis.get('port', 8080)
             
+            self.emit_progress("execution", f"Executing: {recommended_command}")
+            
+            # Always try to run run.py first (our dynamic runner)
+            run_py_path = os.path.join(project_path, 'run.py')
+            if os.path.exists(run_py_path):
+                cmd = [sys.executable, 'run.py']
+                self.emit_progress("execution", f"Starting with dynamic runner: {' '.join(cmd)}")
+                
+                # Start the process
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    bufsize=1,
+                    universal_newlines=True,
+                    cwd=project_path
+                )
+                
+                self.running_processes[project_id] = process
+                
+                # Monitor process startup
+                startup_checks = 5
+                for i in range(startup_checks):
+                    time.sleep(1)
+                    
+                    # Check if process terminated early
+                    if process.poll() is not None:
+                        stdout, stderr = process.communicate()
+                        self.emit_progress("execution", f"Process failed to start. Exit code: {process.returncode}")
+                        if stdout:
+                            self.emit_progress("execution", f"Stdout: {stdout[:500]}")
+                        if stderr:
+                            self.emit_progress("execution", f"Stderr: {stderr[:500]}")
+                        return {
+                            'success': False,
+                            'method': run_method,
+                            'error': f"Process failed to start: {stderr or 'Process terminated unexpectedly'}",
+                            'output': stdout or '',
+                            'status': 'failed'
+                        }
+                    
+                    self.emit_progress("execution", f"Checking startup... ({i+1}/{startup_checks})")
+                
+                if process.poll() is None:  # Process is still running
+                    self.emit_progress("execution", f"Application started successfully!")
+                    
+                    # For web applications, test connectivity and open browser
+                    if run_method in ['web', 'streamlit', 'fastapi', 'flask']:
+                        try:
+                            time.sleep(2)  # Give server time to be ready
+                            self.emit_progress("execution", f"Server should be available on port {port}")
+                            
+                            # Open browser automatically
+                            def open_browser():
+                                time.sleep(1)
+                                url = f'http://localhost:{port}'
+                                if run_method == 'fastapi':
+                                    url += '/docs'  # Open API docs for FastAPI
+                                webbrowser.open(url)
+                                self.emit_progress("execution", f"Browser opened automatically: {url}")
+                            
+                            import threading
+                            browser_thread = threading.Thread(target=open_browser)
+                            browser_thread.daemon = True
+                            browser_thread.start()
+                            
+                        except Exception as e:
+                            self.emit_progress("execution", f"Could not open browser automatically: {str(e)}")
+                    
+                    return {
+                        'success': True,
+                        'method': run_method,
+                        'message': f'{analysis.get("project_type", "Application").title()} started successfully',
+                        'url': f'http://localhost:{port}' if port else None,
+                        'status': 'running',
+                        'pid': process.pid,
+                        'port': port,
+                        'output': f'Application is running on port {port}' if port else 'Application started successfully',
+                        'auto_opened': True,
+                        'project_type': analysis.get('project_type', 'unknown')
+                    }
+                else:
+                    # Final check - process terminated after startup monitoring
+                    stdout, stderr = process.communicate()
+                    self.emit_progress("execution", f"Application stopped unexpectedly after startup")
+                    return {
+                        'success': False,
+                        'method': run_method,
+                        'error': f"Application stopped unexpectedly: {stderr or 'Unknown error'}",
+                        'output': stdout or '',
+                        'status': 'failed'
+                    }
+            else:
+                # No run.py found, try direct execution based on analysis
+                return self._execute_direct_command(project_id, project_path, recommended_command, analysis)
+                
         except Exception as e:
-            # Restore original working directory
-            os.chdir(original_cwd)
-            error_result = {
+            self.emit_progress("execution", f"Dynamic execution failed: {str(e)}")
+            return {
                 'success': False,
                 'method': run_method,
-                'error': f"Execution failed: {str(e)}",
+                'error': str(e),
                 'output': '',
-                'status': 'error'
+                'status': 'failed'
             }
-            self.emit_progress("execution", f"Project execution failed: {str(e)}")
-            return error_result
+    
+    def _execute_direct_command(self, project_id, project_path, command, analysis):
+        """Execute project using direct command when no run.py is available"""
+        try:
+            # Parse the command
+            if isinstance(command, str):
+                cmd_parts = command.split()
+            else:
+                cmd_parts = command
+            
+            self.emit_progress("execution", f"Direct execution: {' '.join(cmd_parts)}")
+            
+            # Start the process
+            process = subprocess.Popen(
+                cmd_parts,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                bufsize=1,
+                universal_newlines=True,
+                cwd=project_path
+            )
+            
+            self.running_processes[project_id] = process
+            
+            # For quick-running scripts, get output
+            if analysis.get('project_type') in ['python', 'desktop']:
+                try:
+                    stdout, stderr = process.communicate(timeout=30)
+                    return {
+                        'success': process.returncode == 0,
+                        'method': analysis.get('run_method', 'python'),
+                        'error': stderr if process.returncode != 0 else None,
+                        'output': stdout,
+                        'status': 'completed',
+                        'exit_code': process.returncode
+                    }
+                except subprocess.TimeoutExpired:
+                    # Long-running process
+                    return {
+                        'success': True,
+                        'method': analysis.get('run_method', 'python'),
+                        'message': 'Long-running application started',
+                        'status': 'running',
+                        'pid': process.pid
+                    }
+            else:
+                # Web applications - monitor like before
+                time.sleep(3)
+                if process.poll() is None:
+                    return {
+                        'success': True,
+                        'method': analysis.get('run_method', 'web'),
+                        'message': 'Web application started',
+                        'status': 'running',
+                        'pid': process.pid,
+                        'port': analysis.get('port', 8080)
+                    }
+                else:
+                    stdout, stderr = process.communicate()
+                    return {
+                        'success': False,
+                        'method': analysis.get('run_method', 'web'),
+                        'error': stderr,
+                        'output': stdout,
+                        'status': 'failed'
+                    }
+                    
+        except Exception as e:
+            return {
+                'success': False,
+                'method': analysis.get('run_method', 'python'),
+                'error': str(e),
+                'output': '',
+                'status': 'failed'
+            }
+    
+    def stop_project(self, project_id):
+        """Stop a running project"""
+        try:
+            if hasattr(self, 'running_processes') and project_id in self.running_processes:
+                process = self.running_processes[project_id]
+                if process and process.poll() is None:
+                    process.terminate()
+                    # Wait a bit for graceful termination
+                    time.sleep(2)
+                    if process.poll() is None:
+                        process.kill()  # Force kill if still running
+                    del self.running_processes[project_id]
+                    return True
+            return False
+        except Exception as e:
+            print(f"Error stopping project {project_id}: {e}")
+            return False
 
     def stop_project_execution(self, project_id):
         """Stop a running project execution"""
@@ -1345,7 +2605,7 @@ def health_check():
     }})
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)'''
+    app.run(debug=False, host='0.0.0.0', port=5000, threaded=True, use_reloader=False)'''
 
         requirements_content = '''Flask==2.3.3
 Flask-CORS==4.0.0'''
@@ -1500,7 +2760,7 @@ if __name__ == '__main__':
     print("Press Ctrl+C to stop the server")
     
     try:
-        app.run(debug=True, host='0.0.0.0', port=5000)
+        app.run(debug=False, host='0.0.0.0', port=5000, threaded=True, use_reloader=False)
     except KeyboardInterrupt:
         print("\\nServer stopped.")
     except Exception as e:
@@ -2563,7 +3823,7 @@ def internal_server_error(e):
 
 # Run the application if this script is executed
 if __name__ == '__main__':
-    app.run(debug=True, host='127.0.0.1', port=8080)"""
+    app.run(debug=False, host='0.0.0.0', port=8080, threaded=True, use_reloader=False)"""
 
     def _get_fallback_run(self):
         """Get fallback run.py content"""
@@ -2576,30 +3836,49 @@ Run this file to start the development server.
 import os
 import sys
 from app import app
+from wsgiref.simple_server import make_server, WSGIServer
+import threading
+import webbrowser
+import time
+
+class QuietWSGIServer(WSGIServer):
+    \"\"\"A quieter WSGI server that doesn't log every request\"\"\"
+    def log_message(self, format, *args):
+        pass  # Suppress request logs
 
 def main():
     \"\"\"Main function to run the development server\"\"\"
+    port = 8080
+    host = '0.0.0.0'
+    
     print("Starting web application development server...")
-    print("Open your browser and go to: http://localhost:8080")
+    print(f"Open your browser and go to: http://localhost:{port}")
     print("Press Ctrl+C to stop the server")
     print("-" * 50)
     
     try:
-        # Run the Flask development server
-        app.run(
-            debug=True,
-            host='127.0.0.1',
-            port=8080,
-            use_reloader=True,
-            use_debugger=True
-        )
+        # Use Python's built-in WSGI server instead of Flask's development server
+        with make_server(host, port, app, server_class=QuietWSGIServer) as httpd:
+            print(f"Server started successfully on http://localhost:{port}")
+            
+            # Open browser in a separate thread
+            def open_browser():
+                time.sleep(1)
+                webbrowser.open(f'http://localhost:{port}')
+            
+            browser_thread = threading.Thread(target=open_browser)
+            browser_thread.daemon = True
+            browser_thread.start()
+            
+            # Serve forever
+            httpd.serve_forever()
+            
     except KeyboardInterrupt:
         print("\\nServer stopped by user.")
     except OSError as e:
         if "Address already in use" in str(e):
-            print("\\nError: Port 8080 is already in use.")
-            print("Try running on a different port:")
-            print("python -c \\"from app import app; app.run(debug=True, port=8081)\\"")
+            print(f"\\nError: Port {port} is already in use.")
+            print("Try stopping other applications using this port.")
         else:
             print(f"\\nError starting server: {e}")
     except Exception as e:

@@ -26,6 +26,7 @@ function CodeGenerator() {
   const [runningProjects, setRunningProjects] = useState([]);
   const [showAdvancedLogs, setShowAdvancedLogs] = useState(false);
   const [generationStats, setGenerationStats] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
 
   // File Explorer Component
   const FileExplorer = ({ files, path = '' }) => {
@@ -53,7 +54,7 @@ function CodeGenerator() {
     };
 
     return (
-      <div className="space-y-1">
+      <div className="space-y-1 file-explorer-bw">
         {Object.entries(files).map(([name, item]) => {
           const currentPath = path ? `${path}/${name}` : name;
           
@@ -63,13 +64,13 @@ function CodeGenerator() {
               <div key={currentPath}>
                 <div
                   onClick={() => toggleFolder(currentPath)}
-                  className="flex items-center space-x-3 p-2 rounded-lg cursor-pointer hover:bg-white/30 transition-premium"
+                  className="flex items-center space-x-3 p-2 rounded-lg cursor-pointer hover:bg-white/20 transition-bw file-item-bw"
                 >
-                  <span className="text-premium-muted text-sm w-4 flex justify-center">
+                  <span className="text-bw-secondary text-sm w-4 flex justify-center">
                     {isExpanded ? '▼' : '▶'}
                   </span>
-                  <span className="text-premium-accent text-sm">📁</span>
-                  <span className="text-premium-primary text-sm font-medium">{name}</span>
+                  <span className="text-bw-accent text-sm">📁</span>
+                  <span className="folder-name-bw flex-1">{name}</span>
                 </div>
                 {isExpanded && (
                   <div className="ml-6 border-l border-white/20 pl-3 mt-1">
@@ -86,16 +87,16 @@ function CodeGenerator() {
                   setSelectedFile(item);
                   fetchFileContent(selectedProject.id, item.path);
                 }}
-                className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer transition-premium ${
+                className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer transition-bw file-item-bw ${
                   selectedFile?.path === item.path
-                    ? 'bg-white/50 border border-premium shadow-premium'
-                    : 'hover:bg-white/30'
+                    ? 'selected bg-white/20 border border-white/30 shadow-bw'
+                    : 'hover:bg-white/15'
                 }`}
               >
-                <span className="text-premium-muted text-sm w-4 flex justify-center">◦</span>
-                <span className="text-premium-muted text-sm">{getFileIcon(name)}</span>
-                <span className="text-premium-primary text-sm font-mono flex-1">{name}</span>
-                <span className="text-xs text-premium-muted">
+                <span className="text-bw-secondary text-sm w-4 flex justify-center">◦</span>
+                <span className="text-bw-accent text-sm">{getFileIcon(name)}</span>
+                <span className="file-name-bw flex-1">{name}</span>
+                <span className="file-size-bw">
                   {Math.round(item.size / 1024 * 10) / 10}KB
                 </span>
               </div>
@@ -171,6 +172,7 @@ function CodeGenerator() {
 
     newSocket.on('connect', () => {
       console.log('Connected to server');
+      setIsConnected(true);
       addLog('🔗 Connected to Python Code Generator', 'success');
     });
 
@@ -236,6 +238,7 @@ function CodeGenerator() {
 
     newSocket.on('disconnect', () => {
       console.log('Disconnected from server');
+      setIsConnected(false);
       setIsGenerating(false); // Reset generating state on disconnect
       setIsExecuting(false); // Reset execution state on disconnect
       addLog('🔌 Disconnected from Python Code Generator', 'warning');
@@ -330,6 +333,11 @@ function CodeGenerator() {
       
       if (response.data.run_method === 'streamlit') {
         addLog('🌐 Streamlit app will be available at http://localhost:8501', 'info');
+      } else if (response.data.run_method === 'web') {
+        addLog('🌍 Web application will be available at http://localhost:8080', 'info');
+        addLog('🖥️ Full-stack web application with Flask backend and HTML/CSS/JS frontend', 'info');
+      } else {
+        addLog('🐍 Running Python script...', 'info');
       }
       
     } catch (error) {
@@ -402,86 +410,100 @@ function CodeGenerator() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-indigo-50 relative overflow-hidden">
-      {/* Premium Animated Background Elements */}
+    <div className="generator-bw min-h-screen relative overflow-hidden">
+      {/* Black & White Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-10 left-10 w-72 h-72 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse"></div>
-        <div className="absolute top-20 right-20 w-96 h-96 bg-gradient-to-r from-yellow-400 to-pink-400 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse animation-delay-2000"></div>
-        <div className="absolute bottom-20 left-20 w-80 h-80 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse animation-delay-4000"></div>
+        <div className="absolute top-10 left-10 w-72 h-72 bg-gradient-to-r from-black to-gray-800 rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-pulse"></div>
+        <div className="absolute top-20 right-20 w-96 h-96 bg-gradient-to-r from-gray-900 to-black rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-pulse animation-delay-2000"></div>
+        <div className="absolute bottom-20 left-20 w-80 h-80 bg-gradient-to-r from-gray-700 to-black rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-pulse animation-delay-4000"></div>
       </div>
       
-      {/* Premium Geometric Pattern */}
+      {/* Black & White Geometric Pattern */}
       <div 
-        className="absolute inset-0 opacity-5"
+        className="absolute inset-0 opacity-10"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%236366f1' fill-opacity='0.3'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
         }}
       ></div>
       
       <div className="relative z-10 min-h-screen">
-        {/* Premium Header */}
-        <header className="glass-premium-strong border-b border-white/20 shadow-premium-lg">
+        {/* Black & White Header */}
+        <header className="glass-bw-strong border-b border-white/20 shadow-bw-lg">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 {/* Back Button */}
                 <button
                   onClick={() => navigate('/')}
-                  className="btn-premium-secondary px-4 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 shadow-premium hover:shadow-premium-lg transition-premium"
+                  className="btn-bw-secondary px-4 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 shadow-bw hover:shadow-bw-lg transition-bw"
                 >
                   <span>←</span>
                   <span>Home</span>
                 </button>
                 
-                <div className="relative floating-premium">
-                  <div className="w-12 h-12 bg-premium-gradient rounded-xl flex items-center justify-center shadow-premium border border-white/20">
-                    <div className="text-white text-lg font-bold font-mono">{'</>'}</div>
+                <div className="relative floating-bw">
+                  <div className="w-12 h-12 bg-gradient-to-br from-white to-gray-300 rounded-xl flex items-center justify-center shadow-bw border border-white/20">
+                    <div className="text-black text-lg font-bold font-mono">{'</>'}</div>
                   </div>
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full border-2 border-white shadow-premium pulse"></div>
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-white to-gray-200 rounded-full border-2 border-black shadow-bw pulse-bw"></div>
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold gradient-text-premium tracking-tight">
+                  <h1 className="text-2xl font-bold gradient-text-bw tracking-tight">
                     Python Code Generator
                   </h1>
-                  <p className="text-premium-secondary text-sm font-medium">
-                    ✨ Premium AI Development Platform
-                  </p>
+                  <div className="flex items-center space-x-3">
+                    <p className="text-bw-secondary text-sm font-medium">
+                      ✨ Premium AI Development Platform
+                    </p>
+                    <div className={`flex items-center space-x-1 text-xs px-2 py-1 rounded-full ${
+                      isConnected 
+                        ? 'bg-white/20 text-white border border-white/30' 
+                        : 'bg-gray-500/20 text-gray-300 border border-gray-500/30'
+                    }`}>
+                      <div className={`w-2 h-2 rounded-full ${
+                        isConnected ? 'bg-white' : 'bg-gray-400'
+                      } ${isConnected ? 'animate-pulse' : ''}`}></div>
+                      <span className="font-medium">
+                        {isConnected ? 'Connected' : 'Disconnected'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
               
-              {/* Premium Navigation */}
-              <nav className="flex space-x-2 glass-premium rounded-lg p-2 border border-white/20">
+              {/* Black & White Navigation */}
+              <nav className="flex space-x-2 glass-bw rounded-lg p-2 border border-white/20">
                 <button
                   onClick={() => setActiveTab('generator')}
-                  className={`px-4 py-2 rounded-lg transition-premium font-semibold text-sm relative overflow-hidden ${
+                  className={`px-4 py-2 rounded-lg transition-bw font-semibold text-sm relative overflow-hidden ${
                     activeTab === 'generator'
-                      ? 'btn-premium text-white shadow-premium'
-                      : 'text-premium-secondary hover:text-premium-primary hover:bg-white/30'
+                      ? 'btn-bw-primary text-black shadow-bw'
+                      : 'text-bw-secondary hover:text-bw-primary hover:bg-white/30'
                   }`}
                 >
                   🚀 Generator
                 </button>
                 <button
                   onClick={() => setActiveTab('run')}
-                  className={`px-4 py-2 rounded-lg transition-premium font-semibold text-sm relative overflow-hidden ${
+                  className={`px-4 py-2 rounded-lg transition-bw font-semibold text-sm relative overflow-hidden ${
                     activeTab === 'run'
-                      ? 'btn-premium text-white shadow-premium'
-                      : 'text-premium-secondary hover:text-premium-primary hover:bg-white/30'
+                      ? 'btn-bw-primary text-black shadow-bw'
+                      : 'text-bw-secondary hover:text-bw-primary hover:bg-white/30'
                   }`}
                 >
                   ⚡ Run & Test
                   {runningProjects.length > 0 && (
-                    <span className="absolute -top-1 -right-1 status-premium-success text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                    <span className="absolute -top-1 -right-1 status-bw-success text-black text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
                       {runningProjects.length}
                     </span>
                   )}
                 </button>
                 <button
                   onClick={() => setActiveTab('history')}
-                  className={`px-4 py-2 rounded-lg transition-premium font-semibold text-sm relative overflow-hidden ${
+                  className={`px-4 py-2 rounded-lg transition-bw font-semibold text-sm relative overflow-hidden ${
                     activeTab === 'history'
-                      ? 'btn-premium text-white shadow-premium'
-                      : 'text-premium-secondary hover:text-premium-primary hover:bg-white/30'
+                      ? 'btn-bw-primary text-black shadow-bw'
+                      : 'text-bw-secondary hover:text-bw-primary hover:bg-white/30'
                   }`}
                 >
                   📚 Archive
@@ -494,27 +516,27 @@ function CodeGenerator() {
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-6 py-8">
           {activeTab === 'generator' && (
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-              {/* Premium Input Section */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 generator-bw">
+              {/* Premium Black & White Input Section */}
               <div className="xl:col-span-1">
-                <div className="card-premium p-6 shadow-premium-lg hover:shadow-premium-xl transition-premium">
+                <div className="card-bw-glow p-6 shadow-bw-xl hover:shadow-bw-xl transition-bw">
                   <div className="flex items-center space-x-3 mb-6">
-                    <div className="w-10 h-10 bg-premium-gradient rounded-xl flex items-center justify-center shadow-premium">
-                      <span className="text-white text-lg">✨</span>
+                    <div className="w-10 h-10 bg-gradient-to-br from-white to-gray-300 rounded-xl flex items-center justify-center shadow-bw floating-bw">
+                      <span className="text-black text-lg">✨</span>
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-premium-primary">Project Specification</h2>
-                      <p className="text-premium-secondary text-sm">Define your dream project</p>
+                      <h2 className="text-xl font-bold text-bw-primary">Project Specification</h2>
+                      <p className="text-bw-secondary text-sm">Define your dream project</p>
                     </div>
                   </div>
                   
                   <div className="space-y-6">
                     <div className="relative">
-                      <label className="block text-sm font-semibold text-premium-primary mb-3">
+                      <label className="block text-sm font-semibold text-bw-primary mb-3">
                         💭 Project Description
                       </label>
                       <textarea
-                        className="input-premium w-full h-40 p-4 resize-none focus-premium text-sm leading-relaxed"
+                        className="input-bw w-full h-40 p-4 resize-none focus-bw text-sm leading-relaxed"
                         placeholder="🚀 Describe your Python project in detail...
 
 💡 Example: Create a web scraping application that extracts product information from e-commerce websites, stores data in PostgreSQL database, and generates beautiful analytical reports with interactive data visualization charts."
@@ -522,7 +544,7 @@ function CodeGenerator() {
                         onChange={(e) => setPrompt(e.target.value)}
                         disabled={isGenerating}
                       />
-                      <div className="absolute bottom-3 right-3 text-xs text-premium-muted bg-white/70 px-2 py-1 rounded-lg backdrop-blur-sm">
+                      <div className="absolute bottom-3 right-3 text-xs text-bw-muted bg-black/70 px-2 py-1 rounded-lg backdrop-blur-sm">
                         {prompt.length}/2000
                       </div>
                     </div>
@@ -531,11 +553,11 @@ function CodeGenerator() {
                       <button 
                         onClick={handleGenerate}
                         disabled={isGenerating || !prompt.trim()}
-                        className="btn-premium w-full py-3 px-6 rounded-xl font-semibold transition-premium shadow-premium hover:shadow-premium-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3"
+                        className="btn-bw-primary w-full py-3 px-6 rounded-xl font-semibold transition-bw shadow-bw hover:shadow-bw-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3"
                       >
                         {isGenerating ? (
                           <>
-                            <div className="spinner-premium"></div>
+                            <div className="spinner-bw"></div>
                             <span>Creating Magic...</span>
                           </>
                         ) : (
@@ -549,7 +571,7 @@ function CodeGenerator() {
                       {currentProject?.result?.success && (
                         <button 
                           onClick={handleDownload}
-                          className="btn-premium-success w-full py-3 px-6 rounded-xl font-semibold transition-premium shadow-premium hover:shadow-premium-lg flex items-center justify-center space-x-3"
+                          className="btn-bw-success w-full py-3 px-6 rounded-xl font-semibold transition-bw shadow-bw hover:shadow-bw-lg flex items-center justify-center space-x-3"
                         >
                           <span>📦</span>
                           <span>Download Project</span>
@@ -557,9 +579,9 @@ function CodeGenerator() {
                       )}
                     </div>
 
-                    {/* Premium Templates */}
-                    <div className="border-t border-premium pt-5">
-                      <h3 className="text-sm font-bold text-premium-primary mb-4">🎯 Quick Templates</h3>
+                    {/* Premium Black & White Templates */}
+                    <div className="border-t border-white/20 pt-5">
+                      <h3 className="text-sm font-bold text-bw-primary mb-4">🎯 Quick Templates</h3>
                       <div className="grid grid-cols-1 gap-2">
                         {[
                           { icon: "🔐", text: "Web API with authentication system" },
@@ -570,7 +592,7 @@ function CodeGenerator() {
                           <button
                             key={idx}
                             onClick={() => setPrompt(template.text)}
-                            className="text-left p-3 bg-white/40 hover:bg-white/60 rounded-lg text-sm text-premium-secondary hover:text-premium-primary transition-premium border border-white/20 hover:border-premium shadow-premium hover:shadow-premium-lg"
+                            className="text-left p-3 bg-black/40 hover:bg-black/60 rounded-lg text-sm text-bw-secondary hover:text-bw-primary transition-bw border border-white/20 hover:border-white/40 shadow-bw hover:shadow-bw-lg"
                           >
                             <div className="flex items-center space-x-2">
                               <span className="text-base">{template.icon}</span>
@@ -584,26 +606,26 @@ function CodeGenerator() {
                 </div>
               </div>
 
-              {/* Premium Logs Section */}
+              {/* Premium Black & White Logs Section */}
               <div className="xl:col-span-2">
-                <div className="card-premium p-6 h-[700px] flex flex-col shadow-premium-lg">
+                <div className="card-bw-glow p-6 h-[700px] flex flex-col shadow-bw-xl">
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-premium-gradient rounded-xl flex items-center justify-center shadow-premium">
-                        <span className="text-white text-lg">🎯</span>
+                      <div className="w-10 h-10 bg-gradient-to-br from-white to-gray-300 rounded-xl flex items-center justify-center shadow-bw floating-bw">
+                        <span className="text-black text-lg">🎯</span>
                       </div>
                       <div>
-                        <h2 className="text-xl font-bold text-premium-primary">Development Console</h2>
-                        <p className="text-premium-secondary text-sm">Real-time AI agent collaboration ✨</p>
+                        <h2 className="text-xl font-bold text-bw-primary">Development Console</h2>
+                        <p className="text-bw-secondary text-sm">Real-time AI agent collaboration ✨</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={() => setShowAdvancedLogs(!showAdvancedLogs)}
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-premium border ${
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-bw border ${
                           showAdvancedLogs 
-                            ? 'btn-premium text-white' 
-                            : 'btn-premium-secondary'
+                            ? 'btn-bw-primary text-black' 
+                            : 'btn-bw-secondary'
                         }`}
                       >
                         {showAdvancedLogs ? '🔍 Advanced' : '📋 Simple'}
@@ -611,7 +633,7 @@ function CodeGenerator() {
                       {logs.length > 0 && (
                         <button
                           onClick={() => setLogs([])}
-                          className="text-premium-muted hover:text-premium-primary px-4 py-3 rounded-xl hover:bg-white/50 transition-premium border border-premium text-sm font-medium"
+                          className="text-bw-muted hover:text-bw-primary px-4 py-3 rounded-xl hover:bg-white/20 transition-bw border border-white/20 text-sm font-medium"
                         >
                           🗑️ Clear
                         </button>
@@ -619,50 +641,50 @@ function CodeGenerator() {
                     </div>
                   </div>
 
-                  {/* Generation Statistics */}
+                  {/* Black & White Generation Statistics */}
                   {(isGenerating || generationStats) && (
-                    <div className="mb-8 p-6 glass-premium rounded-xl border border-white/20">
-                      <h3 className="text-lg font-bold text-premium-primary mb-4">📊 Generation Metrics</h3>
+                    <div className="mb-8 p-6 glass-bw-strong rounded-xl border border-white/20">
+                      <h3 className="text-lg font-bold text-bw-primary mb-4">📊 Generation Metrics</h3>
                       <div className="grid grid-cols-3 gap-4 text-sm">
-                        <div className="bg-white/50 p-4 rounded-xl border border-white/20">
-                          <div className="text-premium-muted font-medium">🤖 Agent Calls</div>
-                          <div className="text-premium-primary font-bold text-xl font-mono">{generationStats?.agentCalls || (isGenerating ? '...' : '0')}</div>
+                        <div className="bg-black/50 p-4 rounded-xl border border-white/20">
+                          <div className="text-bw-muted font-medium">🤖 Agent Calls</div>
+                          <div className="text-bw-primary font-bold text-xl font-mono">{generationStats?.agentCalls || (isGenerating ? '...' : '0')}</div>
                         </div>
-                        <div className="bg-white/50 p-4 rounded-xl border border-white/20">
-                          <div className="text-premium-muted font-medium">📁 Files Created</div>
-                          <div className="text-premium-primary font-bold text-xl font-mono">{generationStats?.filesCreated || (isGenerating ? '...' : '0')}</div>
+                        <div className="bg-black/50 p-4 rounded-xl border border-white/20">
+                          <div className="text-bw-muted font-medium">📁 Files Created</div>
+                          <div className="text-bw-primary font-bold text-xl font-mono">{generationStats?.filesCreated || (isGenerating ? '...' : '0')}</div>
                         </div>
-                        <div className="bg-white/50 p-4 rounded-xl border border-white/20">
-                          <div className="text-premium-muted font-medium">⏱️ Duration</div>
-                          <div className="text-premium-primary font-bold text-xl font-mono">{generationStats?.duration || (isGenerating ? 'Active' : '0s')}</div>
+                        <div className="bg-black/50 p-4 rounded-xl border border-white/20">
+                          <div className="text-bw-muted font-medium">⏱️ Duration</div>
+                          <div className="text-bw-primary font-bold text-xl font-mono">{generationStats?.duration || (isGenerating ? 'Active' : '0s')}</div>
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {/* Execution Results */}
+                  {/* Black & White Execution Results */}
                   {executionResult && (
-                    <div className="mb-8 p-6 glass-premium rounded-xl border border-white/20">
-                      <h3 className="text-lg font-bold text-premium-primary mb-4 flex items-center space-x-3">
+                    <div className="mb-8 p-6 glass-bw-strong rounded-xl border border-white/20">
+                      <h3 className="text-lg font-bold text-bw-primary mb-4 flex items-center space-x-3">
                         <span>🚀 Execution Result</span>
                         <span className={`text-sm px-3 py-1 rounded-lg font-semibold ${
                           executionResult.success 
-                            ? 'status-premium-success text-white' 
-                            : 'status-premium-error text-white'
+                            ? 'status-bw-success text-black' 
+                            : 'status-bw-error text-white'
                         }`}>
                           {executionResult.method}
                         </span>
                       </h3>
                       
                       {executionResult.method === 'streamlit' && executionResult.success ? (
-                        <div className="bg-emerald-900/20 border border-emerald-700 rounded p-3 text-sm">
-                          <div className="text-emerald-300 font-medium mb-2 flex items-center space-x-2">
+                        <div className="bg-black/20 border border-white/30 rounded p-3 text-sm">
+                          <div className="text-white font-medium mb-2 flex items-center space-x-2">
                             <span>🌐 Streamlit App Running</span>
                             {executionResult.auto_opened && (
-                              <span className="text-xs bg-emerald-800/50 px-2 py-1 rounded">Auto-opened</span>
+                              <span className="text-xs bg-white/20 px-2 py-1 rounded">Auto-opened</span>
                             )}
                           </div>
-                          <div className="text-emerald-100 text-xs mb-3">
+                          <div className="text-bw-secondary text-xs mb-3">
                             {executionResult.auto_opened ? 
                               'Application opened automatically in your browser' : 
                               'Access your application at:'
@@ -673,7 +695,7 @@ function CodeGenerator() {
                               href="http://localhost:8501" 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="text-emerald-300 underline hover:text-emerald-200 font-mono text-xs flex items-center space-x-1"
+                              className="text-white underline hover:text-gray-300 font-mono text-xs flex items-center space-x-1"
                             >
                               <span>🔗</span>
                               <span>http://localhost:8501</span>
@@ -687,14 +709,61 @@ function CodeGenerator() {
                           <div className="flex items-center space-x-2">
                             <button
                               onClick={() => stopProject(selectedProject?.id)}
-                              className="px-3 py-1.5 bg-red-700/20 text-red-300 rounded text-xs hover:bg-red-700/30 transition-colors border border-red-700/50 flex items-center space-x-1"
+                              className="px-3 py-1.5 bg-white/20 text-white rounded text-xs hover:bg-white/30 transition-colors border border-white/50 flex items-center space-x-1"
                             >
                               <span>🛑</span>
                               <span>Stop Server</span>
                             </button>
                             <button
                               onClick={() => window.open('http://localhost:8501', '_blank')}
-                              className="px-3 py-1.5 bg-blue-700/20 text-blue-300 rounded text-xs hover:bg-blue-700/30 transition-colors border border-blue-700/50 flex items-center space-x-1"
+                              className="px-3 py-1.5 bg-white/10 text-white rounded text-xs hover:bg-white/20 transition-colors border border-white/50 flex items-center space-x-1"
+                            >
+                              <span>🔗</span>
+                              <span>Open in New Tab</span>
+                            </button>
+                          </div>
+                        </div>
+                      ) : executionResult.method === 'web' && executionResult.success ? (
+                        <div className="bg-black/20 border border-white/30 rounded p-3 text-sm">
+                          <div className="text-white font-medium mb-2 flex items-center space-x-2">
+                            <span>🌐 Web Application Running</span>
+                            {executionResult.auto_opened && (
+                              <span className="text-xs bg-white/20 px-2 py-1 rounded">Auto-opened</span>
+                            )}
+                          </div>
+                          <div className="text-bw-secondary text-xs mb-3">
+                            {executionResult.auto_opened ? 
+                              'Web application opened automatically in your browser' : 
+                              'Access your web application at:'
+                            }
+                          </div>
+                          <div className="flex items-center space-x-3 mb-3">
+                            <a 
+                              href="http://localhost:8080" 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-white underline hover:text-gray-300 font-mono text-xs flex items-center space-x-1"
+                            >
+                              <span>🔗</span>
+                              <span>http://localhost:8080</span>
+                              <div className="w-3 h-3">
+                                <svg fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z"/>
+                                </svg>
+                              </div>
+                            </a>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => stopProject(selectedProject?.id)}
+                              className="px-3 py-1.5 bg-white/20 text-white rounded text-xs hover:bg-white/30 transition-colors border border-white/50 flex items-center space-x-1"
+                            >
+                              <span>🛑</span>
+                              <span>Stop Server</span>
+                            </button>
+                            <button
+                              onClick={() => window.open('http://localhost:8080', '_blank')}
+                              className="px-3 py-1.5 bg-white/10 text-white rounded text-xs hover:bg-white/20 transition-colors border border-white/50 flex items-center space-x-1"
                             >
                               <span>🔗</span>
                               <span>Open in New Tab</span>
@@ -704,12 +773,12 @@ function CodeGenerator() {
                       ) : (
                         <div className="text-xs">
                           {executionResult.output && (
-                            <pre className="glass-premium p-3 rounded border border-white/20 text-premium-primary overflow-x-auto whitespace-pre-wrap font-mono text-sm">
+                            <pre className="glass-bw-strong p-3 rounded border border-white/20 text-bw-primary overflow-x-auto whitespace-pre-wrap font-mono text-sm">
                               {executionResult.output}
                             </pre>
                           )}
                           {executionResult.error && (
-                            <div className="mt-2 bg-red-900/20 border border-red-700 rounded p-3 text-red-200">
+                            <div className="mt-2 bg-white/10 border border-white/30 rounded p-3 text-bw-primary">
                               {executionResult.error}
                             </div>
                           )}
@@ -718,16 +787,16 @@ function CodeGenerator() {
                     </div>
                   )}
                   
-                  <div className="flex-1 overflow-y-auto glass-premium rounded-xl p-6 border border-white/20 backdrop-blur-md">
+                  <div className="flex-1 overflow-y-auto glass-bw-strong rounded-xl p-6 border border-white/20 backdrop-blur-md">
                     {logs.length === 0 ? (
                       <div className="flex items-center justify-center h-full">
                         <div className="text-center">
-                          <div className="w-16 h-16 bg-premium-gradient rounded-xl flex items-center justify-center mx-auto mb-6 shadow-premium floating-premium">
-                            <span className="text-white text-2xl">🚀</span>
+                          <div className="w-16 h-16 bg-gradient-to-br from-white to-gray-300 rounded-xl flex items-center justify-center mx-auto mb-6 shadow-bw floating-bw">
+                            <span className="text-black text-2xl">🚀</span>
                           </div>
-                          <h3 className="text-xl font-bold text-premium-primary mb-3">Ready for Development</h3>
-                          <p className="text-premium-secondary mb-6">Enter project specifications to begin AI-powered code generation ✨</p>
-                          <div className="text-sm text-premium-muted glass-premium rounded-lg p-4 border border-white/20">
+                          <h3 className="text-xl font-bold text-bw-primary mb-3">Ready for Development</h3>
+                          <p className="text-bw-secondary mb-6">Enter project specifications to begin AI-powered code generation ✨</p>
+                          <div className="text-sm text-bw-muted glass-bw rounded-lg p-4 border border-white/20">
                             🤖 Multi-agent system: Planning → Development → Testing → Optimization
                           </div>
                         </div>
@@ -737,11 +806,11 @@ function CodeGenerator() {
                         {logs.map((log, index) => (
                           <div 
                             key={log.id} 
-                            className={`p-4 rounded-lg border-l-4 transition-premium shadow-premium ${
-                              log.type === 'success' ? 'bg-emerald-50 border-emerald-400 text-emerald-800' :
-                              log.type === 'warning' ? 'bg-amber-50 border-amber-400 text-amber-800' :
-                              log.type === 'error' ? 'bg-red-50 border-red-400 text-red-800' :
-                              'bg-blue-50 border-blue-400 text-blue-800'
+                            className={`p-4 rounded-lg border-l-4 transition-bw shadow-bw ${
+                              log.type === 'success' ? 'bg-black/30 border-white text-white' :
+                              log.type === 'warning' ? 'bg-black/40 border-gray-300 text-gray-200' :
+                              log.type === 'error' ? 'bg-black/50 border-gray-100 text-gray-100' :
+                              'bg-black/20 border-gray-400 text-gray-300'
                             }`}
                             style={{
                               animation: `slideInRight 0.5s ease-out ${index * 0.05}s both`
@@ -751,12 +820,12 @@ function CodeGenerator() {
                               <div className="flex-1">
                                 <span className="font-semibold text-sm pr-4">{log.message}</span>
                                 {showAdvancedLogs && log.details && (
-                                  <div className="mt-2 text-xs opacity-80 code-premium p-3 rounded-lg">
+                                  <div className="mt-2 text-xs bg-black/30 p-3 rounded-lg border border-white/20 font-mono">
                                     {typeof log.details === 'string' ? log.details : JSON.stringify(log.details, null, 2)}
                                   </div>
                                 )}
                               </div>
-                              <span className="text-xs opacity-70 flex-shrink-0 bg-white/50 px-2 py-1 rounded-lg font-mono font-medium">
+                              <span className="text-xs flex-shrink-0 bg-black/50 text-white px-2 py-1 rounded-lg font-mono font-medium">
                                 {log.timestamp}
                               </span>
                             </div>
@@ -770,47 +839,47 @@ function CodeGenerator() {
             </div>
           )}
 
-          {/* Premium Run & Test Tab */}
+          {/* Black & White Run & Test Tab */}
           {activeTab === 'run' && (
             <div className="space-y-12">
-              {/* Premium Running Projects Status */}
+              {/* Black & White Running Projects Status */}
               {runningProjects.length > 0 && (
-                <div className="card-premium-glow p-10 shadow-premium-xl">
+                <div className="card-bw p-10 shadow-bw-xl">
                   <div className="flex items-center space-x-4 mb-8">
-                    <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center shadow-premium-lg">
+                    <div className="w-14 h-14 bg-black border border-white/30 rounded-2xl flex items-center justify-center shadow-bw-lg">
                       <span className="text-white text-2xl">⚡</span>
                     </div>
                     <div>
-                      <h3 className="text-2xl font-bold text-premium-primary">✨ Currently Running Projects</h3>
-                      <p className="text-premium-secondary text-lg">{runningProjects.length} project{runningProjects.length > 1 ? 's' : ''} actively running</p>
+                      <h3 className="text-2xl font-bold text-bw-primary">✨ Currently Running Projects</h3>
+                      <p className="text-bw-secondary text-lg">{runningProjects.length} project{runningProjects.length > 1 ? 's' : ''} actively running</p>
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {runningProjects.map((project) => (
-                      <div key={project.project_id} className="glass-premium-strong border border-white/30 rounded-2xl p-6 shadow-premium hover:shadow-premium-lg transition-premium">
+                      <div key={project.project_id} className="glass-bw-strong border border-white/30 rounded-2xl p-6 shadow-bw hover:shadow-bw-lg transition-bw">
                         <div className="flex items-start justify-between mb-4">
                           <div>
-                            <h4 className="text-premium-primary font-bold text-lg">🚀 Active Project</h4>
-                            <p className="text-premium-muted font-mono text-sm bg-white/50 px-3 py-1 rounded-lg inline-block">{project.project_id.substring(0, 8)}...</p>
+                            <h4 className="text-bw-primary font-bold text-lg">🚀 Active Project</h4>
+                            <p className="text-bw-muted font-mono text-sm bg-white/20 px-3 py-1 rounded-lg inline-block">{project.project_id.substring(0, 8)}...</p>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <div className="w-3 h-3 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full animate-pulse shadow-premium"></div>
-                            <span className="text-premium-primary text-sm font-semibold">Running</span>
+                            <div className="w-3 h-3 bg-white rounded-full animate-pulse shadow-bw"></div>
+                            <span className="text-bw-primary text-sm font-semibold">Running</span>
                           </div>
                         </div>
                         
                         <div className="flex items-center space-x-3">
                           <button
                             onClick={() => window.open('http://localhost:8501', '_blank')}
-                            className="btn-premium flex-1 py-3 px-4 rounded-xl text-sm font-semibold flex items-center justify-center space-x-2"
+                            className="btn-bw-primary flex-1 py-3 px-4 rounded-xl text-sm font-semibold flex items-center justify-center space-x-2"
                           >
                             <span>🌐</span>
                             <span>Open App</span>
                           </button>
                           <button
                             onClick={() => stopProject(project.project_id)}
-                            className="btn-premium-secondary px-4 py-3 text-red-600 border-red-200 hover:border-red-400 rounded-xl text-sm font-semibold flex items-center space-x-2"
+                            className="btn-bw-secondary px-4 py-3 text-white border-white/30 hover:border-white/50 rounded-xl text-sm font-semibold flex items-center space-x-2"
                           >
                             <span>🛑</span>
                             <span>Stop</span>
@@ -822,28 +891,27 @@ function CodeGenerator() {
                 </div>
               )}
 
-              <div className="card-premium p-6 shadow-premium-lg">
+              <div className="card-bw p-6 shadow-bw-xl">
                 <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl flex items-center justify-center shadow-premium">
+                  <div className="w-10 h-10 bg-black border border-white/30 rounded-xl flex items-center justify-center shadow-bw">
                     <span className="text-white text-lg">⚡</span>
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold gradient-text-premium">Project Execution Center</h2>
-                    <p className="text-premium-secondary text-sm">Run and test your generated Python projects ✨</p>
+                    <h2 className="text-xl font-bold text-bw-primary">Project Execution Center</h2>
+                    <p className="text-bw-secondary text-sm">Run and test your generated Python projects ✨</p>
                   </div>
                 </div>
 
                 {projectHistory.length === 0 ? (
                   <div className="text-center py-16">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-premium floating-premium relative">
-                      <div className="absolute inset-0 bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 rounded-2xl blur-lg opacity-30"></div>
-                      <span className="text-white text-2xl relative z-10">⚡</span>
+                    <div className="w-16 h-16 bg-black border border-white/30 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-bw">
+                      <span className="text-white text-2xl">⚡</span>
                     </div>
-                    <h3 className="text-xl font-bold text-premium-primary mb-3">No Projects Available</h3>
-                    <p className="text-premium-secondary mb-6">Generate your first Python project to get started ✨</p>
+                    <h3 className="text-xl font-bold text-bw-primary mb-3">No Projects Available</h3>
+                    <p className="text-bw-secondary mb-6">Generate your first Python project to get started ✨</p>
                     <button
                       onClick={() => setActiveTab('generator')}
-                      className="btn-premium px-6 py-3 rounded-xl font-semibold flex items-center space-x-2 shadow-premium"
+                      className="btn-bw-primary px-6 py-3 rounded-xl font-semibold flex items-center space-x-2 shadow-bw mx-auto"
                     >
                       <span>🚀</span>
                       <span>Go to Generator</span>
@@ -854,29 +922,29 @@ function CodeGenerator() {
                     {projectHistory.filter(p => p.status === 'completed').map((project, index) => (
                       <div
                         key={project.id}
-                        className="card-premium p-6 hover:scale-105 transition-premium shadow-premium hover:shadow-premium-lg"
+                        className="card-bw p-6 hover:scale-105 transition-bw shadow-bw-lg hover:shadow-bw-xl"
                         style={{
                           animation: `scaleIn 0.5s ease-out ${index * 0.1}s both`
                         }}
                       >
                         <div className="flex items-start justify-between mb-4">
-                          <h3 className="text-premium-primary font-bold text-lg truncate pr-2">{project.name}</h3>
-                          <span className="badge-premium text-xs">
+                          <h3 className="text-bw-primary font-bold text-lg truncate pr-2">{project.name}</h3>
+                          <span className="badge-bw-status">
                             ✅ Ready
                           </span>
                         </div>
                         
-                        <p className="text-premium-secondary text-sm mb-6 line-clamp-2">{project.description}</p>
+                        <p className="text-bw-secondary text-sm mb-6 line-clamp-2">{project.description}</p>
                         
                         <div className="space-y-3">
                           <button
                             onClick={() => runProject(project.id)}
                             disabled={isExecuting}
-                            className="btn-premium-success w-full py-2 px-3 rounded-xl font-medium transition-premium shadow-premium hover:shadow-premium-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-sm"
+                            className="btn-bw-success w-full py-2 px-3 rounded-xl font-medium transition-bw shadow-bw hover:shadow-bw-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-sm"
                           >
                             {isExecuting ? (
                               <>
-                                <div className="spinner-premium"></div>
+                                <div className="spinner-bw"></div>
                                 <span>Running...</span>
                               </>
                             ) : (
@@ -894,7 +962,7 @@ function CodeGenerator() {
                                 fetchProjectFiles(project.id);
                                 setActiveTab('history');
                               }}
-                              className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 glass-premium text-premium-primary rounded-lg hover:bg-white/30 transition-premium border border-white/20 text-sm font-medium shadow-premium"
+                              className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 glass-bw text-bw-primary rounded-lg hover:bg-white/30 transition-bw border border-white/20 text-sm font-medium shadow-bw"
                             >
                               <div className="w-3 h-3">
                                 <svg fill="currentColor" viewBox="0 0 24 24">
@@ -906,7 +974,7 @@ function CodeGenerator() {
                             
                             <button
                               onClick={() => {/* Download functionality */}}
-                              className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 glass-premium text-premium-primary rounded-lg hover:bg-white/30 transition-premium border border-white/20 text-sm font-medium shadow-premium"
+                              className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 glass-bw text-bw-primary rounded-lg hover:bg-white/30 transition-bw border border-white/20 text-sm font-medium shadow-bw"
                             >
                               <div className="w-3 h-3">
                                 <svg fill="currentColor" viewBox="0 0 24 24">
@@ -921,17 +989,24 @@ function CodeGenerator() {
                         {/* Execution Status */}
                         {executionResult && selectedProject?.id === project.id && (
                           <div className="mt-4 pt-4 border-t border-white/20">
-                            <div className="text-xs text-premium-muted mb-2 font-medium">Last Execution</div>
+                            <div className="text-xs text-bw-muted mb-2 font-medium">Last Execution</div>
                             <div className={`text-sm p-3 rounded-lg border ${
                               executionResult.success
-                                ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
-                                : 'bg-red-50 border-red-300 text-red-800'
+                                ? 'bg-white/10 border-white/30 text-bw-primary'
+                                : 'bg-white/5 border-white/20 text-white'
                             }`}>
                               {executionResult.method === 'streamlit' && executionResult.success ? (
                                 <div>
                                   <div className="font-medium mb-1">Streamlit Running</div>
                                   <a href="http://localhost:8501" target="_blank" rel="noopener noreferrer" className="underline text-xs">
                                     http://localhost:8501
+                                  </a>
+                                </div>
+                              ) : executionResult.method === 'web' && executionResult.success ? (
+                                <div>
+                                  <div className="font-medium mb-1">Web Application Running</div>
+                                  <a href="http://localhost:8080" target="_blank" rel="noopener noreferrer" className="underline text-xs">
+                                    http://localhost:8080
                                   </a>
                                 </div>
                               ) : executionResult.success ? (
@@ -952,22 +1027,22 @@ function CodeGenerator() {
 
           {activeTab === 'history' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Premium Project List */}
+              {/* Black & White Project List */}
               <div className="lg:col-span-1">
-                <div className="card-premium p-6 shadow-premium-lg">
+                <div className="card-bw-glow p-6 shadow-bw-xl">
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-premium-gradient rounded-xl flex items-center justify-center shadow-premium">
+                      <div className="w-10 h-10 bg-black border border-white/30 rounded-xl flex items-center justify-center shadow-bw floating-bw">
                         <span className="text-white text-lg">📚</span>
                       </div>
                       <div>
-                        <h2 className="text-xl font-bold text-premium-primary">Project Archive</h2>
-                        <p className="text-premium-secondary text-sm">{projectHistory.length} total projects</p>
+                        <h2 className="text-xl font-bold text-bw-primary">Project Archive</h2>
+                        <p className="text-bw-secondary text-sm">{projectHistory.length} total projects</p>
                       </div>
                     </div>
                     <button
                       onClick={fetchProjectHistory}
-                      className="flex items-center space-x-2 bg-premium-gradient hover:shadow-premium-lg text-white px-3 py-2 rounded-lg transition-premium shadow-premium active:scale-95"
+                      className="flex items-center space-x-2 btn-bw-primary px-3 py-2 rounded-lg transition-bw shadow-bw hover:shadow-bw-lg active:scale-95"
                       title="Refresh Projects"
                     >
                       <span className="text-sm">🔄</span>
@@ -978,11 +1053,11 @@ function CodeGenerator() {
                   <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
                     {projectHistory.length === 0 ? (
                       <div className="text-center py-12">
-                        <div className="w-16 h-16 bg-premium-gradient rounded-xl flex items-center justify-center mx-auto mb-4 shadow-premium">
+                        <div className="w-16 h-16 bg-black border border-white/30 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-bw">
                           <span className="text-white text-2xl">📚</span>
                         </div>
-                        <h3 className="text-lg font-semibold text-premium-primary mb-2">No Projects Available</h3>
-                        <p className="text-premium-secondary">Generated projects will be archived here</p>
+                        <h3 className="text-lg font-semibold text-bw-primary mb-2">No Projects Available</h3>
+                        <p className="text-bw-secondary">Generated projects will be archived here</p>
                       </div>
                     ) : (
                       projectHistory.map((project, index) => (
@@ -995,48 +1070,33 @@ function CodeGenerator() {
                             setFileContent('');
                             setExpandedFolders(new Set());
                           }}
-                          className={`p-4 rounded-xl border cursor-pointer transition-premium relative overflow-hidden ${
+                          className={`p-4 rounded-xl border cursor-pointer transition-bw relative overflow-hidden ${
                             selectedProject?.id === project.id
-                              ? 'bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 border-amber-300 shadow-premium-lg'
-                              : 'bg-gradient-to-br from-gray-50 via-slate-50 to-gray-100 border-gray-200 hover:border-amber-300 hover:from-amber-50 hover:via-orange-50 hover:to-yellow-50'
+                              ? 'bg-white/20 border-white/40 shadow-bw-lg card-bw-glow'
+                              : 'bg-white/5 border-white/20 hover:border-white/40 hover:bg-white/15 hover:shadow-bw'
                           }`}
                           style={{
                             animation: `slideInLeft 0.3s ease-out ${index * 0.05}s both`
                           }}
                         >
-                          {/* Archive Badge */}
-                          <div className="absolute top-2 right-2 w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg opacity-80">
-                            <span className="text-white text-xs">📁</span>
-                          </div>
                           
                           <div className="flex items-start justify-between mb-3 pr-10">
                             <div className="flex items-center space-x-2">
-                              <div className="w-6 h-6 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center shadow-premium">
-                                <span className="text-white text-xs">🗂️</span>
+                              <div className="w-6 h-6 bg-white border border-black rounded-lg flex items-center justify-center shadow-bw">
+                                <span className="text-black text-xs">🗂️</span>
                               </div>
-                              <h3 className="text-amber-800 font-semibold text-base truncate">{project.name}</h3>
+                              <h3 className="text-bw-primary font-semibold text-base truncate">{project.name}</h3>
                             </div>
-                            <span className={`text-xs px-2 py-1 rounded-lg font-medium ${
-                              project.status === 'completed' 
-                                ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-premium' 
-                                : 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-premium'
-                            }`}>
-                              {project.status === 'completed' ? '✅ Archived' : '❌ Failed'}
-                            </span>
                           </div>
-                          <p className="text-amber-700 text-sm mb-4 line-clamp-2 opacity-80">{project.description}</p>
+                          <p className="text-bw-secondary text-sm mb-4 line-clamp-2">{project.description}</p>
                           <div className="flex items-center justify-between text-xs mb-3">
                             <div className="flex items-center space-x-4">
-                              <span className="text-amber-600 flex items-center space-x-1 font-medium">
+                              <span className="text-bw-muted flex items-center space-x-1 font-medium">
                                 <span>📄</span>
                                 <span>{project.file_count} files</span>
                               </span>
-                              <span className="text-amber-600 flex items-center space-x-1 font-medium">
-                                <span>📅</span>
-                                <span>Archived</span>
-                              </span>
                             </div>
-                            <span className="text-amber-600 font-mono text-xs bg-amber-100 px-2 py-1 rounded-lg">
+                            <span className="text-bw-muted font-mono text-xs bg-white/20 px-2 py-1 rounded-lg">
                               {project.created_at}
                             </span>
                           </div>
@@ -1050,7 +1110,7 @@ function CodeGenerator() {
                                   runProject(project.id);
                                 }}
                                 disabled={isExecuting}
-                                className="btn-premium-success flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="btn-bw-success flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <span>▶️</span>
                                 <span>Run</span>
@@ -1061,7 +1121,7 @@ function CodeGenerator() {
                                   e.stopPropagation();
                                   // Download functionality
                                 }}
-                                className="btn-premium-secondary flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium"
+                                className="btn-bw-secondary flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium"
                               >
                                 <span>📦</span>
                                 <span>Download</span>
@@ -1071,10 +1131,11 @@ function CodeGenerator() {
                                 <div className="ml-2">
                                   <span className={`text-xs px-2 py-1 rounded-lg font-medium ${
                                     executionResult.success 
-                                      ? 'status-premium-success text-white'
-                                      : 'status-premium-error text-white'
+                                      ? 'status-bw-success text-black'
+                                      : 'status-bw-error text-white'
                                   }`}>
                                     {executionResult.method === 'streamlit' && executionResult.success ? 'Running' : 
+                                     executionResult.method === 'web' && executionResult.success ? 'Running' :
                                      executionResult.success ? 'Completed' : 'Failed'}
                                   </span>
                                 </div>
@@ -1092,56 +1153,56 @@ function CodeGenerator() {
               <div className="lg:col-span-2">
                 {selectedProject ? (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Premium File Explorer */}
-                    <div className="card-premium p-6 shadow-premium-lg">
+                    {/* Black & White File Explorer */}
+                    <div className="card-bw-glow p-6 shadow-bw-xl">
                       <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-premium-gradient rounded-xl flex items-center justify-center shadow-premium">
+                          <div className="w-10 h-10 bg-black border border-white/30 rounded-xl flex items-center justify-center shadow-bw floating-bw">
                             <span className="text-white text-lg">📁</span>
                           </div>
                           <div>
-                            <h3 className="text-lg font-bold text-premium-primary">File Structure</h3>
-                            <p className="text-premium-secondary text-sm">{selectedProject.name}</p>
+                            <h3 className="text-lg font-bold text-bw-primary">File Structure</h3>
+                            <p className="text-bw-secondary text-sm">{selectedProject.name}</p>
                           </div>
                         </div>
                       </div>
                       
-                      <div className="max-h-[400px] overflow-y-auto pr-2 glass-premium rounded-lg p-4 border border-white/20">
+                      <div className="max-h-[400px] overflow-y-auto pr-2 glass-bw-strong rounded-lg p-4 border border-white/20">
                         <FileExplorer files={projectFiles} />
                       </div>
                     </div>
 
-                    {/* Premium File Viewer */}
-                    <div className="card-premium p-6 shadow-premium-lg">
+                    {/* Black & White File Viewer */}
+                    <div className="card-bw-glow p-6 shadow-bw-xl">
                       <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-premium-gradient rounded-xl flex items-center justify-center shadow-premium">
+                          <div className="w-10 h-10 bg-black border border-white/30 rounded-xl flex items-center justify-center shadow-bw floating-bw">
                             <span className="text-white text-lg">👁️</span>
                           </div>
                           <div>
-                            <h3 className="text-lg font-bold text-premium-primary">
+                            <h3 className="text-lg font-bold text-bw-primary">
                               {selectedFile ? selectedFile.name : 'Code Viewer'}
                             </h3>
                             {selectedFile && (
-                              <p className="text-premium-muted text-sm font-mono">{selectedFile.path}</p>
+                              <p className="text-bw-muted text-sm font-mono">{selectedFile.path}</p>
                             )}
                           </div>
                         </div>
                         {selectedFile && (
-                          <span className="text-xs text-premium-muted bg-white/50 px-3 py-1 rounded border border-white/20 font-mono">
+                          <span className="text-xs text-bw-muted bg-white/20 px-3 py-1 rounded border border-white/20 font-mono">
                             {Math.round(selectedFile.size / 1024 * 10) / 10}KB
                           </span>
                         )}
                       </div>
                       
-                      <div className="glass-premium rounded-lg p-6 border border-white/20 h-[400px] overflow-auto backdrop-blur-md">
+                      <div className="glass-bw rounded-lg p-6 border border-white/20 h-[400px] overflow-auto backdrop-blur-md">
                         {selectedFile ? (
-                          <pre className="text-sm text-premium-primary font-mono whitespace-pre-wrap leading-relaxed">
+                          <pre className="text-sm text-bw-primary font-mono whitespace-pre-wrap leading-relaxed">
                             {fileContent || (
                               <div className="flex items-center justify-center h-full">
                                 <div className="text-center">
-                                  <div className="w-8 h-8 border-2 border-premium border-t-premium-secondary rounded-full animate-spin mb-4 mx-auto"></div>
-                                  <p className="text-premium-muted">Loading file content...</p>
+                                  <div className="w-8 h-8 border-2 border-white border-t-white/50 rounded-full animate-spin mb-4 mx-auto"></div>
+                                  <p className="text-bw-muted">Loading file content...</p>
                                 </div>
                               </div>
                             )}
@@ -1149,15 +1210,15 @@ function CodeGenerator() {
                         ) : (
                           <div className="flex items-center justify-center h-full">
                             <div className="text-center">
-                              <div className="w-16 h-16 bg-premium-gradient rounded-lg flex items-center justify-center mx-auto mb-4 shadow-premium">
+                              <div className="w-16 h-16 bg-black border border-white/30 rounded-lg flex items-center justify-center mx-auto mb-4 shadow-bw">
                                 <div className="w-8 h-8">
-                                  <svg fill="currentColor" viewBox="0 0 24 24" className="text-premium-muted">
+                                  <svg fill="currentColor" viewBox="0 0 24 24" className="text-bw-muted">
                                     <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/>
                                   </svg>
                                 </div>
                               </div>
-                              <h4 className="text-lg font-semibold text-white mb-2">Select File</h4>
-                              <p className="text-premium-muted">Choose a file from the structure to view its content</p>
+                              <h4 className="text-lg font-semibold text-bw-primary mb-2">Select File</h4>
+                              <p className="text-bw-muted">Choose a file from the structure to view its content</p>
                             </div>
                           </div>
                         )}
@@ -1165,18 +1226,18 @@ function CodeGenerator() {
                     </div>
                   </div>
                 ) : (
-                  <div className="card-premium backdrop-blur-xl rounded-lg border border-white/20 p-8 shadow-premium-lg">
+                  <div className="card-bw-glow backdrop-blur-xl rounded-lg border border-white/20 p-8 shadow-bw-xl">
                     <div className="flex items-center justify-center h-[500px]">
                       <div className="text-center">
-                        <div className="w-20 h-20 bg-premium-gradient rounded-lg flex items-center justify-center mx-auto mb-6 shadow-premium">
+                        <div className="w-20 h-20 bg-black border border-white/30 rounded-lg flex items-center justify-center mx-auto mb-6 shadow-bw floating-bw">
                           <div className="w-10 h-10">
                             <svg fill="currentColor" viewBox="0 0 24 24" className="text-white">
                               <path d="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z"/>
                             </svg>
                           </div>
                         </div>
-                        <h3 className="text-xl font-bold text-premium-primary mb-3">Select Project</h3>
-                        <p className="text-premium-muted text-base">Choose a project from the archive to explore its structure and code</p>
+                        <h3 className="text-xl font-bold text-bw-primary mb-3">Select Project</h3>
+                        <p className="text-bw-muted text-base">Choose a project from the archive to explore its structure and code</p>
                       </div>
                     </div>
                   </div>
@@ -1185,21 +1246,21 @@ function CodeGenerator() {
             </div>
           )}
 
-          {/* Project Results - Professional Display */}
+          {/* Project Results - Black & White Display */}
           {activeTab === 'generator' && currentProject?.result?.success && (
             <div className="mt-10">
-              <div className="card-premium backdrop-blur-xl rounded-lg border border-emerald-200 p-8 shadow-premium-lg bg-gradient-to-br from-emerald-50 to-green-50">
+              <div className="card-bw backdrop-blur-xl rounded-lg border border-white/30 p-8 shadow-bw-lg bg-white/10">
                 <div className="flex items-center space-x-3 mb-8">
-                  <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center shadow-premium">
+                  <div className="w-10 h-10 bg-white border border-black rounded-lg flex items-center justify-center shadow-bw">
                     <div className="w-5 h-5">
-                      <svg fill="currentColor" viewBox="0 0 24 24" className="text-white">
+                      <svg fill="currentColor" viewBox="0 0 24 24" className="text-black">
                         <path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/>
                       </svg>
                     </div>
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-emerald-600">Project Generated Successfully</h2>
-                    <p className="text-premium-muted text-sm">Code generation completed and ready for download</p>
+                    <h2 className="text-xl font-bold text-bw-primary">Project Generated Successfully</h2>
+                    <p className="text-bw-muted text-sm">Code generation completed and ready for download</p>
                   </div>
                 </div>
                 

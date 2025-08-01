@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Login to your GlassEffectLogin account.">
+    <title>Login | GlassEffectLogin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+</head>
+<body>
+    <div class="video-background">
+        <video autoplay muted loop id="bg-video">
+            <source src="{{ url_for('static', filename='videos/background.mp4') }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+    <header class="main-header">
+        <nav class="main-nav" aria-label="Main Navigation">
+            <div class="nav-brand"><a href="{{ url_for('home_page') }}">GlassLogin</a></div>
+            <button class="nav-toggle" aria-controls="main-menu" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="toggle-icon"></span>
+                <span class="toggle-icon"></span>
+                <span class="toggle-icon"></span>
+            </button>
+            <ul class="nav-menu" id="main-menu" role="menu">
+                <li role="none"><a href="{{ url_for('home_page') }}" class="nav-link" role="menuitem">Home</a></li>
+                <li role="none"><a href="{{ url_for('about_page') }}" class="nav-link" role="menuitem">About</a></li>
+                <li role="none"><a href="{{ url_for('contact_page') }}" class="nav-link" role="menuitem">Contact</a></li>
+                <li role="none"><a href="{{ url_for('register_page') }}" class="nav-link" role="menuitem">Register</a></li>
+                <li role="none"><a href="{{ url_for('login_page') }}" class="nav-link current" role="menuitem">Login</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <section class="login-section glass-container" aria-labelledby="login-heading">
+            <h1 id="login-heading">Welcome Back!</h1>
+            <p>Log in to your account to continue.</p>
+
+            <form id="login-form" class="auth-form" aria-label="Login form">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required aria-required="true" placeholder="Enter your username" autocomplete="username">
+                    <div class="error-message" id="username-error" aria-live="polite"></div>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required aria-required="true" placeholder="Enter your password" autocomplete="current-password">
+                    <div class="error-message" id="password-error" aria-live="polite"></div>
+                </div>
+                <button type="submit" class="btn btn-primary" id="login-submit-btn">Login</button>
+                <div id="login-status-message" class="status-message" aria-live="polite"></div>
+            </form>
+
+            <p class="auth-link-text">Don't have an account? <a href="{{ url_for('register_page') }}">Register Here</a></p>
+            <button id="test-api-btn" class="btn btn-secondary" aria-label="Test API connection">Test API Connection</button>
+            <div id="api-test-status" class="status-message" aria-live="polite"></div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <p>&copy; 2023 GlassEffectLogin. All rights reserved. Designed with <span aria-hidden="true">&hearts;</span>.</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

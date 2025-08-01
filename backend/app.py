@@ -13,7 +13,7 @@ from parsing_debugger import debug_logger
 app = Flask(__name__)
 app.config['SECRET_KEY'] = Config.SECRET_KEY
 CORS(app, origins="*")
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
 # Global project manager instance
 project_manager = ProjectManager(socketio)
@@ -329,12 +329,20 @@ def run_project(project_id):
         if not os.path.exists(project_path):
             return jsonify({"error": "Project directory not found"}), 404
         
-        # Check for main.py
-        main_py_path = os.path.join(project_path, 'main.py')
-        if not os.path.exists(main_py_path):
-            return jsonify({"error": "main.py not found in project"}), 404
+        # Check for entry point files in order of preference
+        entry_files = ['main.py', 'run.py']
+        entry_file = None
         
-        # Determine run method by analyzing main.py and requirements.txt
+        for file in entry_files:
+            file_path = os.path.join(project_path, file)
+            if os.path.exists(file_path):
+                entry_file = file
+                break
+        
+        if not entry_file:
+            return jsonify({"error": "No entry point file found (main.py, app.py, or run.py)"}), 404
+        
+        # Determine run method by analyzing project structure and requirements.txt
         run_method = project_manager.determine_run_method(project_path)
         
         # If project is not in active_projects, add a basic entry for execution tracking

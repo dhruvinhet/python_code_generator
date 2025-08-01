@@ -160,7 +160,7 @@ The frontend will start on `http://localhost:5173`
 
 ```python
 GEMINI_API_KEY = "your_api_key"
-CREWAI_MODEL = "gemini/gemini-2.0-flash-exp"
+CREWAI_MODEL = "gemini/gemini-2.5-flash"
 MAX_PROJECT_SIZE = 50  # Maximum number of files
 SUPPORTED_GUI_FRAMEWORKS = ['streamlit', 'tkinter']
 ```
