@@ -360,8 +360,12 @@ const LandingPage = () => {
                           <h3 className="text-base font-bold text-white group-hover:text-purple-300 transition-colors" style={{ color: '#ffffff' }}>
                             {feature.name}
                           </h3>
-                          <span className="bg-gradient-to-r from-orange-500 to-pink-600 text-white text-xs px-2 py-1 rounded-full font-medium">
-                            Coming Soon
+                          <span className={`text-white text-xs px-2 py-1 rounded-full font-medium ${
+                            feature.available 
+                              ? 'bg-gradient-to-r from-green-500 to-emerald-600' 
+                              : 'bg-gradient-to-r from-orange-500 to-pink-600'
+                          }`}>
+                            {feature.available ? 'AVAILABLE NOW' : 'Coming Soon'}
                           </span>
                         </div>
                       </div>
@@ -371,7 +375,7 @@ const LandingPage = () => {
                       </p>
                       
                       <div className="flex items-center text-purple-400 font-semibold text-sm group-hover:text-purple-300 transition-colors">
-                        <span>Get Notified</span>
+                        <span>{feature.available ? 'Launch Tool' : 'Get Notified'}</span>
                         <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
@@ -399,8 +403,12 @@ const LandingPage = () => {
                               <h3 className="text-lg font-bold text-white group-hover:text-orange-300 transition-colors" style={{ color: '#ffffff' }}>
                                 {feature.name}
                               </h3>
-                              <span className="bg-gradient-to-r from-orange-500 to-pink-600 text-white text-xs px-2 py-1 rounded-full font-medium">
-                                Coming Soon
+                              <span className={`text-white text-xs px-2 py-1 rounded-full font-medium ${
+                                feature.available 
+                                  ? 'bg-gradient-to-r from-green-500 to-emerald-600' 
+                                  : 'bg-gradient-to-r from-orange-500 to-pink-600'
+                              }`}>
+                                {feature.available ? 'AVAILABLE NOW' : 'Coming Soon'}
                               </span>
                             </div>
                             
@@ -409,7 +417,7 @@ const LandingPage = () => {
                             </p>
                             
                             <div className="flex items-center text-orange-400 font-semibold group-hover:text-orange-300 transition-colors">
-                              <span>Get Notified</span>
+                              <span>{feature.available ? 'Launch Tool' : 'Get Notified'}</span>
                               <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                             </div>
                           </div>

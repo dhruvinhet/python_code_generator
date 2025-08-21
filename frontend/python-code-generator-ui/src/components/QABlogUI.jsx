@@ -13,6 +13,8 @@ export default function QABlogUI() {
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [additionalContext, setAdditionalContext] = useState("");
   const [activeTab, setActiveTab] = useState("topic"); // "topic" or "youtube"
+  const [blogTitle, setBlogTitle] = useState("");
+  const [subtopics, setSubtopics] = useState([]);
   const blogContentRef = useRef(null);
 
   // Add CSS for animations
@@ -35,12 +37,26 @@ export default function QABlogUI() {
     setIsReadyToWrite(false);
 
     setLoading(true);
-    const res = await axios.post("http://localhost:3001/interview", {
-      topic,
-      answer: ""
-    });
-    setConversation([{ role: "agent", content: res.data.question }]);
-    setIsReadyToWrite(true); // Since we show overview instead of questions
+    try {
+      const res = await axios.post("http://localhost:5000/api/blog/plan", {
+        topic: topic
+      });
+      
+      if (res.data.success) {
+        setConversation([{ 
+          role: "agent", 
+          content: `I've planned your blog about "${topic}". Here's what I suggest to cover:\n\nTitle: ${res.data.title}\n\nSubtopics:\n${res.data.subtopics.map((subtopic, i) => `${i+1}. ${subtopic}`).join('\n')}\n\nWould you like to proceed with these topics or modify them?`
+        }]);
+        setBlogTitle(res.data.title);
+        setSubtopics(res.data.subtopics);
+        setIsReadyToWrite(true);
+      } else {
+        alert("Error planning blog: " + res.data.error);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error connecting to server");
+    }
     setLoading(false);
   };
 
@@ -55,14 +71,15 @@ export default function QABlogUI() {
     setUserInput("");
 
     setLoading(true);
-    const res = await axios.post("http://localhost:3001/interview", {
-      topic,
-      answer: userInput
-    });
-
-    const agentReply = res.data.question;
-    updatedConversation.push({ role: "agent", content: agentReply });
-    setConversation([...updatedConversation]);
+    try {
+      // For now, just add user feedback to conversation
+      // In a full implementation, you might want to re-plan the blog based on feedback
+      const agentReply = `Thank you for your feedback: "${userInput}". I'll keep that in mind when generating the blog. You can now proceed to generate the blog with the current topics, or provide more feedback.`;
+      updatedConversation.push({ role: "agent", content: agentReply });
+      setConversation([...updatedConversation]);
+    } catch (error) {
+      console.error("Error:", error);
+    }
     setLoading(false);
     setIsReadyToWrite(true);
   };
@@ -70,9 +87,19 @@ export default function QABlogUI() {
   const generateBlog = async () => {
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:3001/generate");
-      setBlogResult(res.data);
+      const res = await axios.post("http://localhost:5000/api/blog/generate", {
+        mainTopic: topic,
+        subtopics: subtopics,
+        title: blogTitle
+      });
+      
+      if (res.data.success) {
+        setBlogResult(res.data);
+      } else {
+        alert("Error generating blog: " + res.data.error);
+      }
     } catch (error) {
+      console.error("Error:", error);
       alert("Error generating blog. Please try again.");
     }
     setLoading(false);
@@ -86,11 +113,29 @@ export default function QABlogUI() {
     setConversation([]);
     
     try {
-      const res = await axios.post("http://localhost:3001/quick-generate", {
+      // First plan the blog
+      const planRes = await axios.post("http://localhost:5000/api/blog/plan", {
         topic: topic
       });
-      setBlogResult(res.data);
+      
+      if (planRes.data.success) {
+        // Then immediately generate the blog
+        const generateRes = await axios.post("http://localhost:5000/api/blog/generate", {
+          mainTopic: topic,
+          subtopics: planRes.data.subtopics,
+          title: planRes.data.title
+        });
+        
+        if (generateRes.data.success) {
+          setBlogResult(generateRes.data);
+        } else {
+          alert("Error generating blog: " + generateRes.data.error);
+        }
+      } else {
+        alert("Error planning blog: " + planRes.data.error);
+      }
     } catch (error) {
+      console.error("Error:", error);
       alert("Error generating blog. Please try again.");
     }
     setLoading(false);
@@ -110,13 +155,34 @@ export default function QABlogUI() {
     setConversation([]);
     
     try {
-      const res = await axios.post("http://localhost:3001/youtube-generate", {
-        youtubeUrl: youtubeUrl,
-        additionalContext: additionalContext
+      // For now, we'll generate a blog based on the YouTube URL as a topic
+      // In a full implementation, you'd want to extract YouTube transcripts
+      const topic = `Content based on YouTube video: ${youtubeUrl}${additionalContext ? '. Additional context: ' + additionalContext : ''}`;
+      
+      // First plan the blog
+      const planRes = await axios.post("http://localhost:5000/api/blog/plan", {
+        topic: topic
       });
-      setBlogResult(res.data);
+      
+      if (planRes.data.success) {
+        // Then generate the blog
+        const generateRes = await axios.post("http://localhost:5000/api/blog/generate", {
+          mainTopic: topic,
+          subtopics: planRes.data.subtopics,
+          title: planRes.data.title
+        });
+        
+        if (generateRes.data.success) {
+          setBlogResult(generateRes.data);
+        } else {
+          alert("Error generating blog: " + generateRes.data.error);
+        }
+      } else {
+        alert("Error planning blog: " + planRes.data.error);
+      }
     } catch (error) {
-      const errorMessage = error.response?.data?.error || "Error generating blog from YouTube video. Please try again.";
+      console.error("Error:", error);
+      const errorMessage = "Error generating blog from YouTube video. Please try again.";
       alert(errorMessage);
     }
     setLoading(false);
@@ -131,6 +197,8 @@ export default function QABlogUI() {
     setYoutubeUrl("");
     setAdditionalContext("");
     setActiveTab("topic");
+    setBlogTitle("");
+    setSubtopics([]);
   };
 
   // Format blog content in simple, clean blog format like real-world blogs

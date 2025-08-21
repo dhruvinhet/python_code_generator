@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, session
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 import uuid
@@ -6,6 +6,8 @@ import os
 import threading
 import zipfile
 import asyncio
+import re
+import json
 from datetime import datetime
 from project_manager import ProjectManager
 from advanced_agents_system import create_advanced_project
@@ -501,12 +503,191 @@ def get_parsing_stats():
     except Exception as e:
         return jsonify({"error": f"Failed to get parsing stats: {str(e)}"}), 500
 
-# Blog Generation Routes
+# Blog Generation Routes - Updated to use blog_main_system
+@app.route('/api/blog/interview', methods=['POST'])
+def blog_interview():
+    """Start or continue blog interview process"""
+    try:
+        # Import blog system locally
+        import sys
+        sys.path.append(os.path.join(os.path.dirname(__file__), 'blog'))
+        from blog.blog_main import InterviewBlogGenerator
+        blog_generator = InterviewBlogGenerator()
+        
+        data = request.get_json()
+        topic = data.get('topic', '').strip()
+        user_answer = data.get('answer', '').strip() if data.get('answer') else None
+        
+        if not topic and not session.get("topic"):
+            return jsonify({"error": "Topic is required"}), 400
+        
+        # Use the blog generator's interview step
+        response = blog_generator.interview_step(topic, user_answer)
+        
+        return jsonify({
+            "success": True,
+            "response": response,
+            "topic": session.get("topic", topic)
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Failed to process interview: {str(e)}"
+        }), 500
+
+@app.route('/api/blog/generate', methods=['POST'])
+def generate_blog():
+    """Generate complete blog post"""
+    try:
+        # Import blog system locally
+        import sys
+        sys.path.append(os.path.join(os.path.dirname(__file__), 'blog'))
+        from blog.blog_main import InterviewBlogGenerator
+        blog_generator = InterviewBlogGenerator()
+        
+        data = request.get_json()
+        
+        # Support both new and legacy formats
+        topic = data.get('topic', '').strip() or data.get('mainTopic', '').strip()
+        additional_info = data.get('additional_info', '').strip()
+        subtopics = data.get('subtopics', [])
+        title = data.get('title', '').strip()
+        
+        if not topic:
+            return jsonify({"error": "Topic is required"}), 400
+        
+        # For legacy compatibility, simulate quick generation using the existing pattern
+        # Research the topic first
+        research_data = blog_generator.researcher_tool.research_topic(topic)
+        if not research_data:
+            research_data = {"sources": [], "content": f"General information about {topic}"}
+        
+        # Create context similar to the original quick_generate function
+        context_info = additional_info
+        if subtopics:
+            context_info += f"\nSubtopics to cover: {', '.join(subtopics)}"
+        if title:
+            context_info += f"\nSuggested title: {title}"
+            
+        context = f"""Create a detailed, expert-level blog post about: {topic}
+
+RESEARCH DATA AVAILABLE:
+{research_data.get('content', '')}
+
+REQUIREMENTS:
+- Use research data to provide accurate, specific information with facts and statistics
+- Write as a subject matter expert with deep knowledge of {topic}
+- Provide specific, actionable information rather than generic advice
+- Include real-world examples, case studies, or practical scenarios
+- Use appropriate industry terminology and concepts
+- Make it comprehensive but accessible
+- Include step-by-step guidance where applicable
+- Add tables, lists, or structured information when relevant
+- Ensure all claims are accurate and supportable
+
+Additional user requirements: {context_info if context_info else 'None - cover the topic comprehensively with research-backed information'}
+
+Target length: 1000-1200 words with proper structure, formatting, and research-backed accuracy."""
+        
+        # Use the blog crew to generate content
+        result = blog_generator.blog_crew.kickoff(inputs={
+            "topic": topic,
+            "context": context
+        }, research_data=research_data)
+        
+        raw_output = result.raw if hasattr(result, "raw") else str(result)
+        clean_json = re.sub(r"```json\n|\n```|```", "", raw_output).strip()
+        
+        # More aggressive JSON cleaning
+        start_idx = clean_json.find('{')
+        end_idx = clean_json.rfind('}')
+        
+        if start_idx != -1 and end_idx != -1:
+            clean_json = clean_json[start_idx:end_idx+1]
+        
+        try:
+            blog_data = json.loads(clean_json)
+            # Ensure all required fields exist
+            if not isinstance(blog_data.get('blogContent'), str):
+                raise ValueError("Invalid blogContent")
+            if not isinstance(blog_data.get('summary'), str):
+                blog_data['summary'] = f"A comprehensive, research-backed guide about {topic}"
+            if not isinstance(blog_data.get('keywords'), list):
+                blog_data['keywords'] = [topic.lower(), "guide", "research", "facts", "expert analysis"]
+            
+            # Clean up the blog content formatting
+            blog_data['blogContent'] = blog_generator.clean_blog_formatting(blog_data['blogContent'])
+                
+        except (json.JSONDecodeError, ValueError):
+            # Clean fallback without research sources
+            cleaned_content = blog_generator.clean_blog_formatting(f"# {topic}\n\n{raw_output}")
+            blog_data = {
+                "blogContent": cleaned_content,
+                "summary": f"A comprehensive, research-backed guide about {topic}",
+                "keywords": [topic.lower(), "guide", "research", "facts", "expert analysis"]
+            }
+        
+        return jsonify({
+            "success": True,
+            "blogContent": blog_data.get("blogContent", ""),
+            "blog": blog_data.get("blogContent", ""),  # Legacy compatibility
+            "summary": blog_data.get("summary", ""),
+            "keywords": blog_data.get("keywords", []),
+            "title": title or f"Guide to {topic}",
+            "wordCount": len(blog_data.get("blogContent", "").split())
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Failed to generate blog: {str(e)}"
+        }), 500
+
+@app.route('/api/blog/quick-generate', methods=['POST'])
+def quick_generate_blog():
+    """Generate blog post directly without interview"""
+    try:
+        # Import blog system locally
+        import sys
+        sys.path.append(os.path.join(os.path.dirname(__file__), 'blog'))
+        from blog.blog_main import InterviewBlogGenerator
+        blog_generator = InterviewBlogGenerator()
+        
+        data = request.get_json()
+        topic = data.get('topic', '').strip()
+        additional_info = data.get('additional_info', '').strip()
+        
+        if not topic:
+            return jsonify({"error": "Topic is required"}), 400
+        
+        # Use quick generation
+        result = blog_generator.quick_generate(topic, additional_info)
+        
+        return jsonify({
+            "success": True,
+            "blogContent": result.get("blogContent", ""),
+            "summary": result.get("summary", ""),
+            "keywords": result.get("keywords", []),
+            "wordCount": len(result.get("blogContent", "").split())
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Failed to quick generate blog: {str(e)}"
+        }), 500
+
+# Legacy route for compatibility
 @app.route('/api/blog/plan', methods=['POST'])
 def plan_blog():
-    """Plan blog structure based on topic"""
+    """Plan blog structure based on topic - redirects to interview"""
     try:
-        from blog_agents import blog_system
+        # Import blog system locally
+        import sys
+        sys.path.append(os.path.join(os.path.dirname(__file__), 'blog'))
+        from blog.blog_main import InterviewBlogGenerator
+        blog_generator = InterviewBlogGenerator()
         
         data = request.get_json()
         topic = data.get('topic', '').strip()
@@ -514,53 +695,21 @@ def plan_blog():
         if not topic:
             return jsonify({"error": "Topic is required"}), 400
         
-        # Plan the blog structure
-        result = blog_system.plan_blog(topic)
+        # Start interview process
+        response = blog_generator.interview_step(topic)
         
         return jsonify({
             "success": True,
-            "title": result['title'],
-            "subtopics": result['subtopics'],
-            "outline": result['outline']
+            "title": f"Comprehensive Guide to {topic}",
+            "outline": response,
+            "subtopics": ["Introduction", "Background", "Key Concepts", "Applications", "Future Trends", "Conclusion"],
+            "interview_response": response
         })
         
     except Exception as e:
         return jsonify({
             "success": False,
             "error": f"Failed to plan blog: {str(e)}"
-        }), 500
-
-@app.route('/api/blog/generate', methods=['POST'])
-def generate_blog():
-    """Generate blog content"""
-    try:
-        from blog_agents import blog_system
-        
-        data = request.get_json()
-        main_topic = data.get('mainTopic', '').strip()
-        subtopics = data.get('subtopics', [])
-        title = data.get('title', '').strip()
-        
-        if not main_topic or not subtopics:
-            return jsonify({"error": "Main topic and subtopics are required"}), 400
-        
-        if not title:
-            title = f"Complete Guide to {main_topic}"
-        
-        # Generate the blog
-        blog_content = blog_system.generate_blog(main_topic, subtopics, title)
-        
-        return jsonify({
-            "success": True,
-            "blog": blog_content,
-            "title": title,
-            "wordCount": len(blog_content.split())
-        })
-        
-    except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": f"Failed to generate blog: {str(e)}"
         }), 500
 
 if __name__ == '__main__':
