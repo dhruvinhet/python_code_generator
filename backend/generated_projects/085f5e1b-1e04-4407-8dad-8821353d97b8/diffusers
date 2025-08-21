@@ -1,0 +1,7 @@
+transformers
+accelerate
+torch
+flask  # Or your backend framework
+numpy
+Pillow  # For image handling
+# Add any other backend or frontend dependencies here (e.g., React, Vue, etc.)

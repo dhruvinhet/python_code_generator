@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html manifest="faostat.appcache">
+<head>
+    <title>FAOSTAT</title>
+    <link rel='author' href='humans.txt'>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name='format-detection' content='telephone=no'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta charset="utf-8">
+    <meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
+    <meta name='description' content='FAOSTAT provides free access to food and agriculture data for over 245 countries and territories and covers all FAO regional groupings from 1961 to the most recent year available.'>
+    <link rel="shortcut icon" href="src/images/logo/FAO-logo.svg" type="image/x-icon; charset=binary">
+    <link rel="icon" href="src/images/logo/FAO-logo.svg" type="image/x-icon; charset=binary">
+    <link rel="stylesheet" href="src/css/repo/bootstrap.min.css">
+    <link rel="stylesheet" href="src/css/repo/bootstrap-table.min.css">
+    <link rel="stylesheet" href='src/css/repo/jstree.style.min.css'>
+    <link rel="stylesheet" href='src/css/repo/select2.css'>
+    <link rel="stylesheet" href="src/css/repo/jquery-ui.custom.min.css"/>
+    <link rel="stylesheet" href="src/css/repo/outdatedbrowser.min.css">
+    <link rel="stylesheet" href="src/css/repo/normalize.css">
+    <link rel="stylesheet" href="src/css/repo/ion.rangeSlider.css">
+    <link rel="stylesheet" href="src/css/repo/ion.rangeSlider.skinHTML5.css">
+    <link rel="stylesheet" href="src/css/repo/swiper.min.css">
+    <link rel="stylesheet" href="src/css/repo/nprogress.css">
+    <link rel="stylesheet" href="src/css/repo/toastr.min.css">
+    <link rel="stylesheet" href="src/css/repo/jbPivot.css">
+    <link rel="stylesheet" href="src/css/repo/leaflet.css" />
+    <link rel="stylesheet" href="src/css/repo/waves.min.css">
+    <link rel="stylesheet" href="src/css/repo/introjs.min.css">
+    <link rel="stylesheet" href="src/css/repo/dataTables.bootstrap.min.css">
+    <link rel="stylesheet" href="src/css/repo/fixedColumns.bootstrap.min.css">
+    <link rel="stylesheet" href="submodules/fenix-ui-map/dist/fenix-ui-map.min.css" />
+    <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="//fonts.googleapis.com/css?family=Cairo|Open+Sans|Roboto" rel="stylesheet">
+    <link rel='stylesheet' href='dist/css/index.min.css'>
+    <script data-main='main' src='src/js/lib/repo/require.min.js'></script>
+<!-- FAOSTAT -->
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-T5BXQMP');</script>
+    <!-- End Google Tag Manager -->    
+
+<!-- Site Finity -->
+    <!-- Google Tag Manager Source Identification start -->
+    <script type="text/javascript">
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+        'event': 'pageType',
+        'cmsType': 'CUSTOM'
+    });
+    </script>
+    <!-- Google Tag Manager Source Identification end -->
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-NHPTQQS');</script>
+    <!-- End Google Tag Manager -->
+</head>
+<body></body>
+</html>
+

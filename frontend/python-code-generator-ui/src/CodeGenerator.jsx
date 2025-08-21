@@ -15,6 +15,7 @@ function CodeGenerator() {
   const [logs, setLogs] = useState([]);
   const [activeTab, setActiveTab] = useState('generator');
   const [projectHistory, setProjectHistory] = useState([]);
+  const [mode, setMode] = useState('simple'); // 'simple' or 'multi_agent'
   const [selectedProject, setSelectedProject] = useState(null);
   const [projectFiles, setProjectFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -209,6 +210,24 @@ function CodeGenerator() {
       fetchProjectHistory(); // Refresh history
     });
 
+    // Advanced pipeline structured logs
+    newSocket.on('agent_log', (log) => {
+      console.log('Agent log:', log);
+      // Append structured advanced logs separately with agent-specific formatting
+      const agentIcon = {
+        'System': '⚙️',
+        'Planner': '🎯',
+        'Research': '🔍',
+        'Data Engineer': '📊',
+        'ML Engineer': '🤖',
+        'Reviewer': '🔍',
+        'Documentation': '📚'
+      }[log.agent] || '🔧';
+      
+      addLog(`${agentIcon} [${log.agent}] ${log.message}`, log.type || 'info', log);
+      setShowAdvancedLogs(true);
+    });
+
     newSocket.on('project_failed', (data) => {
       console.log('Project failed:', data);
       setIsGenerating(false);
@@ -255,7 +274,9 @@ function CodeGenerator() {
 
   const addLog = (message, type = 'info', details = null) => {
     const timestamp = new Date().toLocaleTimeString();
-    setLogs(prev => [...prev, { message, type, timestamp, details, id: Date.now() }]);
+    // Generate a more unique ID using timestamp + random number
+    const uniqueId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    setLogs(prev => [...prev, { message, type, timestamp, details, id: uniqueId }]);
   };
 
   const handleGenerate = async () => {
@@ -273,7 +294,8 @@ function CodeGenerator() {
     try {
       addLog('📡 Sending request to server...', 'info');
       const response = await axios.post(`${API_BASE_URL}/api/generate`, {
-        prompt: prompt.trim()
+        prompt: prompt.trim(),
+        mode: mode
       });
 
       if (response.data.project_id) {
@@ -516,7 +538,7 @@ function CodeGenerator() {
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-6 py-8">
           {activeTab === 'generator' && (
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 generator-bw">
+            <div className="grid grid-cols-3 xl:grid-cols-3 gap-8 generator-bw">
               {/* Premium Black & White Input Section */}
               <div className="xl:col-span-1">
                 <div className="card-bw-glow p-6 shadow-bw-xl hover:shadow-bw-xl transition-bw">
@@ -549,7 +571,112 @@ function CodeGenerator() {
                       </div>
                     </div>
                     
-                    <div className="space-y-3">
+                    <div className="space-y-4">
+                      {/* Mode Selection - Enhanced Slider */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <label className="block text-sm font-semibold text-bw-primary">
+                            🚀 Generation Mode
+                          </label>
+                          <div className="text-xs text-bw-secondary">
+                            {mode === 'simple' ? 'Quick & Easy' : 'Full-Stack Multi-Agent System'}
+                          </div>
+                        </div>
+                        
+                        {/* Toggle Switch */}
+                        <div className="relative">
+                          <div className="flex items-center space-x-1 bg-black/30 rounded-xl p-1 border border-white/20">
+                            <button
+                              type="button"
+                              onClick={() => setMode('simple')}
+                              className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                mode === 'simple'
+                                  ? 'bg-white text-black shadow-lg'
+                                  : 'text-bw-secondary hover:text-bw-primary'
+                              }`}
+                            >
+                              ⚡ Simple
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setMode('multi_agent')}
+                              className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                mode === 'multi_agent'
+                                  ? 'bg-white text-black shadow-lg'
+                                  : 'text-bw-secondary hover:text-bw-primary'
+                              }`}
+                            >
+                              🧠 Multi-Agent
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {/* Mode Description */}
+                        <div className="text-xs text-bw-secondary leading-relaxed">
+                          {mode === 'simple' ? (
+                            <p>
+                              <span className="text-white font-medium">⚡ Simple Mode:</span><br/>
+                              Quick project generation with basic agents. Ideal for standard applications, scripts, and prototypes.
+                            </p>
+                          ) : (
+                            <p>
+                              <span className="text-white font-medium"> Multi-Agent System:</span><br/>
+                              Complete full-stack project generation with 8 specialized agents: Project Planner → Domain Expert → Model Selector → Backend Developer → Frontend Developer → Main File Creator → Code Checker → Documentation Agent. Builds complete React + Python applications with AI models.
+                            </p>
+                          )}
+                        </div>
+                        
+                        {/* Example Prompts */}
+                        {mode === 'multi_agent' && (
+                          <div className="space-y-3">
+                            <div className="text-xs font-medium text-bw-primary">
+                              💡 Example Projects for Multi-Agent System:
+                            </div>
+                            <div className="grid grid-cols-1 gap-2">
+                              {[
+                                {
+                                  title: "🎨 Text-to-Image Generator",
+                                  prompt: "Build a text-to-image generator using AI models like Stable Diffusion"
+                                },
+                                {
+                                  title: "📝 AI Content Writer",
+                                  prompt: "Create an AI-powered content writing platform with multiple writing styles"
+                                },
+                                {
+                                  title: "🗣️ Voice Assistant System",
+                                  prompt: "Build a voice assistant with speech recognition and text-to-speech capabilities"
+                                },
+                                {
+                                  title: "📊 Data Analytics Dashboard",
+                                  prompt: "Create a data analytics dashboard with AI-powered insights and predictions"
+                                },
+                                {
+                                  title: "🔍 Document Search Engine",
+                                  prompt: "Build an intelligent document search engine with semantic search capabilities"
+                                },
+                                {
+                                  title: "🎵 Music Generation App",
+                                  prompt: "Create a music generation application using AI models"
+                                }
+                              ].map((example, index) => (
+                                <button
+                                  key={index}
+                                  onClick={() => setPrompt(example.prompt)}
+                                  className="text-left p-3 bg-black/20 border border-white/20 rounded-lg hover:bg-black/30 hover:border-white/30 transition-all duration-200 group"
+                                  disabled={isGenerating}
+                                >
+                                  <div className="text-xs font-medium text-white group-hover:text-gray-200">
+                                    {example.title}
+                                  </div>
+                                  <div className="text-xs text-bw-secondary mt-1 group-hover:text-bw-primary">
+                                    Click to use this example
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                       <button 
                         onClick={handleGenerate}
                         disabled={isGenerating || !prompt.trim()}
@@ -788,6 +915,61 @@ function CodeGenerator() {
                   )}
                   
                   <div className="flex-1 overflow-y-auto glass-bw-strong rounded-xl p-6 border border-white/20 backdrop-blur-md">
+                    {/* Advanced/Multi-Agent Mode Progress */}
+                    {(mode === 'advanced' || mode === 'multi_agent') && isGenerating && (
+                      <div className="mb-6 p-4 bg-gradient-to-r from-black/30 to-black/20 border border-white/30 rounded-xl">
+                        <div className="flex items-center space-x-3 mb-3">
+                          <div className="w-8 h-8 bg-gradient-to-br from-white to-gray-300 rounded-lg flex items-center justify-center animate-pulse">
+                            <span className="text-black text-sm">{mode === 'multi_agent' ? '�' : '�🤖'}</span>
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold text-white">
+                              {mode === 'multi_agent' ? 'Multi-Agent Full-Stack System' : 'Advanced AI Agents System'}
+                            </h3>
+                            <p className="text-sm text-bw-secondary">
+                              {mode === 'multi_agent' 
+                                ? '8-agent pipeline building complete full-stack application...' 
+                                : 'Multi-agent collaboration in progress...'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          {[
+                            { name: 'Planner', icon: '🎯', desc: 'Project Planning' },
+                            { name: 'Domain Expert', icon: '🔬', desc: 'Research & Analysis' },
+                            { name: 'Model Selector', icon: '🤖', desc: 'AI Model Selection' },
+                            { name: 'Backend Dev', icon: '⚙️', desc: 'Python Backend' },
+                            { name: 'Frontend Dev', icon: '🎨', desc: 'React Frontend' },
+                            { name: 'Main Creator', icon: '🚀', desc: 'Runner & Setup' },
+                            { name: 'Code Checker', icon: '🔍', desc: 'Quality Check' },
+                            { name: 'Docs Agent', icon: '📚', desc: 'Documentation' }
+                          ].map((agent) => {
+                            const isActive = logs.some(log => log.message.includes(`[${agent.name}]`)) && 
+                                           !logs.some(log => log.message.includes(`[${agent.name}]`) && log.message.includes('✅'));
+                            const isCompleted = logs.some(log => log.message.includes(`[${agent.name}]`) && log.message.includes('✅'));
+                            
+                            return (
+                              <div key={agent.name} className={`p-2 rounded-lg border transition-all duration-300 ${
+                                isCompleted ? 'bg-green-500/20 border-green-400/50' :
+                                isActive ? 'bg-blue-500/20 border-blue-400/50 animate-pulse' :
+                                'bg-black/20 border-white/20'
+                              }`}>
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-sm">{agent.icon}</span>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-xs font-medium text-white truncate">{agent.name}</div>
+                                    <div className="text-xs text-bw-secondary truncate">{agent.desc}</div>
+                                  </div>
+                                  {isCompleted && <span className="text-green-400 text-xs">✅</span>}
+                                  {isActive && <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    
                     {logs.length === 0 ? (
                       <div className="flex items-center justify-center h-full">
                         <div className="text-center">
@@ -918,7 +1100,7 @@ function CodeGenerator() {
                     </button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {projectHistory.filter(p => p.status === 'completed').map((project, index) => (
                       <div
                         key={project.id}
@@ -1026,7 +1208,7 @@ function CodeGenerator() {
           )}
 
           {activeTab === 'history' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-3 lg:grid-cols-3 gap-8">
               {/* Black & White Project List */}
               <div className="lg:col-span-1">
                 <div className="card-bw-glow p-6 shadow-bw-xl">

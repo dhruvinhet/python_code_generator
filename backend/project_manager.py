@@ -20,6 +20,14 @@ from web_agents import (
 )
 from config import Config
 from json_parser import json_parser
+from advanced_agents import (
+    PlannerAgent as AdvancedPlannerAgent,
+    ResearchAgent,
+    DataEngineerAgent,
+    MLEngineerAgent,
+    ReviewerAgent,
+    DocumentationAgent
+)
 
 class ProjectManager:
     def __init__(self, socketio=None):
@@ -126,7 +134,7 @@ class ProjectManager:
             })
         print(f"[{stage}] {message}")
     
-    def generate_project(self, user_prompt, project_id):
+    def generate_project(self, user_prompt, project_id, mode='simple'):
         """Main method to generate a complete project (Python or Web Application)"""
         try:
             project_dir = os.path.join(Config.GENERATED_PROJECTS_DIR, project_id)
@@ -153,8 +161,12 @@ class ProjectManager:
                 self.logger.info("Plan parsed successfully")
             
             # Determine project type and route to appropriate generation method
+            # If advanced mode requested, route to advanced pipeline
+            if mode == 'advanced':
+                return self.generate_advanced_project(user_prompt, project_id, project_plan)
+
             project_type = project_plan.get('project_type', 'python_application')
-            
+
             if project_type == 'web_application':
                 return self.generate_web_application(user_prompt, project_id, project_plan)
             else:
@@ -164,6 +176,88 @@ class ProjectManager:
             self.logger.error(f"Error in generate_project: {str(e)}")
             self.emit_progress("error", f"Project generation failed: {str(e)}")
             return None
+
+    def generate_advanced_project(self, user_prompt, project_id, project_plan=None):
+        """Generate a high-level project using advanced agents. Emit structured logs per agent."""
+        try:
+            project_dir = os.path.join(Config.GENERATED_PROJECTS_DIR, project_id)
+            os.makedirs(project_dir, exist_ok=True)
+
+            # Initialize advanced agents
+            planner = AdvancedPlannerAgent()
+            researcher = ResearchAgent()
+            data_engineer = DataEngineerAgent()
+            ml_engineer = MLEngineerAgent()
+            reviewer = ReviewerAgent()
+            doc_agent = DocumentationAgent()
+
+            all_logs = []
+
+            # Planner
+            planner_result = planner.create_high_level_plan(user_prompt)
+            for log in planner_result.get('logs', []):
+                all_logs.append(log)
+                if self.socketio:
+                    self.socketio.emit('advanced_log', log)
+
+            # Research
+            research_result = researcher.gather_requirements(planner_result.get('plan'))
+            for log in research_result.get('logs', []):
+                all_logs.append(log)
+                if self.socketio:
+                    self.socketio.emit('advanced_log', log)
+
+            # Data engineering
+            pipeline_result = data_engineer.design_pipeline(research_result.get('research'))
+            for log in pipeline_result.get('logs', []):
+                all_logs.append(log)
+                if self.socketio:
+                    self.socketio.emit('advanced_log', log)
+
+            # ML engineering
+            model_result = ml_engineer.design_model(pipeline_result.get('pipeline'))
+            for log in model_result.get('logs', []):
+                all_logs.append(log)
+                if self.socketio:
+                    self.socketio.emit('advanced_log', log)
+
+            # Review
+            review_result = reviewer.review({'plan': planner_result.get('plan'), 'model': model_result.get('model')})
+            for log in review_result.get('logs', []):
+                all_logs.append(log)
+                if self.socketio:
+                    self.socketio.emit('advanced_log', log)
+
+            # Documentation
+            docs_result = doc_agent.generate_docs(planner_result.get('plan'), research_result.get('research'), pipeline_result.get('pipeline'), model_result.get('model'))
+            for log in docs_result.get('logs', []):
+                all_logs.append(log)
+                if self.socketio:
+                    self.socketio.emit('advanced_log', log)
+
+            # Write docs to project dir
+            docs = docs_result.get('docs', {})
+            for fname, content in docs.items():
+                with open(os.path.join(project_dir, fname), 'w', encoding='utf-8') as f:
+                    f.write(content)
+
+            # Package minimal placeholder project (high-level)
+            zip_path = os.path.join(Config.GENERATED_PROJECTS_DIR, f"{project_id}.zip")
+            with zipfile.ZipFile(zip_path, 'w') as z:
+                for fname in docs.keys():
+                    z.write(os.path.join(project_dir, fname), arcname=fname)
+
+            result = {
+                'success': True,
+                'project_id': project_id,
+                'zip_path': zip_path,
+                'logs': all_logs
+            }
+
+            return result
+        except Exception as e:
+            self.logger.error(f"Advanced generation failed: {e}")
+            return {'success': False, 'error': str(e)}
     
     def generate_python_application(self, user_prompt, project_id, project_plan=None):
         """Generate a Python application (existing logic)"""
@@ -718,6 +812,104 @@ if __name__ == "__main__":
     exit(main())
 '''
 
+    def create_project_from_files(self, project_id, user_prompt, all_files):
+        """Create a project from pre-generated files (used by advanced agents system)"""
+        try:
+            project_dir = os.path.join(Config.GENERATED_PROJECTS_DIR, project_id)
+            os.makedirs(project_dir, exist_ok=True)
+            
+            self.emit_progress("creating", f"Creating project with {len(all_files)} files...")
+            
+            # Convert files dict to the format expected by _write_project_files
+            files_list = []
+            for filename, content in all_files.items():
+                files_list.append({
+                    'path': filename,
+                    'content': content
+                })
+            
+            # Write all files to disk
+            self._write_project_files(project_dir, files_list)
+            
+            # Create a main.py entry point if it doesn't exist
+            main_py_path = os.path.join(project_dir, 'main.py')
+            if not os.path.exists(main_py_path):
+                main_content = self._generate_main_entry_point(all_files)
+                with open(main_py_path, 'w', encoding='utf-8') as f:
+                    f.write(main_content)
+            
+            # Create zip file
+            self.emit_progress("packaging", "Creating project archive...")
+            zip_path = os.path.join(Config.TEMP_DIR, f"python_project_{project_id}.zip")
+            
+            with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for root, dirs, files in os.walk(project_dir):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        arc_name = os.path.relpath(file_path, project_dir)
+                        zipf.write(file_path, arc_name)
+            
+            self.emit_progress("completed", "Advanced project generation completed successfully!")
+            
+            return {
+                "success": True,
+                "message": "Advanced project created successfully",
+                "project_dir": project_dir,
+                "zip_path": zip_path,
+                "file_count": len(all_files),
+                "generation_type": "advanced"
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Error creating project from files: {str(e)}")
+            self.emit_progress("error", f"Failed to create project: {str(e)}")
+            return {
+                "success": False,
+                "error": str(e),
+                "generation_type": "advanced"
+            }
+    
+    def _generate_main_entry_point(self, all_files):
+        """Generate a main.py entry point based on available files"""
+        imports = []
+        main_calls = []
+        
+        # Analyze files to determine what to import and call
+        for filename, content in all_files.items():
+            if filename.endswith('.py') and filename != 'main.py':
+                module_name = filename.replace('.py', '').replace('/', '.').replace('\\', '.')
+                
+                # Look for common function patterns
+                if 'def main(' in content:
+                    imports.append(f"from {module_name} import main as {module_name}_main")
+                    main_calls.append(f"    {module_name}_main()")
+                elif 'def run(' in content:
+                    imports.append(f"from {module_name} import run as {module_name}_run")
+                    main_calls.append(f"    {module_name}_run()")
+                elif 'class' in content and 'Model' in content:
+                    imports.append(f"import {module_name}")
+                    main_calls.append(f"    # {module_name} imported for use")
+        
+        main_content = f'''"""
+Main entry point for the generated project.
+This file orchestrates the execution of all project components.
+"""
+
+{chr(10).join(imports)}
+
+def main():
+    """Main execution function"""
+    print("=== Starting Application ===")
+    
+{chr(10).join(main_calls) if main_calls else "    print('No main functions found to execute')"}
+    
+    print("=== Application Completed ===")
+
+if __name__ == "__main__":
+    main()
+'''
+        return main_content
+
     def _write_project_files(self, project_dir, files):
         """Write generated code files to disk"""
         for file_info in files:
@@ -802,6 +994,9 @@ if __name__ == "__main__":
     
     def _create_project_zip(self, project_dir, project_id):
         """Create a zip file of the project"""
+        # Ensure temp directory exists
+        os.makedirs(Config.TEMP_DIR, exist_ok=True)
+        
         zip_path = os.path.join(Config.TEMP_DIR, f"{project_id}.zip")
         
         try:
@@ -3887,4 +4082,3 @@ def main():
 
 if __name__ == '__main__':
     main()"""
-

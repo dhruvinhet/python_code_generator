@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './LandingPage';
 import CodeGenerator from './CodeGenerator';
 import SystemGraphPage from './SystemGraphPage';
+import BlogGenerator from './BlogGenerator';
 import './App.css';
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/generator" element={<CodeGenerator />} />
         <Route path="/graph" element={<SystemGraphPage />} />
+        <Route path="/blog" element={<BlogGenerator />} />
       </Routes>
     </Router>
   );

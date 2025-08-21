@@ -5,8 +5,10 @@ import uuid
 import os
 import threading
 import zipfile
+import asyncio
 from datetime import datetime
 from project_manager import ProjectManager
+from advanced_agents_system import create_advanced_project
 from config import Config
 from parsing_debugger import debug_logger
 
@@ -35,60 +37,81 @@ def generate_project():
     try:
         data = request.get_json()
         user_prompt = data.get('prompt', '').strip()
-        
+        mode = data.get('mode', 'simple')
+
         if not user_prompt:
             return jsonify({"error": "Prompt is required"}), 400
-        
+
         # Generate unique project ID
         project_id = str(uuid.uuid4())
-        
+
         # Store project info
         active_projects[project_id] = {
             "id": project_id,
             "prompt": user_prompt,
+            "mode": mode,
             "status": "started",
             "created_at": datetime.now().isoformat()
         }
-        
+
         # Start project generation in background thread
         def generate_in_background():
             try:
-                result = project_manager.generate_project(user_prompt, project_id)
-                active_projects[project_id].update({
-                    "status": "completed" if result["success"] else "failed",
-                    "result": result,
-                    "completed_at": datetime.now().isoformat()
-                })
-                
+                if mode == 'multi_agent':
+                    # Use new advanced agents system with LangGraph
+                    import asyncio
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    result = loop.run_until_complete(
+                        create_advanced_project(user_prompt)
+                    )
+                    
+                    # Update project status
+                    active_projects[project_id].update({
+                        "status": "completed" if result.get('success') else "failed",
+                        "result": result,
+                        "project_folder": result.get("project_folder"),
+                        "project_name": result.get("project_name"),
+                        "completed_at": datetime.now().isoformat()
+                    })
+                else:
+                    # Use simple generation
+                    result = project_manager.generate_project(user_prompt, project_id, mode=mode)
+                    active_projects[project_id].update({
+                        "status": "completed" if result.get("success") else "failed",
+                        "result": result,
+                        "completed_at": datetime.now().isoformat()
+                    })
+
                 # Emit completion event
                 socketio.emit('project_completed', {
                     "project_id": project_id,
-                    "success": result["success"],
+                    "success": result.get("success"),
                     "result": result
                 })
-                
+
             except Exception as e:
                 active_projects[project_id].update({
                     "status": "failed",
                     "error": str(e),
                     "completed_at": datetime.now().isoformat()
                 })
-                
+
                 socketio.emit('project_failed', {
                     "project_id": project_id,
                     "error": str(e)
                 })
-        
+
         thread = threading.Thread(target=generate_in_background)
         thread.daemon = True
         thread.start()
-        
+
         return jsonify({
             "project_id": project_id,
             "status": "started",
             "message": "Project generation started"
         })
-        
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -478,16 +501,78 @@ def get_parsing_stats():
     except Exception as e:
         return jsonify({"error": f"Failed to get parsing stats: {str(e)}"}), 500
 
+# Blog Generation Routes
+@app.route('/api/blog/plan', methods=['POST'])
+def plan_blog():
+    """Plan blog structure based on topic"""
+    try:
+        from blog_agents import blog_system
+        
+        data = request.get_json()
+        topic = data.get('topic', '').strip()
+        
+        if not topic:
+            return jsonify({"error": "Topic is required"}), 400
+        
+        # Plan the blog structure
+        result = blog_system.plan_blog(topic)
+        
+        return jsonify({
+            "success": True,
+            "title": result['title'],
+            "subtopics": result['subtopics'],
+            "outline": result['outline']
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Failed to plan blog: {str(e)}"
+        }), 500
+
+@app.route('/api/blog/generate', methods=['POST'])
+def generate_blog():
+    """Generate blog content"""
+    try:
+        from blog_agents import blog_system
+        
+        data = request.get_json()
+        main_topic = data.get('mainTopic', '').strip()
+        subtopics = data.get('subtopics', [])
+        title = data.get('title', '').strip()
+        
+        if not main_topic or not subtopics:
+            return jsonify({"error": "Main topic and subtopics are required"}), 400
+        
+        if not title:
+            title = f"Complete Guide to {main_topic}"
+        
+        # Generate the blog
+        blog_content = blog_system.generate_blog(main_topic, subtopics, title)
+        
+        return jsonify({
+            "success": True,
+            "blog": blog_content,
+            "title": title,
+            "wordCount": len(blog_content.split())
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Failed to generate blog: {str(e)}"
+        }), 500
+
 if __name__ == '__main__':
     print("Starting Python Code Generator API...")
-    print(f"Gemini API Key configured: {'Yes' if Config.GEMINI_API_KEY else 'No'}")
+    print(f"Gemini API Key configured: {'Yes' if Config.GOOGLE_API_KEY else 'No'}")
     print(f"Generated projects directory: {Config.GENERATED_PROJECTS_DIR}")
     
-    # Run with eventlet for WebSocket support
+    # Run with eventlet for WebSocket support - Debug disabled to prevent auto-restart
     socketio.run(
         app, 
         host='0.0.0.0', 
         port=5000, 
-        debug=Config.FLASK_DEBUG
+        debug=False,  # Disabled to prevent server auto-restart
+        use_reloader=False  # Explicitly disable file watching
     )
-

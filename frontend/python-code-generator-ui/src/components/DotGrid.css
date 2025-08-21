@@ -1,0 +1,31 @@
+.dot-grid {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.dot-grid__wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.dot-grid__canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Additional styling for better integration */
+.dot-grid--interactive {
+  cursor: crosshair;
+}
+
+.dot-grid--interactive .dot-grid__canvas {
+  pointer-events: auto;
+}

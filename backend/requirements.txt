@@ -8,4 +8,6 @@ python-socketio
 eventlet
 python-dotenv
 psutil
-
+requests
+beautifulsoup4
+lxml

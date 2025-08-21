@@ -4,7 +4,7 @@ import json
 import re
 
 # Configure Gemini API
-genai.configure(api_key=Config.GEMINI_API_KEY)
+genai.configure(api_key=Config.GOOGLE_API_KEY)
 
 class BaseWebAgent:
     """Base web agent class using Google Generative AI directly"""

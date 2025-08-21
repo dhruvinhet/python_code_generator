@@ -1,0 +1,7 @@
+uvicorn
+Pillow
+torch
+diffusers
+transformers
+accelerate
+huggingface_hub
