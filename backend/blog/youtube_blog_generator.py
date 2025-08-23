@@ -555,20 +555,3 @@ def generate_blog_from_youtube(video_url, additional_context="", gemini_api_key=
             result['error'] = "Unknown error occurred during processing"
     
     return result
-
-
-# Example usage and testing
-if __name__ == "__main__":
-    # Test the function
-    test_url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"  # Rick Roll for testing
-    
-    # You would need to provide your actual API keys
-    result = generate_blog_from_youtube(
-        video_url=test_url,
-        additional_context="Focus on the cultural impact and meme status",
-        # gemini_api_key="your_gemini_api_key_here",
-        # google_search_api_key="your_google_api_key_here",
-        # search_engine_id="your_search_engine_id_here"
-    )
-    
-    print(json.dumps(result, indent=2))
