@@ -471,7 +471,7 @@ function CodeGenerator() {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold gradient-text-bw tracking-tight">
-                    Python Code Generator
+                    CodeCrafter
                   </h1>
                   <div className="flex items-center space-x-3">
                     <p className="text-bw-secondary text-sm font-medium">
