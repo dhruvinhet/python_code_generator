@@ -36,6 +36,8 @@ const LandingPage = () => {
       navigate('/generator');
     } else if (feature === 'blogbot') {
       navigate('/blog');
+    } else if (feature === 'datawash') {
+      navigate('/data');
     } else {
       alert(`${feature} is coming soon! 🚀`);
     }
@@ -71,7 +73,7 @@ const LandingPage = () => {
       name: 'DataWash',
       icon: Database,
       description: 'Clean and preprocess your data with automated AI workflows',
-      available: false,
+      available: true,
       color: 'from-purple-500 to-violet-600',
       accent: 'purple'
     },

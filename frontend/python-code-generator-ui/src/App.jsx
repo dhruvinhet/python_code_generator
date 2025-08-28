@@ -4,6 +4,7 @@ import LandingPage from './LandingPage';
 import CodeGenerator from './CodeGenerator';
 import SystemGraphPage from './SystemGraphPage';
 import BlogGenerator from './BlogGenerator';
+import DataWash from './DataWash';
 import './App.css';
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
         <Route path="/generator" element={<CodeGenerator />} />
         <Route path="/graph" element={<SystemGraphPage />} />
         <Route path="/blog" element={<BlogGenerator />} />
+        <Route path="/data" element={<DataWash />} />
       </Routes>
     </Router>
   );

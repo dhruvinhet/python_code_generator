@@ -8,11 +8,30 @@ import zipfile
 import asyncio
 import re
 import json
+import logging
 from datetime import datetime
 from project_manager import ProjectManager
 from advanced_agents_system import create_advanced_project
 from config import Config
 from parsing_debugger import debug_logger
+
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
+# Set json_parser to DEBUG level for detailed parsing logs
+logging.getLogger('json_parser').setLevel(logging.DEBUG)
+
+# Try to import data_cleaner, but don't crash if dependencies are missing
+try:
+    from data_cleaner import data_cleaner
+    DATA_CLEANER_AVAILABLE = True
+except ImportError as e:
+    print(f"Data cleaner not available: {e}")
+    data_cleaner = None
+    DATA_CLEANER_AVAILABLE = False
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = Config.SECRET_KEY
@@ -30,7 +49,14 @@ def index():
     return jsonify({
         "message": "Python Code Generator API",
         "version": "1.0.0",
-        "status": "running"
+        "status": "running",
+        "data_endpoints": [
+            "/api/data/upload",
+            "/api/data/analyze", 
+            "/api/data/graphs",
+            "/api/data/clean",
+            "/api/data/download/<filename>"
+        ]
     })
 
 @app.route('/api/generate', methods=['POST'])
@@ -711,6 +737,214 @@ def plan_blog():
             "success": False,
             "error": f"Failed to plan blog: {str(e)}"
         }), 500
+
+# Data Cleaning Endpoints
+@app.route('/api/data/test', methods=['GET'])
+def test_data_endpoint():
+    """Test endpoint to verify data cleaning module"""
+    try:
+        if not DATA_CLEANER_AVAILABLE or data_cleaner is None:
+            return jsonify({
+                "success": False,
+                "error": "Data cleaning module not available. Please install required dependencies: pip install pandas numpy openpyxl xlrd"
+            }), 500
+            
+        return jsonify({
+            "success": True,
+            "message": "Data cleaning endpoints are working",
+            "supported_formats": data_cleaner.supported_formats
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/data/upload', methods=['POST'])
+def upload_data():
+    """Upload and analyze data file"""
+    try:
+        if not DATA_CLEANER_AVAILABLE or data_cleaner is None:
+            return jsonify({
+                "error": "Data cleaning module not available. Please install required dependencies: pip install pandas numpy openpyxl xlrd"
+            }), 500
+            
+        if 'file' not in request.files:
+            return jsonify({"error": "No file uploaded"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "No file selected"}), 400
+        
+        # Analyze the file
+        result = data_cleaner.analyze_file(file)
+        
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify({"error": result['error']}), 400
+            
+    except Exception as e:
+        return jsonify({"error": f"Failed to process file: {str(e)}"}), 500
+
+@app.route('/api/data/analyze', methods=['POST'])
+def analyze_data():
+    """Perform AI analysis on uploaded data"""
+    try:
+        if not DATA_CLEANER_AVAILABLE or data_cleaner is None:
+            return jsonify({
+                "error": "Data cleaning module not available. Please install required dependencies: pip install pandas numpy openpyxl xlrd"
+            }), 500
+            
+        if 'file' not in request.files:
+            return jsonify({"error": "No file uploaded"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "No file selected"}), 400
+        
+        # Perform AI analysis
+        result = data_cleaner.ai_analysis(file)
+        
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify({"error": result['error']}), 400
+            
+    except Exception as e:
+        return jsonify({"error": f"Failed to analyze data: {str(e)}"}), 500
+
+@app.route('/api/data/graphs', methods=['POST'])
+def generate_data_graphs():
+    """Generate matplotlib/seaborn graphs for data visualization"""
+    try:
+        if not DATA_CLEANER_AVAILABLE or data_cleaner is None:
+            return jsonify({
+                "error": "Data cleaning module not available. Please install required dependencies: pip install pandas numpy matplotlib seaborn openpyxl xlrd"
+            }), 500
+            
+        if 'file' not in request.files:
+            return jsonify({"error": "No file uploaded"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "No file selected"}), 400
+        
+        # Generate graphs
+        result = data_cleaner.generate_data_quality_graphs(file)
+        
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify({"error": result['error']}), 400
+            
+    except Exception as e:
+        return jsonify({"error": f"Failed to generate graphs: {str(e)}"}), 500
+
+@app.route('/api/data/clean', methods=['POST'])
+def clean_data():
+    """Clean data based on selected options"""
+    try:
+        if not DATA_CLEANER_AVAILABLE or data_cleaner is None:
+            return jsonify({
+                "error": "Data cleaning module not available. Please install required dependencies: pip install pandas numpy openpyxl xlrd"
+            }), 500
+            
+        if 'file' not in request.files:
+            return jsonify({"error": "No file uploaded"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "No file selected"}), 400
+        
+        # Get cleaning options
+        options = {
+            'removeDuplicates': request.form.get('removeDuplicates', 'true').lower() == 'true',
+            'handleMissingValues': request.form.get('handleMissingValues', 'true').lower() == 'true',
+            'standardizeFormats': request.form.get('standardizeFormats', 'true').lower() == 'true',
+            'detectOutliers': request.form.get('detectOutliers', 'true').lower() == 'true',
+            'validateDataTypes': request.form.get('validateDataTypes', 'true').lower() == 'true'
+        }
+        
+        # Clean the data
+        result = data_cleaner.clean_data(file, options)
+        
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify({"error": result['error']}), 400
+            
+    except Exception as e:
+        return jsonify({"error": f"Failed to clean data: {str(e)}"}), 500
+
+@app.route('/api/data/manual-clean', methods=['POST'])
+def manual_clean_data():
+    """Perform manual cleaning operations on data"""
+    try:
+        if not DATA_CLEANER_AVAILABLE or data_cleaner is None:
+            return jsonify({
+                "error": "Data cleaning module not available. Please install required dependencies: pip install pandas numpy openpyxl xlrd"
+            }), 500
+            
+        if 'file' not in request.files:
+            return jsonify({"error": "No file uploaded"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "No file selected"}), 400
+        
+        # Get operation and parameters
+        operation = request.form.get('operation')
+        parameters = {}
+        
+        # Parse parameters based on operation type
+        if operation == 'filter_rows':
+            parameters = {
+                'column': request.form.get('column'),
+                'condition': request.form.get('condition'),
+                'value': request.form.get('value')
+            }
+        elif operation == 'find_replace':
+            parameters = {
+                'column': request.form.get('column'),
+                'find_value': request.form.get('find_value'),
+                'replace_value': request.form.get('replace_value')
+            }
+        elif operation == 'remove_columns':
+            columns_str = request.form.get('columns', '')
+            parameters = {
+                'columns': [col.strip() for col in columns_str.split(',') if col.strip()]
+            }
+        elif operation == 'transform_data':
+            parameters = {
+                'column': request.form.get('column'),
+                'transformation': request.form.get('transformation')
+            }
+        
+        # Perform manual cleaning
+        result = data_cleaner.manual_clean_data(file, operation, parameters)
+        
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify({"error": result['error']}), 400
+            
+    except Exception as e:
+        return jsonify({"error": f"Failed to perform manual cleaning: {str(e)}"}), 500
+
+@app.route('/api/data/download/<filename>', methods=['GET'])
+def download_cleaned_data(filename):
+    """Download cleaned data file"""
+    try:
+        # In a real implementation, you would store the cleaned data temporarily
+        # and retrieve it here. For now, we'll return a placeholder response
+        return jsonify({
+            "message": "Download functionality would be implemented here",
+            "filename": filename
+        })
+        
+    except Exception as e:
+        return jsonify({"error": f"Failed to download file: {str(e)}"}), 500
 
 if __name__ == '__main__':
     print("Starting Python Code Generator API...")
