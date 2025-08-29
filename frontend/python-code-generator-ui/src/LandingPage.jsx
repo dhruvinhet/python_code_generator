@@ -38,6 +38,8 @@ const LandingPage = () => {
       navigate('/blog');
     } else if (feature === 'datawash') {
       navigate('/data');
+    } else if (feature === 'smartslides') {
+      navigate('/slide');
     } else {
       alert(`${feature} is coming soon! 🚀`);
     }
@@ -64,7 +66,7 @@ const LandingPage = () => {
       name: 'SmartSlides',
       icon: Presentation,
       description: 'Create stunning PowerPoint presentations with intelligent design',
-      available: false,
+      available: true,
       color: 'from-green-500 to-emerald-600',
       accent: 'green'
     },

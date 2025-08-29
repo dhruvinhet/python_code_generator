@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, send_file, session
 from flask_cors import CORS
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room, leave_room
 import uuid
 import os
 import threading
@@ -33,6 +33,31 @@ except ImportError as e:
     data_cleaner = None
     DATA_CLEANER_AVAILABLE = False
 
+# Try to import PPT functionality, but don't crash if dependencies are missing
+try:
+    # Suppress Pydantic warnings for PPT components
+    import warnings
+    from pydantic._internal._config import PydanticDeprecatedSince20
+    warnings.filterwarnings("ignore", category=PydanticDeprecatedSince20)
+    warnings.filterwarnings("ignore", category=DeprecationWarning, module="pydantic")
+    warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
+    
+    from ppt.project_manager import PPTProjectManager
+    from ppt.themes import PPTThemes
+    PPT_AVAILABLE = True
+    print("✅ PPT functionality is available")
+except ImportError as e:
+    print(f"⚠️  PPT functionality not available: {e}")
+    PPTProjectManager = None
+    PPTThemes = None
+    PPT_AVAILABLE = False
+except Exception as e:
+    print(f"⚠️  PPT functionality disabled due to error: {e}")
+    print("📋 Creating fallback PPT functionality...")
+    PPTProjectManager = None
+    PPTThemes = None
+    PPT_AVAILABLE = "FALLBACK"  # Use fallback mode
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = Config.SECRET_KEY
 CORS(app, origins="*")
@@ -40,6 +65,55 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
 # Global project manager instance
 project_manager = ProjectManager(socketio)
+
+# Initialize PPT project manager if available
+if PPT_AVAILABLE == True:
+    ppt_project_manager = PPTProjectManager(socketio=socketio)
+    print("PPT Project Manager initialized")
+elif PPT_AVAILABLE == "FALLBACK":
+    # Create simple fallback functionality
+    class FallbackPPTManager:
+        def __init__(self):
+            self.projects = {}
+            
+        def get_all_projects(self):
+            return []
+            
+        def create_project(self, **kwargs):
+            return {"success": False, "error": "PPT functionality temporarily unavailable due to dependency issues"}
+            
+        def get_project_status(self, project_id):
+            return {"success": False, "error": "PPT functionality temporarily unavailable"}
+    
+    class FallbackThemes:
+        @staticmethod
+        def get_all_themes():
+            return {
+                "corporate_blue": {
+                    "name": "Corporate Blue",
+                    "description": "Professional blue theme",
+                    "primary_color": "#2563eb",
+                    "secondary_color": "#1e40af"
+                },
+                "modern_purple": {
+                    "name": "Modern Purple", 
+                    "description": "Contemporary purple theme",
+                    "primary_color": "#7c3aed",
+                    "secondary_color": "#5b21b6"
+                },
+                "clean_green": {
+                    "name": "Clean Green",
+                    "description": "Fresh green theme",
+                    "primary_color": "#059669", 
+                    "secondary_color": "#047857"
+                }
+            }
+    
+    ppt_project_manager = FallbackPPTManager()
+    PPTThemes = FallbackThemes
+    print("📋 Fallback PPT functionality initialized")
+else:
+    ppt_project_manager = None
 
 # Store active projects
 active_projects = {}
@@ -946,10 +1020,283 @@ def download_cleaned_data(filename):
     except Exception as e:
         return jsonify({"error": f"Failed to download file: {str(e)}"}), 500
 
+# ================================
+# PPT/SmartSlides Routes
+# ================================
+
+if PPT_AVAILABLE == True or PPT_AVAILABLE == "FALLBACK":
+    
+    # Download routes for presentations
+    @app.route('/api/ppt/presentations/<presentation_id>/download/pdf', methods=['GET'])
+    def download_presentation_pdf(presentation_id):
+        try:
+            pdf_path = ppt_project_manager.get_pdf_path(presentation_id)
+            if pdf_path and os.path.exists(pdf_path):
+                # Try to get the topic name for a better filename
+                download_name = f'presentation_{presentation_id}.pdf'
+                
+                # Check if we have project data with topic information
+                if presentation_id in ppt_project_manager.projects:
+                    topic = ppt_project_manager.projects[presentation_id].get('topic', '')
+                    if topic:
+                        sanitized_topic = PPTProjectManager.sanitize_filename(topic)
+                        download_name = f'{sanitized_topic}.pdf'
+                else:
+                    # Try to get topic from JSON file
+                    json_path = ppt_project_manager.get_response_path(presentation_id)
+                    if json_path and os.path.exists(json_path):
+                        try:
+                            with open(json_path, 'r', encoding='utf-8') as f:
+                                json_data = json.load(f)
+                                topic = json_data.get('topic') or json_data.get('title', '')
+                                if topic:
+                                    sanitized_topic = PPTProjectManager.sanitize_filename(topic)
+                                    download_name = f'{sanitized_topic}.pdf'
+                        except Exception as e:
+                            logging.warning(f"Could not load topic from JSON for download: {e}")
+                
+                return send_file(pdf_path, 
+                               mimetype='application/pdf',
+                               as_attachment=True,
+                               download_name=download_name)
+            return jsonify({'error': 'PDF not found'}), 404
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/ppt/presentations/<presentation_id>/download/response', methods=['GET'])
+    def download_presentation_response(presentation_id):
+        try:
+            response_path = ppt_project_manager.get_response_path(presentation_id)
+            if response_path and os.path.exists(response_path):
+                return send_file(response_path,
+                               mimetype='application/json',
+                               as_attachment=True,
+                               download_name=f'response_{presentation_id}.json')
+            return jsonify({'error': 'Response file not found'}), 404
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    # Create new presentation route
+    @app.route('/api/ppt/presentations', methods=['POST'])
+    def create_presentation():
+        try:
+            if PPT_AVAILABLE == "FALLBACK":
+                return jsonify({
+                    'success': False,
+                    'error': 'PPT functionality is temporarily unavailable due to dependency compatibility issues. Please check server logs for details.'
+                }), 503
+                
+            data = request.json
+            logging.info(f"Received presentation data: {data}")
+            
+            # Validate required fields
+            if not data or 'topic' not in data:
+                return jsonify({'error': 'Topic is required'}), 400
+            
+            # Extract data
+            topic = data['topic']
+            theme_name = data.get('theme', 'corporate_blue')
+            tone = data.get('tone', 'professional')
+            audience = data.get('audience', 'general')
+            length = data.get('length', 'medium')
+            focus_areas = data.get('focus_areas', [])
+            additional_requirements = data.get('additional_requirements', '')
+            
+            # Create project
+            result = ppt_project_manager.create_project(
+                topic=topic,
+                theme_name=theme_name,
+                tone=tone,
+                audience=audience,
+                length=length,
+                focus_areas=focus_areas,
+                additional_requirements=additional_requirements
+            )
+            
+            if result['success']:
+                return jsonify({
+                    'success': True,
+                    'project_id': result['project_id'],
+                    'message': 'Presentation project created successfully'
+                }), 201
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': result['error']
+                }), 500
+                
+        except Exception as e:
+            logging.error(f"Error creating presentation: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+
+    # Get presentation data route
+    @app.route('/api/ppt/presentations/<project_id>', methods=['GET'])
+    def get_presentation(project_id):
+        try:
+            result = ppt_project_manager.get_project_data(project_id)
+            
+            if result['success']:
+                return jsonify({
+                    'success': True,
+                    'data': result['data']
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': result['error']
+                }), 404
+                
+        except Exception as e:
+            logging.error(f"Error getting presentation {project_id}: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+
+    # Generate presentation route
+    @app.route('/api/ppt/presentations/<project_id>/generate', methods=['POST'])
+    def generate_presentation(project_id):
+        try:
+            # Check if project exists
+            if project_id not in ppt_project_manager.projects:
+                return jsonify({'error': 'Project not found'}), 404
+            
+            # Start generation in background
+            result = ppt_project_manager.start_generation(project_id)
+            
+            if result['success']:
+                return jsonify({
+                    'success': True,
+                    'message': 'Generation started',
+                    'project_id': project_id
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': result['error']
+                }), 500
+                
+        except Exception as e:
+            logging.error(f"Error generating presentation {project_id}: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+
+    # Get themes route
+    @app.route('/api/ppt/themes', methods=['GET'])
+    def get_themes():
+        try:
+            themes = PPTThemes.get_all_themes()
+            return jsonify({
+                'success': True,
+                'themes': themes
+            })
+        except Exception as e:
+            logging.error(f"Error getting themes: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
+
+    # Get project status route
+    @app.route('/api/ppt/projects/<project_id>/status', methods=['GET'])
+    def get_ppt_project_status(project_id):
+        try:
+            status = ppt_project_manager.get_project_status(project_id)
+            return jsonify(status)
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    # Download project route
+    @app.route('/api/ppt/projects/<project_id>/download', methods=['GET'])
+    def download_ppt_project(project_id):
+        try:
+            result = ppt_project_manager.get_download_files(project_id)
+            
+            if result['success']:
+                return jsonify({
+                    'success': True,
+                    'files': result['files']
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': result['error']
+                }), 404
+                
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    # Get all projects route
+    @app.route('/api/ppt/projects', methods=['GET'])
+    def get_all_ppt_projects():
+        try:
+            projects = ppt_project_manager.get_all_projects()
+            return jsonify({
+                'success': True,
+                'projects': projects
+            })
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    # Delete project route
+    @app.route('/api/ppt/projects/<project_id>', methods=['DELETE'])
+    def delete_ppt_project(project_id):
+        try:
+            result = ppt_project_manager.delete_project(project_id)
+            
+            if result['success']:
+                return jsonify({'success': True, 'message': 'Project deleted successfully'})
+            else:
+                return jsonify({'success': False, 'error': result['error']}), 404
+                
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    # PPT SocketIO events
+    @socketio.on('ppt_connect')
+    def handle_ppt_connect():
+        """Handle PPT client connection"""
+        logging.info(f"PPT Client connected: {request.sid}")
+        emit('ppt_connected', {'status': 'Connected to PPT service'})
+
+    @socketio.on('ppt_disconnect')
+    def handle_ppt_disconnect():
+        """Handle PPT client disconnection"""
+        logging.info(f"PPT Client disconnected: {request.sid}")
+
+    @socketio.on('join_ppt_project')
+    def handle_join_ppt_project(data):
+        """Join a PPT project room for real-time updates"""
+        project_id = data.get('project_id')
+        if project_id:
+            join_room(f"ppt_{project_id}")
+            logging.info(f"Client {request.sid} joined PPT project room: {project_id}")
+            emit('joined_ppt_project', {'project_id': project_id})
+
+    @socketio.on('leave_ppt_project')
+    def handle_leave_ppt_project(data):
+        """Leave a PPT project room"""
+        project_id = data.get('project_id')
+        if project_id:
+            leave_room(f"ppt_{project_id}")
+            logging.info(f"Client {request.sid} left PPT project room: {project_id}")
+            emit('left_ppt_project', {'project_id': project_id})
+
+else:
+    # PPT functionality not available routes
+    @app.route('/api/ppt/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
+    def ppt_not_available(path):
+        return jsonify({
+            'error': 'PPT functionality is not available. Please install required dependencies.'
+        }), 503
+
 if __name__ == '__main__':
     print("Starting Python Code Generator API...")
     print(f"Gemini API Key configured: {'Yes' if Config.GOOGLE_API_KEY else 'No'}")
     print(f"Generated projects directory: {Config.GENERATED_PROJECTS_DIR}")
+    
+    if PPT_AVAILABLE == True:
+        print("PPT/SmartSlides functionality: ✅ Fully Available")
+    elif PPT_AVAILABLE == "FALLBACK":
+        print("PPT/SmartSlides functionality: ⚠️  Fallback Mode (Limited functionality due to dependency issues)")
+    else:
+        print("PPT/SmartSlides functionality: ❌ Not Available")
     
     # Run with eventlet for WebSocket support - Debug disabled to prevent auto-restart
     socketio.run(

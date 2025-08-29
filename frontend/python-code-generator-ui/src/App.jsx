@@ -5,6 +5,7 @@ import CodeGenerator from './CodeGenerator';
 import SystemGraphPage from './SystemGraphPage';
 import BlogGenerator from './BlogGenerator';
 import DataWash from './DataWash';
+import SlideGenerator from './SlideGenerator';
 import './App.css';
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
         <Route path="/graph" element={<SystemGraphPage />} />
         <Route path="/blog" element={<BlogGenerator />} />
         <Route path="/data" element={<DataWash />} />
+        <Route path="/slide" element={<SlideGenerator />} />
       </Routes>
     </Router>
   );
