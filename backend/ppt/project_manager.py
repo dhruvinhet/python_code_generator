@@ -3,6 +3,8 @@ import json
 import re
 from datetime import datetime
 from .agents import PPTCrew
+import sys
+sys.path.append('..')
 from config import Config
 import logging
 from .themes import ThemeConfig, PPTThemes
@@ -302,45 +304,47 @@ class PPTProjectManager:
                 f.write(f"Response:\n{response}\n\n")
             logger.info(f"Logged agent response to {file_path}")
 
-    def generate_presentation(self, user_prompt, num_slides=5, project_id=None, theme_name='corporate_blue'):
-        if not project_id:
-            project_id = self.generate_project_id_from_topic(user_prompt, self.projects)
+    def create_project(self, topic, theme_name='corporate_blue', tone='professional', audience='general', length='medium', focus_areas=[], additional_requirements='', num_slides=5):
+        project_id = self.generate_project_id_from_topic(topic, self.projects)
         
         try:
-            logger.info(f"🎯 STARTING PRESENTATION GENERATION FOR TOPIC: '{user_prompt}' (ID: {project_id})")
+            logger.info(f"🎯 STARTING PRESENTATION GENERATION FOR TOPIC: '{topic}' (ID: {project_id})")
             
             self.projects[project_id] = {
                 'id': project_id, 
-                'prompt': user_prompt,
-                'topic': user_prompt,  # Add topic field for easier access
-                'title': user_prompt,  # Add title field for compatibility
-                'num_slides': num_slides,
+                'prompt': topic,
+                'topic': topic,
+                'title': topic,
                 'theme_name': theme_name, 
                 'status': 'started',
                 'created_at': datetime.now().isoformat(), 
                 'stages': []
             }
             
-            self.emit_progress(project_id, 'initialization', f'Starting presentation generation for: {user_prompt}')
+            self.emit_progress(project_id, 'initialization', f'Starting presentation generation for: {topic}')
             
-            self.emit_progress(project_id, 'planning', f'AI agents researching: {user_prompt}')
+            self.emit_progress(project_id, 'planning', f'AI agents researching: {topic}')
             
             # Create presentation with the required arguments
             style_prefs = {
                 'num_slides': num_slides,
                 'project_id': project_id,
-                'theme': theme_name
+                'theme': theme_name,
+                'tone': tone,
+                'audience': audience,
+                'focus_areas': focus_areas,
+                'additional_requirements': additional_requirements
             }
             
-            logger.info(f"🤖 Calling AI agents to research and create presentation about: '{user_prompt}'")
+            logger.info(f"🤖 Calling AI agents to research and create presentation about: '{topic}'")
             presentation_plan = self.crew.create_presentation(
-                topic=user_prompt,
+                topic=topic,
                 style_preferences=style_prefs
             )
             
-            logger.info(f"✅ AI agents completed. Processing results for topic: '{user_prompt}'")
+            logger.info(f"✅ AI agents completed. Processing results for topic: '{topic}'")
             PPTProjectManager._log_agent_response(project_id, "Presentation Generator", str(presentation_plan))
-            self.emit_progress(project_id, 'generation', f'AI generation complete for: {user_prompt}, processing results...')
+            self.emit_progress(project_id, 'generation', f'AI generation complete for: {topic}, processing results...')
 
             theme = PPTThemes.get_theme(theme_name)
             if not theme:
@@ -461,6 +465,39 @@ class PPTProjectManager:
                 self.socketio.emit('project_failed', {'project_id': project_id, 'error': error_str}, room=project_id)
             
             return {'success': False, 'project_id': project_id, 'error': error_str}
+
+    def generate_presentation(self, user_prompt, num_slides=5, theme_name='corporate_blue'):
+        """
+        Generate a presentation with specified parameters.
+        This method wraps create_project for API compatibility.
+        """
+        try:
+            result = self.create_project(
+                topic=user_prompt,
+                theme_name=theme_name,
+                num_slides=num_slides
+            )
+            
+            if result and result.get('success'):
+                return {
+                    'success': True,
+                    'project_id': result.get('project_id'),
+                    'file_path': result.get('file_path'),
+                    'message': 'Presentation generated successfully'
+                }
+            else:
+                return {
+                    'success': False,
+                    'error': result.get('error', 'Failed to generate presentation'),
+                    'user_message': 'An error occurred during presentation generation'
+                }
+        except Exception as e:
+            logger.error(f"Error in generate_presentation: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e),
+                'user_message': 'An error occurred during presentation generation'
+            }
 
     def _extract_crew_result(self, crew_output):
         logger.info(f"CrewOutput type: {type(crew_output)}")
@@ -673,8 +710,8 @@ class PPTProjectManager:
                 return self._generate_pdf_from_html(project_id, html_content)
         
         # Fallback to old method if no project-specific slides found
-        logger.warning("No project-specific slides found, using fallback method")
-        return self._create_html_presentation_fallback(plan_data, project_id, theme)
+        logger.error("No project-specific slides found for PDF generation.")
+        raise ValueError("No project-specific HTML slides found to create presentation.")
 
     # def _create_html_presentation_fallback(self, plan_data: dict, project_id: str, theme: ThemeConfig) -> str:
     #     """
@@ -769,90 +806,48 @@ class PPTProjectManager:
     #     except Exception as e:
     #         logger.error(f"Error generating PDF: {str(e)}")
     #         raise
-
     def _generate_pdf_from_html(self, project_id: str, html_content: str) -> str:
-        """Generate PDF from HTML content with proper styling for PDF output"""
+        """Generate PDF from HTML content, allowing pages to size dynamically"""
         from weasyprint import HTML, CSS
+        from bs4 import BeautifulSoup
         
-        # Clean the HTML content if it has code block formatting
+        # Clean HTML
         html_content = PPTProjectManager.clean_html_code_block(html_content)
         logger.info(f"Processing cleaned HTML content for PDF generation: {html_content[:200]}...")
-        
-        project_data = self.projects.get(project_id, {})
-        theme_name = project_data.get('theme_name', 'corporate_blue')
-        theme = PPTThemes.get_theme(theme_name)
-        theme_css = theme.get_css() if theme else ""
 
-        # Enhanced PDF CSS for 16:9 aspect ratio (1920x1080px) with better visual quality
-        pdf_css = f"""
-        @page {{ 
-            size: 1920px 1080px; 
+        soup = BeautifulSoup(html_content, "html.parser")
+
+        # (Optional) Remove scaling logic entirely, since dynamic sizing handles it
+        scaled_html = str(soup)
+
+        pdf_css = """
+        @page { 
             margin: 0; 
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
-        }}
-        
-        html, body {{ 
-            width: 1920px; 
-            height: 1080px; 
-            margin: 0; 
-            padding: 0;
-            background: {theme.color_scheme.background_start if theme else '#ffffff'}; 
-            font-family: {theme.font_scheme.title_font if theme else 'Arial, sans-serif'};
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }}
-        
-        .slide-page {{ 
-            break-after: page; 
-            width: 1920px;
-            height: 1080px;
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            overflow: hidden;
-        }}
-        
-        .slide-page:last-child {{
+        }
+
+        .slide-page { 
+            break-after: page;
+            page-break-after: always;
+        }
+        .slide-page:last-child {
             break-after: auto;
-        }}
-        
-        /* Ensure proper text rendering */
-        * {{
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }}
-        
-        /* Enhanced typography for PDF */
-        h1, h2, h3, h4, h5, h6 {{
-            font-weight: bold;
-            text-rendering: optimizeLegibility;
-            line-height: 1.2;
-        }}
-        
-        p, li {{
-            text-rendering: optimizeLegibility;
-            line-height: 1.5;
-        }}
-        
-        /* Preserve background colors and gradients */
-        .card, .visual-element {{
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }}
+            page-break-after: auto;
+        }
+
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
         """
 
         output_path = os.path.join(Config.GENERATED_PPTS_DIR, f"presentation_{project_id}.pdf")
-        
+
         try:
-            HTML(string=html_content, base_url=os.getcwd()).write_pdf(
+            HTML(string=scaled_html, base_url=os.getcwd()).write_pdf(
                 output_path, 
-                stylesheets=[CSS(string=theme_css + pdf_css)],
+                stylesheets=[CSS(string=pdf_css)],
                 presentational_hints=True,
                 optimize_images=True
             )

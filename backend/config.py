@@ -13,7 +13,7 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
     
     # CrewAI Configuration
-    CREWAI_MODEL = "gemini/gemini-2.0-flash-exp"
+    CREWAI_MODEL = "gemini/gemini-2.5-flash"
     
     # Project Generation Settings
     MAX_PROJECT_SIZE = 50  # Maximum number of files
@@ -22,3 +22,11 @@ class Config:
     # File paths
     GENERATED_PROJECTS_DIR = os.path.join(os.path.dirname(__file__), 'generated_projects')
     TEMP_DIR = os.path.join(os.path.dirname(__file__), 'temp')
+    GENERATED_PPTS_DIR = os.path.join(os.path.dirname(__file__), 'generated_ppts')
+    HTML_OUTPUTS_DIR = os.path.join(os.path.dirname(__file__), 'html_outputs')
+
+    # Retry settings for external APIs
+    MAX_RETRIES = 3
+    RETRY_DELAY = 10  # seconds
+    RETRY_BACKOFF = 2
+    MAX_RETRY_DELAY = 60 # seconds

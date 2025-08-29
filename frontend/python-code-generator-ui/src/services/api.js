@@ -30,6 +30,9 @@ export const api = {
     responseType: 'blob'
   }),
   
+  // Get PPT service status
+  getServiceStatus: () => apiClient.get('/api/ppt/status'),
+  
   // Get API status
   getStatus: () => apiClient.get('/'),
 }

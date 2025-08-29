@@ -1,0 +1,506 @@
+<!-- Slide 5 -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Slide 5</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@400;700;400i&display=swap');
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Lato Regular', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            width: 1920px;
+            height: 1080px;
+            margin: 0;
+            padding: 0;
+            background: #F8F8F8; /* Changed to design spec background */
+            color: #333333; /* Changed to design spec text color */
+            overflow: hidden;
+        }
+        
+        .slide {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            position: relative;
+        }
+        
+        .slide-content {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 60px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 1400px;
+            width: 100%;
+            position: relative;
+        }
+        
+        .slide-title {
+            font-family: 'Playfair Display Bold', Georgia, serif;
+            font-size: 3.5rem; /* ~48pt */
+            font-weight: bold;
+            color: #800000; /* Primary color */
+            margin-bottom: 30px;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .slide-subtitle { /* NEW class for subtitle */
+            font-family: 'Playfair Display Regular', Georgia, serif;
+            font-size: 2.5rem; /* ~30pt */
+            color: #003366; /* Secondary color */
+            margin-bottom: 30px;
+            text-align: center;
+            line-height: 1.2;
+        }
+        
+        .slide-body {
+            font-family: 'Lato Regular', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1.6rem; /* Closer to 20pt */
+            line-height: 1.6;
+            color: #333333;
+        }
+        
+        .center {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .center .slide-body p {
+            font-size: 1.8rem; /* Slightly larger for central content */
+        }
+        
+        .card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            border-left: 5px solid #800000; /* Primary color */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .visual-element { /* Use sparingly, accent color for highlights */
+            display: inline-block;
+            color: #FFD700; /* Accent color */
+            font-weight: bold;
+            font-size: 1.6rem;
+            margin: 0 3px;
+        }
+        
+        .bullet-points {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .bullet-points li {
+            margin: 20px 0;
+            padding-left: 40px;
+            position: relative;
+            font-size: 1.6rem;
+        }
+        
+        .bullet-points li::before {
+            content: "●";
+            color: #800000; /* Primary color */
+            font-size: 2rem;
+            position: absolute;
+            left: 0;
+            top: -2px;
+        }
+        
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+        
+        h2 { /* For general sub-headings within slide body */
+            font-size: 2.5rem;
+            color: #003366; /* Secondary color */
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        h3 {
+            font-size: 2rem;
+            color: #003366; /* Secondary color */
+            margin-bottom: 15px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .quote {
+            font-style: italic;
+            font-size: 2rem;
+            color: #555;
+            text-align: center;
+            position: relative;
+            padding: 20px;
+        }
+        
+        .quote::before {
+            content: """;
+            font-size: 4rem;
+            color: #800000; /* Primary color */
+            position: absolute;
+            top: -10px;
+            left: -10px;
+        }
+        
+        .source-citation {
+            text-align: right;
+            font-family: 'Lato Italic', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1rem; /* ~12pt */
+            color: #666666;
+            margin-top: 15px;
+            font-style: italic;
+        }
+
+        .slide-footer-citation {
+            text-align: left; /* Per spec "bottom-left" for source styling */
+            font-family: 'Lato Italic', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1rem;
+            color: #666666;
+            margin-top: 40px; /* Add some space from content */
+            font-style: italic;
+            width: 100%; /* Ensure it takes full width for positioning */
+            display: block; /* Make it block level */
+        }
+        
+        /* Chart and Visual Elements Styling */
+        .chart-container {
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .chart-visual {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .bar-chart {
+            display: flex;
+            justify-content: space-around;
+            align-items: end;
+            height: 200px;
+            padding: 20px;
+        }
+        
+        .bar {
+            background: linear-gradient(45deg, #800000, #003366); /* Primary & Secondary */
+            width: 80px;
+            border-radius: 5px 5px 0 0;
+            display: flex;
+            align-items: end;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            padding: 10px 5px;
+            font-size: 1rem;
+        }
+        
+        .process-diagram {
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .process-flow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .process-step {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px;
+            text-align: center;
+            min-width: 150px;
+            border: 2px solid #800000; /* Primary color */
+        }
+        
+        .step-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .arrow {
+            font-size: 2rem;
+            color: #800000; /* Primary color */
+            margin: 0 10px;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .comparison-item {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: transform 0.2s;
+        }
+        
+        .comparison-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .icon-large {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #800000; /* Primary color */
+        }
+        
+        .timeline {
+            margin: 30px 0;
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #800000; /* Primary color */
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-left: 20px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 20px;
+            width: 12px;
+            height: 12px;
+            background: #800000; /* Primary color */
+            border-radius: 50%;
+        }
+        
+        .timeline-date {
+            font-weight: bold;
+            color: #003366; /* Secondary color */
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .card-icon {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 15px;
+            color: #800000; /* Primary color */
+        }
+
+        /* Custom horizontal timeline for Slide 1 */
+        .horizontal-timeline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 40px auto;
+            width: 90%;
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .horizontal-timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 3px;
+            background: #003366; /* Secondary color for line */
+            z-index: 1;
+        }
+
+        .timeline-event {
+            position: relative;
+            text-align: center;
+            width: 20%; /* Distribute events evenly */
+            z-index: 2;
+        }
+
+        .timeline-dot {
+            width: 25px;
+            height: 25px;
+            background: #800000; /* Primary color */
+            border-radius: 50%;
+            margin: 0 auto 15px auto;
+            border: 3px solid #FFD700; /* Accent color */
+        }
+
+        .timeline-event-title {
+            font-family: 'Playfair Display Regular', Georgia, serif;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #003366; /* Secondary color */
+            margin-bottom: 5px;
+        }
+
+        .timeline-event-date {
+            font-family: 'Lato Regular', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1rem;
+            color: #666666;
+        }
+
+        /* Custom styles for conceptual diagram in Slide 5 */
+        .conceptual-diagram {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .central-concept {
+            font-family: 'Playfair Display Bold', Georgia, serif;
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: #800000; /* Primary color */
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+            padding: 30px;
+            border: 5px solid #FFD700; /* Accent border */
+            border-radius: 50%; /* Make it circular */
+            width: 200px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(128, 0, 0, 0.2);
+        }
+
+        .legacy-points {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .legacy-item {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            width: 280px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border-top: 5px solid #003366; /* Secondary color */
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .legacy-item:hover {
+            transform: translateY(-8px);
+        }
+
+        .legacy-icon {
+            font-size: 3rem;
+            color: #800000; /* Primary color */
+            margin-bottom: 15px;
+        }
+
+        .legacy-text {
+            font-family: 'Lato Regular', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1.2rem;
+            color: #333333;
+            line-height: 1.4;
+        }
+
+        .image-placeholder {
+            background: #e0e0e0;
+            border: 1px dashed #999;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            text-align: center;
+            min-height: 250px; /* Default height */
+            border-radius: 10px;
+            overflow: hidden; /* To handle text overflow */
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <div class="slide-content">
+            <h1 class="slide-title">Maharashtra's Enduring Legacy & Impact</h1>
+            <h2 class="slide-subtitle">Shaping India's Culture, Society, and Future</h2>
+            <div class="slide-body conceptual-diagram">
+                <div class="central-concept">
+                    <span style="font-size: 4rem; color: #FFD700;">🇮🇳</span>
+                </div>
+                <div class="legacy-points">
+                    <div class="legacy-item">
+                        <div class="legacy-icon">🎭</div>
+                        <h3 style="color: #003366;">Marathi Culture</h3>
+                        <p class="legacy-text">Shaped distinct language, ethos, and identity.</p>
+                    </div>
+                    <div class="legacy-item">
+                        <div class="legacy-icon">✊</div>
+                        <h3 style="color: #003366;">Social Justice</h3>
+                        <p class="legacy-text">Inspired numerous social justice and democratic movements.</p>
+                    </div>
+                    <div class="legacy-item">
+                        <div class="legacy-icon">🔱</div>
+                        <h3 style="color: #003366;">Shivaji's Identity</h3>
+                        <p class="legacy-text">Chhatrapati Shivaji Maharaj remains central to state identity.</p>
+                    </div>
+                    <div class="legacy-item">
+                        <div class="legacy-icon">🏛️</div>
+                        <h3 style="color: #003366;">Historical Preservation</h3>
+                        <p class="legacy-text">Ongoing efforts for forts, temples, and archaeological sites.</p>
+                    </div>
+                    <div class="legacy-item">
+                        <div class="legacy-icon">💰</div>
+                        <h3 style="color: #003366;">Economic Power</h3>
+                        <p class="legacy-text">Modern Maharashtra's unity and economic strength are historical outcomes.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-footer-citation">
+                Source: Profoundly shaped Marathi culture, language, ethos, and culinary traditions, creating a distinct regional identity. Inspired and led numerous social justice, anti-caste, and democratic movements that laid foundational principles for modern India. Historical figures like Chhatrapati Shivaji Maharaj remain central to the state's cultural identity, political discourse, and public life. Extensive preservation and conservation efforts are ongoing for numerous historical forts, temples, and archaeological sites across the state. Modern Maharashtra's linguistic and cultural unity, and its status as a leading industrial and cultural hub, are direct outcomes of its historical movements and foundations.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

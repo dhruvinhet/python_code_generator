@@ -1,0 +1,589 @@
+<!-- Slide 5 -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Slide 5</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Montserrat:wght@700&display=swap');
+
+        :root {
+            --primary-background: #F8F8F8;
+            --secondary-background: #FFFFFF;
+            --text-primary: #333333;
+            --text-secondary: #555555;
+            --accent-ai-agent: #00796B;
+            --accent-agentic-ai: #2196F3;
+            --highlight: #FFC107;
+
+            --heading-font: 'Montserrat', sans-serif;
+            --body-font: 'Lato', sans-serif;
+            --source-font: 'Lato', sans-serif;
+
+            --title-size: 48pt;
+            --subtitle-size: 30pt;
+            --slide-title-size: 36pt;
+            --bullet-point-size: 20pt;
+            --paragraph-size: 18pt;
+            --source-size: 14pt;
+
+            /* Define RGB versions of accent colors for rgba usage */
+            --accent-ai-agent-rgb: 0, 121, 107;
+            --accent-agentic-ai-rgb: 33, 150, 243;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--body-font);
+            width: 1920px;
+            height: 1080px;
+            margin: 0;
+            padding: 0;
+            background-color: var(--primary-background);
+            color: var(--text-primary);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .header-bar {
+            width: 100%;
+            padding: 20px 60px;
+            font-family: var(--heading-font);
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            background-color: var(--secondary-background);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .footer-bar {
+            width: 100%;
+            padding: 15px 60px;
+            font-family: var(--source-font);
+            font-size: var(--source-size);
+            color: var(--text-secondary);
+            background-color: var(--secondary-background);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            text-align: right;
+            z-index: 10;
+        }
+
+        .slide {
+            width: 100%;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 60px;
+            position: relative;
+        }
+
+        .slide-content {
+            background: var(--secondary-background);
+            border-radius: 20px;
+            padding: 60px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            max-width: 1600px;
+            width: 100%;
+            position: relative;
+            text-align: left;
+        }
+
+        .slide-title {
+            font-family: var(--heading-font);
+            font-size: var(--slide-title-size);
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .slide-subtitle {
+            font-family: var(--body-font);
+            font-size: var(--subtitle-size);
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            text-align: center;
+            font-weight: normal;
+        }
+
+        .slide-body {
+            font-family: var(--body-font);
+            font-size: var(--paragraph-size);
+            line-height: 1.7;
+            color: var(--text-primary);
+        }
+
+        .center {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .card {
+            background: var(--primary-background);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            border-left: 5px solid var(--accent-agentic-ai);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: left;
+        }
+        .card.accent-ai-agent {
+            border-left-color: var(--accent-ai-agent);
+        }
+        .card.accent-agentic-ai {
+            border-left-color: var(--accent-agentic-ai);
+        }
+
+        .visual-element {
+            display: inline-block;
+            color: var(--highlight);
+            font-weight: bold;
+            font-size: var(--bullet-point-size);
+            margin: 0 5px;
+            padding: 2px 8px;
+            background-color: rgba(255, 193, 7, 0.1);
+            border-radius: 5px;
+        }
+
+        .bullet-points {
+            list-style: none;
+            padding: 0;
+        }
+
+        .bullet-points li {
+            margin: 20px 0;
+            padding-left: 50px;
+            position: relative;
+            font-size: var(--bullet-point-size);
+            color: var(--text-primary);
+        }
+
+        .bullet-points li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            font-family: 'Segoe UI Symbol', sans-serif;
+            font-size: 2rem;
+            line-height: 1.2;
+            color: var(--accent-ai-agent);
+        }
+        .bullet-points li.agentic::before {
+            color: var(--accent-agentic-ai);
+        }
+        .bullet-points li.ai-agent::before {
+            color: var(--accent-ai-agent);
+        }
+
+        h2 {
+            font-family: var(--heading-font);
+            font-size: 2rem;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h3 {
+            font-family: var(--heading-font);
+            font-size: 1.7rem;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+            font-size: var(--paragraph-size);
+            color: var(--text-primary);
+        }
+
+        .quote {
+            font-style: italic;
+            font-size: 2rem;
+            color: var(--text-secondary);
+            text-align: center;
+            position: relative;
+            padding: 20px;
+        }
+
+        .quote::before {
+            content: "“";
+            font-size: 5rem;
+            color: var(--accent-agentic-ai);
+            position: absolute;
+            top: -20px;
+            left: 10px;
+            opacity: 0.2;
+        }
+        .quote::after {
+            content: "”";
+            font-size: 5rem;
+            color: var(--accent-agentic-ai);
+            position: absolute;
+            bottom: -40px;
+            right: 10px;
+            opacity: 0.2;
+        }
+
+        .source-citation {
+            text-align: right;
+            font-size: var(--source-size);
+            color: var(--text-secondary);
+            margin-top: 15px;
+            font-style: italic;
+            font-family: var(--source-font);
+        }
+
+        .chart-container, .process-diagram, .timeline {
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .chart-visual {
+            margin: 20px auto;
+            padding: 20px;
+            background: var(--primary-background);
+            border-radius: 10px;
+            max-width: 800px;
+        }
+
+        .bar-chart {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            height: 250px;
+            padding: 20px;
+            gap: 15px;
+        }
+
+        .bar {
+            background: linear-gradient(to top, var(--accent-ai-agent), var(--accent-agentic-ai));
+            width: 100px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            color: var(--secondary-background);
+            font-weight: bold;
+            padding: 15px 5px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .bar:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .process-flow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .process-step {
+            background: var(--primary-background);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            min-width: 180px;
+            border: 2px solid var(--accent-agentic-ai);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.2s ease-in-out;
+        }
+        .process-step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .step-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: var(--accent-ai-agent);
+        }
+
+        .arrow {
+            font-size: 2.5rem;
+            color: var(--text-secondary);
+            margin: 0 15px;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .comparison-item {
+            background: var(--primary-background);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            border: 2px solid var(--accent-ai-agent);
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .comparison-item.agentic {
+            border-color: var(--accent-agentic-ai);
+        }
+        .comparison-item.ai-agent {
+            border-color: var(--accent-ai-agent);
+        }
+
+        .comparison-item:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .icon-large {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: var(--accent-ai-agent);
+        }
+        .comparison-item.agentic .icon-large {
+            color: var(--accent-agentic-ai);
+        }
+        .comparison-item.ai-agent .icon-large {
+            color: var(--accent-ai-agent);
+        }
+
+        .timeline {
+            margin: 30px 0;
+            position: relative;
+            padding-left: 50px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--accent-ai-agent);
+            border-radius: 2px;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 40px;
+            background: var(--primary-background);
+            border-radius: 10px;
+            padding: 25px;
+            margin-left: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .timeline-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -40px;
+            top: 25px;
+            width: 18px;
+            height: 18px;
+            background: var(--accent-agentic-ai);
+            border-radius: 50%;
+            border: 3px solid var(--secondary-background);
+            box-shadow: 0 0 0 3px var(--accent-ai-agent);
+        }
+
+        .timeline-date {
+            font-weight: bold;
+            color: var(--text-secondary);
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            font-family: var(--heading-font);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 15px;
+            color: var(--accent-agentic-ai);
+            width: 100%;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: start;
+            margin-top: 30px;
+        }
+
+        .column h3 {
+            font-family: var(--heading-font);
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--text-primary);
+            font-size: 2.2rem;
+        }
+        .column ul {
+            padding: 0;
+            list-style: none;
+        }
+        .column ul li {
+            margin-bottom: 20px;
+            padding-left: 50px;
+            position: relative;
+            font-size: var(--bullet-point-size);
+            line-height: 1.6;
+            text-align: left;
+        }
+        .column ul li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            font-size: 2.2rem;
+            line-height: 1.5;
+            font-family: 'Segoe UI Symbol', sans-serif;
+        }
+        .column.positive-impact h3 {
+            color: var(--accent-ai-agent);
+        }
+        .column.positive-impact ul li::before {
+            content: "✅";
+            color: var(--accent-ai-agent);
+        }
+        .column.challenges h3 {
+            color: var(--highlight);
+        }
+        .column.challenges ul li::before {
+            content: "⚠️";
+            color: var(--highlight);
+        }
+
+        .background-image-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+        .background-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.1;
+            filter: grayscale(80%) blur(3px);
+        }
+        .hero-image {
+            max-width: 50%;
+            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-left: 40px;
+        }
+        .summary-layout .slide-body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 50px;
+        }
+        .summary-layout .text-content {
+            flex: 2;
+            padding-right: 0;
+            text-align: center;
+        }
+        .summary-layout .visual-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .summary-layout .visual-content .icon-large {
+            font-size: 8rem;
+            color: var(--accent-agentic-ai);
+            opacity: 0.8;
+        }
+        .summary-layout .visual-content p {
+             font-size: 1.5rem;
+             color: var(--text-secondary);
+             margin-top: 10px;
+             font-weight: bold;
+             text-align: center;
+        }
+
+        .slide-content.slide-5-bg {
+             background-image: url('https://via.placeholder.com/1600x900/F8F8F8/E0E0E0?text=Futuristic+AI+Landscape');
+             background-size: cover;
+             background-position: center;
+             background-blend-mode: overlay;
+             opacity: 0.9;
+        }
+        .slide-content.slide-5-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 248, 248, 0.95));
+            border-radius: inherit;
+            z-index: 0;
+        }
+        .slide-content.slide-5-bg > * {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-bar">
+        <span>AI Agent Vs Agentic AI</span>
+    </div>
+    <div class="slide">
+        <div class="slide-content slide-5-bg">
+            <h1 class="slide-title">Agentic AI: A New Frontier</h1>
+            <p class="slide-subtitle">Evolving Intelligence and Autonomy</p>
+            <div class="slide-body summary-layout">
+                <div class="text-content">
+                    <p>
+                        AI Agents are foundational intelligent systems. Agentic AI, driven by LLMs, marks a significant evolution with higher autonomy, complex planning, and self-correction. This promises vast automation benefits. However, it introduces critical challenges for safety, ethics, and control, requiring careful management for increasingly self-directed AI.
+                    </p>
+                </div>
+                <div class="visual-content">
+                    <div class="icon-large">🌐💡</div>
+                    <p>Evolving Intelligence</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bar">
+        <span>Slide 5</span>
+    </div>
+</body>
+</html>

@@ -1,0 +1,493 @@
+<!-- Slide 3 -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Slide 3</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            width: 1920px;
+            height: 1080px;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            overflow: hidden;
+        }
+        
+        .slide {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            position: relative;
+        }
+        
+        .slide-content {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 60px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 1400px;
+            width: 100%;
+            position: relative;
+            text-align: center;
+        }
+        
+        .slide-title {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .slide-subtitle {
+            font-size: 2rem;
+            color: #7F8C8D;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: lighter;
+        }
+        
+        .slide-body {
+            font-size: 1.8rem;
+            line-height: 1.6;
+            color: #34495e;
+            text-align: left;
+        }
+        
+        .center {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+        
+        .card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            border-left: 5px solid #3498db;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .visual-element {
+            display: inline-block;
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.6rem;
+            margin: 0 3px;
+        }
+        
+        .bullet-points {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .bullet-points li {
+            margin: 20px 0;
+            padding-left: 40px;
+            position: relative;
+            font-size: 1.6rem;
+        }
+        
+        .bullet-points li::before {
+            content: "●";
+            color: #3498db;
+            font-size: 2rem;
+            position: absolute;
+            left: 0;
+            top: -2px;
+        }
+        
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+        
+        h2 {
+            font-size: 2.5rem;
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        h3 {
+            font-size: 2rem;
+            color: #764ba2;
+            margin-bottom: 15px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .quote {
+            font-style: italic;
+            font-size: 2rem;
+            color: #555;
+            text-align: center;
+            position: relative;
+            padding: 20px;
+        }
+        
+        .quote::before {
+            content: """;
+            font-size: 4rem;
+            color: #3498db;
+            position: absolute;
+            top: -10px;
+            left: -10px;
+        }
+        
+        .source-citation {
+            text-align: right;
+            font-size: 1.2rem;
+            color: #7f8c8d;
+            margin-top: 15px;
+            font-style: normal;
+        }
+        
+        /* Chart and Visual Elements Styling */
+        .chart-container {
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .chart-visual {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .bar-chart {
+            display: flex;
+            justify-content: space-around;
+            align-items: end;
+            height: 200px;
+            padding: 20px;
+        }
+        
+        .bar {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            width: 80px;
+            border-radius: 5px 5px 0 0;
+            display: flex;
+            align-items: end;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            padding: 10px 5px;
+            font-size: 1rem;
+        }
+        
+        .process-diagram {
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .process-flow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .process-step {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px;
+            text-align: center;
+            min-width: 150px;
+            border: 2px solid #3498db;
+        }
+        
+        .step-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .arrow {
+            font-size: 2rem;
+            color: #3498db;
+            margin: 0 10px;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            margin: 30px 0;
+            padding: 0 40px;
+        }
+        
+        .comparison-item {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: left;
+            border: 2px solid #e9ecef;
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .comparison-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .icon-large {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+            text-align: center;
+        }
+
+        .comparison-header {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin-bottom: 25px;
+            padding: 15px 0;
+            border-radius: 10px;
+            color: #ECF0F1;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .langchain-header {
+            background-color: #3498DB;
+        }
+
+        .crewai-header {
+            background-color: #2ECC71;
+        }
+
+        .comparison-item .bullet-points li {
+            font-size: 1.4rem;
+            margin: 12px 0;
+            padding-left: 30px;
+        }
+
+        .comparison-item .bullet-points li::before {
+            font-size: 1.6rem;
+            top: 2px;
+        }
+        
+        .timeline {
+            margin: 30px 0;
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #7F8C8D;
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-left: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            text-align: left;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 20px;
+            width: 12px;
+            height: 12px;
+            background: #3498db;
+            border-radius: 50%;
+        }
+
+        .timeline-langchain::before {
+            background-color: #3498DB;
+        }
+
+        .timeline-crewai::before {
+            background-color: #2ECC71;
+        }
+        
+        .timeline-date {
+            font-weight: bold;
+            color: #2C3E50;
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .timeline-content h4 {
+            font-size: 1.8rem;
+            color: #2C3E50;
+            margin-bottom: 8px;
+        }
+
+        .timeline-content p {
+            font-size: 1.4rem;
+            color: #34495e;
+            line-height: 1.4;
+        }
+        
+        .card-icon {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .synergy-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 50px 0;
+            position: relative;
+            width: 100%;
+        }
+
+        .synergy-block {
+            padding: 40px 60px;
+            border-radius: 20px;
+            text-align: center;
+            color: #ECF0F1;
+            font-size: 2.2rem;
+            font-weight: bold;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 1;
+        }
+
+        .synergy-block.langchain {
+            background-color: #3498DB;
+            margin-right: -40px;
+        }
+
+        .synergy-block.crewai {
+            background-color: #2ECC71;
+            margin-left: -40px;
+        }
+
+        .synergy-connector {
+            background-color: #7F8C8D;
+            color: #ECF0F1;
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 2;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .two-column-synergy {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 30px;
+            padding: 0 40px;
+        }
+
+        .two-column-synergy .card {
+            border-left: none;
+            background: #F7F9FA;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            text-align: left;
+        }
+
+        .two-column-synergy h3 {
+            font-size: 2.2rem;
+            text-align: center;
+            width: 100%;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid;
+            color: #2C3E50;
+        }
+
+        .two-column-synergy .langchain-section-header {
+            border-color: #3498DB;
+        }
+
+        .two-column-synergy .crewai-section-header {
+            border-color: #2ECC71;
+        }
+
+        .two-column-synergy .bullet-points li {
+            font-size: 1.4rem;
+            margin: 10px 0;
+            padding-left: 30px;
+        }
+        .two-column-synergy .bullet-points li::before {
+            font-size: 1.6rem;
+            top: 2px;
+            color: #7F8C8D;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <div class="slide-content">
+            <h1 class="slide-title">Key Achievements</h1>
+            <p class="slide-subtitle">Impact on LLM Application & Multi-Agent Development</p>
+            <div class="slide-body">
+                <div class="comparison-grid">
+                    <div class="comparison-item">
+                        <h3 class="comparison-header langchain-header">🔗 LangChain</h3>
+                        <ul class="bullet-points">
+                            <li>Became de-facto standard for LLM-powered applications.</li>
+                            <li>Enabled developers to connect LLMs to external data and tools.</li>
+                            <li>Significantly lowered the barrier for complex LLM use cases.</li>
+                        </ul>
+                    </div>
+                    <div class="comparison-item">
+                        <h3 class="comparison-header crewai-header">🤖🤝 CrewAI</h3>
+                        <ul class="bullet-points">
+                            <li>Successfully streamlined creation of collaborative multi-agent systems.</li>
+                            <li>Provided intuitive framework for defining agent roles, goals, processes.</li>
+                            <li>Made sophisticated AI delegation and teamwork more accessible.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

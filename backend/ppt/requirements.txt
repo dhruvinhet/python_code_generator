@@ -8,5 +8,5 @@ flask-cors==5.0.0
 Pillow==10.4.0
 requests==2.32.3
 dataclasses-json==0.6.4
-weasyprint==60.2
+weasyprint==66.0
 beautifulsoup4==4.12.3

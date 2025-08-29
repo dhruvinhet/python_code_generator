@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Palette, Check, RotateCcw } from 'lucide-react'
 
-export function ThemeMatrix({ themes, selectedTheme, onThemeChange, showPreview = false, previewData = null, onNewPresentation }) {
+export function ThemeMatrix({ themes = [], selectedTheme, onThemeChange, showPreview = false, previewData = null, onNewPresentation }) {
   if (showPreview && previewData) {
     return (
       <div className="card">

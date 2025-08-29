@@ -1,0 +1,494 @@
+<!-- Slide 1 -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Slide 1</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            width: 1920px;
+            height: 1080px;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            overflow: hidden;
+        }
+        
+        .slide {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            position: relative;
+        }
+        
+        .slide-content {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 60px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 1400px;
+            width: 100%;
+            position: relative;
+            text-align: center; /* Center for titles/subtitles, then reset for body */
+        }
+        
+        .slide-title {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px; /* Reduced margin to make space for subtitle */
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .slide-subtitle { /* Custom class for subtitle */
+            font-size: 2rem;
+            color: #7F8C8D;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: lighter;
+        }
+        
+        .slide-body {
+            font-size: 1.8rem;
+            line-height: 1.6;
+            color: #34495e;
+            text-align: left; /* Reset text alignment for body content */
+        }
+        
+        .center {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+        
+        .card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            border-left: 5px solid #3498db;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .visual-element {
+            display: inline-block;
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.6rem;
+            margin: 0 3px;
+        }
+        
+        .bullet-points {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .bullet-points li {
+            margin: 20px 0;
+            padding-left: 40px;
+            position: relative;
+            font-size: 1.6rem;
+        }
+        
+        .bullet-points li::before {
+            content: "●";
+            color: #3498db;
+            font-size: 2rem;
+            position: absolute;
+            left: 0;
+            top: -2px;
+        }
+        
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+        
+        h2 {
+            font-size: 2.5rem;
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        h3 {
+            font-size: 2rem;
+            color: #764ba2;
+            margin-bottom: 15px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .quote {
+            font-style: italic;
+            font-size: 2rem;
+            color: #555;
+            text-align: center;
+            position: relative;
+            padding: 20px;
+        }
+        
+        .quote::before {
+            content: """;
+            font-size: 4rem;
+            color: #3498db;
+            position: absolute;
+            top: -10px;
+            left: -10px;
+        }
+        
+        .source-citation {
+            text-align: right;
+            font-size: 1.2rem;
+            color: #7f8c8d;
+            margin-top: 15px;
+            font-style: normal;
+        }
+        
+        /* Chart and Visual Elements Styling */
+        .chart-container {
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .chart-visual {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .bar-chart {
+            display: flex;
+            justify-content: space-around;
+            align-items: end;
+            height: 200px;
+            padding: 20px;
+        }
+        
+        .bar {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            width: 80px;
+            border-radius: 5px 5px 0 0;
+            display: flex;
+            align-items: end;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            padding: 10px 5px;
+            font-size: 1rem;
+        }
+        
+        .process-diagram {
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .process-flow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .process-step {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px;
+            text-align: center;
+            min-width: 150px;
+            border: 2px solid #3498db;
+        }
+        
+        .step-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .arrow {
+            font-size: 2rem;
+            color: #3498db;
+            margin: 0 10px;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* Explicitly 2 columns for comparison */
+            gap: 40px; /* Increased gap */
+            margin: 30px 0;
+            padding: 0 40px; /* Add some horizontal padding */
+        }
+        
+        .comparison-item {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: left; /* Changed to left for bullet points */
+            border: 2px solid #e9ecef;
+            transition: transform 0.2s;
+            display: flex; /* Make it a flex container */
+            flex-direction: column; /* Stack children vertically */
+        }
+        
+        .comparison-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .icon-large {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block; /* Ensure icon is on its own line */
+            text-align: center; /* Center the icon */
+        }
+
+        /* Custom styles for comparison grid headers */
+        .comparison-header {
+            font-size: 2.2rem; /* Adjusted from 2.5rem to 2.2rem to fit */
+            font-weight: bold;
+            margin-bottom: 25px;
+            padding: 15px 0;
+            border-radius: 10px;
+            color: #ECF0F1; /* text_light */
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .langchain-header {
+            background-color: #3498DB; /* accent_langchain */
+        }
+
+        .crewai-header {
+            background-color: #2ECC71; /* accent_crewai */
+        }
+
+        .comparison-item .bullet-points li {
+            font-size: 1.4rem; /* Smaller bullets for comparison items */
+            margin: 12px 0;
+            padding-left: 30px;
+        }
+
+        .comparison-item .bullet-points li::before {
+            font-size: 1.6rem;
+            top: 2px;
+        }
+        
+        .timeline {
+            margin: 30px 0;
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #7F8C8D; /* timeline_line */
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            background: #f8f9fa; /* neutral_background */
+            border-radius: 10px;
+            padding: 20px;
+            margin-left: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 20px;
+            width: 12px;
+            height: 12px;
+            background: #3498db; /* Default timeline dot color */
+            border-radius: 50%;
+        }
+
+        .timeline-langchain::before {
+            background-color: #3498DB; /* accent_langchain */
+        }
+
+        .timeline-crewai::before {
+            background-color: #2ECC71; /* accent_crewai */
+        }
+        
+        .timeline-date {
+            font-weight: bold;
+            color: #2C3E50; /* event_text, or title color */
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .timeline-content h4 {
+            font-size: 1.8rem;
+            color: #2C3E50; /* event_text */
+            margin-bottom: 8px;
+        }
+
+        .timeline-content p {
+            font-size: 1.4rem;
+            color: #34495e; /* Default body color */
+            line-height: 1.4;
+        }
+        
+        .card-icon {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        /* Slide 5 Specific Styles */
+        .synergy-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 50px 0;
+            position: relative;
+            width: 100%;
+        }
+
+        .synergy-block {
+            padding: 40px 60px;
+            border-radius: 20px;
+            text-align: center;
+            color: #ECF0F1;
+            font-size: 2.2rem;
+            font-weight: bold;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 1;
+        }
+
+        .synergy-block.langchain {
+            background-color: #3498DB;
+            margin-right: -40px; /* Overlap */
+        }
+
+        .synergy-block.crewai {
+            background-color: #2ECC71;
+            margin-left: -40px; /* Overlap */
+        }
+
+        .synergy-connector {
+            background-color: #7F8C8D; /* synergy_element */
+            color: #ECF0F1;
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 2;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .two-column-synergy {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 30px;
+            padding: 0 40px;
+        }
+
+        .two-column-synergy .card {
+            border-left: none; /* Remove default border for aesthetic in this layout */
+            background: #F7F9FA; /* neutral_background */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            min-height: 250px; /* Ensure cards have similar height */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            text-align: left;
+        }
+
+        .two-column-synergy h3 {
+            font-size: 2.2rem;
+            text-align: center;
+            width: 100%;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid;
+            color: #2C3E50; /* text_dark */
+        }
+
+        .two-column-synergy .langchain-section-header {
+            border-color: #3498DB;
+        }
+
+        .two-column-synergy .crewai-section-header {
+            border-color: #2ECC71;
+        }
+
+        .two-column-synergy .bullet-points li {
+            font-size: 1.4rem;
+            margin: 10px 0;
+            padding-left: 30px;
+        }
+        .two-column-synergy .bullet-points li::before {
+            font-size: 1.6rem;
+            top: 2px;
+            color: #7F8C8D; /* Neutral bullet color */
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <div class="slide-content">
+            <h1 class="slide-title">Introduction to Crew AI vs LangChain</h1>
+            <p class="slide-subtitle">Understanding Two LLM Orchestration Frameworks</p>
+            <div class="slide-body">
+                <div class="comparison-grid">
+                    <div class="comparison-item">
+                        <h3 class="comparison-header langchain-header">⚙️ LangChain</h3>
+                        <ul class="bullet-points">
+                            <li>Founded late 2022; pioneers general LLM application orchestration.</li>
+                            <li>Provides modular components for building LLM applications.</li>
+                            <li>Is general-purpose for diverse LLM application development.</li>
+                        </ul>
+                    </div>
+                    <div class="comparison-item">
+                        <h3 class="comparison-header crewai-header">🤝 CrewAI</h3>
+                        <ul class="bullet-points">
+                            <li>Emerged late 2023/early 2024; specialized in multi-agent collaboration.</li>
+                            <li>Designs collaborative autonomous AI agents.</li>
+                            <li>Is multi-agent focused; can integrate tools compatible with LangChain.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

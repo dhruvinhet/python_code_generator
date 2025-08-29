@@ -1,0 +1,417 @@
+<!-- Slide 4 -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Slide 4</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@400;700;400i&display=swap');
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Lato Regular', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            width: 1920px;
+            height: 1080px;
+            margin: 0;
+            padding: 0;
+            background: #F8F8F8; /* Changed to design spec background */
+            color: #333333; /* Changed to design spec text color */
+            overflow: hidden;
+        }
+        
+        .slide {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            position: relative;
+        }
+        
+        .slide-content {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 60px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 1400px;
+            width: 100%;
+            position: relative;
+        }
+        
+        .slide-title {
+            font-family: 'Playfair Display Bold', Georgia, serif;
+            font-size: 3.5rem; /* ~48pt */
+            font-weight: bold;
+            color: #800000; /* Primary color */
+            margin-bottom: 30px;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .slide-subtitle { /* NEW class for subtitle */
+            font-family: 'Playfair Display Regular', Georgia, serif;
+            font-size: 2.5rem; /* ~30pt */
+            color: #003366; /* Secondary color */
+            margin-bottom: 30px;
+            text-align: center;
+            line-height: 1.2;
+        }
+        
+        .slide-body {
+            font-family: 'Lato Regular', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1.6rem; /* Closer to 20pt */
+            line-height: 1.6;
+            color: #333333;
+        }
+        
+        .center {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .center .slide-body p {
+            font-size: 1.8rem; /* Slightly larger for central content */
+        }
+        
+        .card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            border-left: 5px solid #800000; /* Primary color */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .visual-element { /* Use sparingly, accent color for highlights */
+            display: inline-block;
+            color: #FFD700; /* Accent color */
+            font-weight: bold;
+            font-size: 1.6rem;
+            margin: 0 3px;
+        }
+        
+        .bullet-points {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .bullet-points li {
+            margin: 20px 0;
+            padding-left: 40px;
+            position: relative;
+            font-size: 1.6rem;
+        }
+        
+        .bullet-points li::before {
+            content: "●";
+            color: #800000; /* Primary color */
+            font-size: 2rem;
+            position: absolute;
+            left: 0;
+            top: -2px;
+        }
+        
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+        
+        h2 { /* For general sub-headings within slide body */
+            font-size: 2.5rem;
+            color: #003366; /* Secondary color */
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        h3 {
+            font-size: 2rem;
+            color: #003366; /* Secondary color */
+            margin-bottom: 15px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .quote {
+            font-style: italic;
+            font-size: 2rem;
+            color: #555;
+            text-align: center;
+            position: relative;
+            padding: 20px;
+        }
+        
+        .quote::before {
+            content: """;
+            font-size: 4rem;
+            color: #800000; /* Primary color */
+            position: absolute;
+            top: -10px;
+            left: -10px;
+        }
+        
+        .source-citation {
+            text-align: right;
+            font-family: 'Lato Italic', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1rem; /* ~12pt */
+            color: #666666;
+            margin-top: 15px;
+            font-style: italic;
+        }
+
+        .slide-footer-citation {
+            text-align: left; /* Per spec "bottom-left" for source styling */
+            font-family: 'Lato Italic', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1rem;
+            color: #666666;
+            margin-top: 40px; /* Add some space from content */
+            font-style: italic;
+            width: 100%; /* Ensure it takes full width for positioning */
+            display: block; /* Make it block level */
+        }
+        
+        /* Chart and Visual Elements Styling */
+        .chart-container {
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .chart-visual {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .bar-chart {
+            display: flex;
+            justify-content: space-around;
+            align-items: end;
+            height: 200px;
+            padding: 20px;
+        }
+        
+        .bar {
+            background: linear-gradient(45deg, #800000, #003366); /* Primary & Secondary */
+            width: 80px;
+            border-radius: 5px 5px 0 0;
+            display: flex;
+            align-items: end;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            padding: 10px 5px;
+            font-size: 1rem;
+        }
+        
+        .process-diagram {
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .process-flow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .process-step {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px;
+            text-align: center;
+            min-width: 150px;
+            border: 2px solid #800000; /* Primary color */
+        }
+        
+        .step-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .arrow {
+            font-size: 2rem;
+            color: #800000; /* Primary color */
+            margin: 0 10px;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .comparison-item {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: transform 0.2s;
+        }
+        
+        .comparison-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .icon-large {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #800000; /* Primary color */
+        }
+        
+        .timeline {
+            margin: 30px auto; /* Center timeline horizontally */
+            position: relative;
+            padding-left: 0; /* Remove left padding for central layout */
+            width: 80%; /* Control width */
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%; /* Center the line */
+            transform: translateX(-50%); /* Adjust for line width */
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #800000; /* Primary color */
+            z-index: 1;
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 50px; /* More space for integrated bullet points */
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%; /* Take full width of timeline container */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            z-index: 2;
+        }
+        
+        .timeline-item:nth-child(odd) { /* Alternate sides for visual flow */
+            left: -40%; /* Move to left of central line */
+            text-align: right;
+            padding-right: 50px; /* Space for the dot */
+        }
+        
+        .timeline-item:nth-child(even) { /* Alternate sides for visual flow */
+            left: 40%; /* Move to right of central line */
+            text-align: left;
+            padding-left: 50px; /* Space for the dot */
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            top: 30px;
+            width: 18px; /* Larger dot */
+            height: 18px;
+            background: #800000; /* Primary color */
+            border-radius: 50%;
+            border: 4px solid #FFD700; /* Accent color border */
+            z-index: 3;
+        }
+
+        .timeline-item:nth-child(odd)::before {
+            right: -40px; /* Position dot on the right for odd items */
+            left: auto;
+        }
+        
+        .timeline-item:nth-child(even)::before {
+            left: -40px; /* Position dot on the left for even items */
+            right: auto;
+        }
+        
+        .timeline-date {
+            font-weight: bold;
+            color: #003366; /* Secondary color */
+            font-size: 1.5rem; /* Larger date */
+            margin-bottom: 10px;
+            display: block; /* Ensure date is on its own line */
+        }
+        
+        .timeline-content h3 {
+            font-size: 1.8rem;
+            color: #800000;
+            margin-bottom: 10px;
+            text-align: inherit; /* Align with item text */
+        }
+
+        .timeline-content p {
+            font-size: 1.4rem;
+            text-align: inherit; /* Align with item text */
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 15px;
+            color: #800000; /* Primary color */
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <div class="slide-content">
+            <h1 class="slide-title">Social Reform, British Rule & State Formation</h1>
+            <h2 class="slide-subtitle">From Colonial Era to Modern Linguistic State</h2>
+            <div class="slide-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <span class="timeline-date">1818</span>
+                        <div class="timeline-content">
+                            <h3>🇬🇧 British Bombay Presidency</h3>
+                            <p>Maratha territories integrated into British rule after Anglo-Maratha War.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="timeline-date">19th Century</span>
+                        <div class="timeline-content">
+                            <h3>⚖️ Social Reform Movements</h3>
+                            <p>Maharashtra became a crucible for pioneering social reform movements.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="timeline-date">Key Figures</span>
+                        <div class="timeline-content">
+                            <h3>👩‍🎓 Equality & Rights</h3>
+                            <p>Championed women's education, equality, and Dalit rights (Phule, Ambedkar).</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="timeline-date">May 1, 1960</span>
+                        <div class="timeline-content">
+                            <h3>🚩 State Formation</h3>
+                            <p>Samyukta Maharashtra Movement culminated in state formation.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-footer-citation">
+                Source: After the Third Anglo-Maratha War in 1818, Maratha territories were largely integrated into the British Bombay Presidency. Maharashtra has been a crucible for pioneering social reform movements in India since the 19th century. Pioneering significant social reform movements in India, led by figures such as Jyotirao Phule, Savitribai Phule, and Dr. B.R. Ambedkar. The Samyukta Maharashtra Movement led to the state's formation on May 1, 1960. The state of Maharashtra was formed on May 1, 1960.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

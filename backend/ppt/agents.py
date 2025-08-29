@@ -3,7 +3,7 @@ import json
 import google.generativeai as genai
 from crewai import Agent, Task, Crew, Process
 from config import Config
-from scraper import google_search, scrape_webpage
+from .scraper import google_search, scrape_webpage
 import logging
 import os
 # Configure logging
@@ -353,7 +353,7 @@ class PPTTasks:
             
             Slide Distribution Strategy:
             - Slide 1: Introduction to the specific topic
-            - Slides 2-{num_slides-1}: Main themes/aspects from research
+            - Slides 2 to {num_slides - 1}: Main themes/aspects from research (This should be {num_slides - 2} slides)
             - Slide {num_slides}: Conclusion/summary of the topic
             
             Output Format (JSON ONLY):
@@ -460,20 +460,30 @@ class PPTTasks:
             
             For each slide:
             1. Choose layout based on content type and research data
-            2. Determine appropriate visual elements:
-               - Charts/graphs for statistics
-               - Icons for key concepts
-               - Images for visual support
-               - Diagrams for processes
+            2. Determine appropriate visual elements based on content:
+               - Bar charts for statistics, percentages, growth data
+               - Process diagrams for workflows, methodologies, step-by-step processes
+               - Timeline visualizations for historical data, roadmaps, evolution
+               - Comparison grids for feature comparisons, before/after, pros/cons
+               - Icons for key concepts and categories
+               - Card layouts for highlighting important information
             3. Create a cohesive visual theme that:
                - Reflects the topic's domain
                - Supports data visualization
                - Enhances content readability
             4. Define data presentation formats:
-               - Chart types for statistics
-               - Visual hierarchy for facts
-               - Quote styling for citations
-               - Source attribution layouts
+               - Use charts for numerical data (percentages, statistics, growth)
+               - Use process flows for sequential information
+               - Use timelines for chronological data
+               - Use comparison grids for competitive analysis
+               - Use icons to represent concepts visually
+            
+            CRITICAL: Based on content analysis, you MUST specify which visual elements to use:
+            - If content has numbers/statistics → specify "bar_chart" or "comparison_grid"
+            - If content describes processes → specify "process_diagram" 
+            - If content has dates/history → specify "timeline"
+            - If content compares items → specify "comparison_grid"
+            - Always use relevant icons for key concepts
             
             Add design specifications:
             - "layout_type": Based on content and research
@@ -512,7 +522,15 @@ class PPTTasks:
 
             CRITICAL REQUIREMENTS:
 
-            0. CONTENT LENGTH VALIDATION:
+            0. VISUAL ELEMENT IMPLEMENTATION:
+               - Analyze the design specifications for visual element requirements
+               - If design specifies "bar_chart" → implement actual bar chart with data
+               - If design specifies "process_diagram" → create step-by-step visual flow
+               - If design specifies "timeline" → build chronological timeline
+               - If design specifies "comparison_grid" → create comparison layout
+               - Always use relevant icons for key concepts
+
+            1. CONTENT LENGTH VALIDATION:
                - Verify titles are ≤ 10 words
                - Ensure bullet points are ≤ 6 items per slide
                - Confirm paragraphs are ≤ 50 words
@@ -626,13 +644,10 @@ class PPTTasks:
                        
                        .visual-element {{
                            display: inline-block;
-                           background: linear-gradient(45deg, #667eea, #764ba2);
-                           color: white;
-                           padding: 8px 16px;
-                           border-radius: 20px;
+                           color: #667eea;
                            font-weight: bold;
                            font-size: 1.6rem;
-                           margin: 5px;
+                           margin: 0 3px;
                        }}
                        
                        .bullet-points {{
@@ -706,6 +721,148 @@ class PPTTasks:
                            margin-top: 15px;
                            font-style: normal;
                        }}
+                       
+                       /* Chart and Visual Elements Styling */
+                       .chart-container {{
+                           margin: 30px 0;
+                           text-align: center;
+                       }}
+                       
+                       .chart-visual {{
+                           margin: 20px 0;
+                           padding: 20px;
+                           background: #f8f9fa;
+                           border-radius: 10px;
+                       }}
+                       
+                       .bar-chart {{
+                           display: flex;
+                           justify-content: space-around;
+                           align-items: end;
+                           height: 200px;
+                           padding: 20px;
+                       }}
+                       
+                       .bar {{
+                           background: linear-gradient(45deg, #667eea, #764ba2);
+                           width: 80px;
+                           border-radius: 5px 5px 0 0;
+                           display: flex;
+                           align-items: end;
+                           justify-content: center;
+                           color: white;
+                           font-weight: bold;
+                           padding: 10px 5px;
+                           font-size: 1rem;
+                       }}
+                       
+                       .process-diagram {{
+                           margin: 30px 0;
+                           text-align: center;
+                       }}
+                       
+                       .process-flow {{
+                           display: flex;
+                           justify-content: center;
+                           align-items: center;
+                           margin: 20px 0;
+                           flex-wrap: wrap;
+                       }}
+                       
+                       .process-step {{
+                           background: #f8f9fa;
+                           border-radius: 15px;
+                           padding: 20px;
+                           margin: 10px;
+                           text-align: center;
+                           min-width: 150px;
+                           border: 2px solid #3498db;
+                       }}
+                       
+                       .step-icon {{
+                           font-size: 2.5rem;
+                           margin-bottom: 10px;
+                       }}
+                       
+                       .arrow {{
+                           font-size: 2rem;
+                           color: #3498db;
+                           margin: 0 10px;
+                       }}
+                       
+                       .comparison-grid {{
+                           display: grid;
+                           grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                           gap: 20px;
+                           margin: 30px 0;
+                       }}
+                       
+                       .comparison-item {{
+                           background: #f8f9fa;
+                           border-radius: 15px;
+                           padding: 30px;
+                           text-align: center;
+                           border: 2px solid #e9ecef;
+                           transition: transform 0.2s;
+                       }}
+                       
+                       .comparison-item:hover {{
+                           transform: translateY(-5px);
+                       }}
+                       
+                       .icon-large {{
+                           font-size: 3rem;
+                           margin-bottom: 15px;
+                       }}
+                       
+                       .timeline {{
+                           margin: 30px 0;
+                           position: relative;
+                           padding-left: 30px;
+                       }}
+                       
+                       .timeline::before {{
+                           content: '';
+                           position: absolute;
+                           left: 15px;
+                           top: 0;
+                           bottom: 0;
+                           width: 3px;
+                           background: #3498db;
+                       }}
+                       
+                       .timeline-item {{
+                           position: relative;
+                           margin-bottom: 30px;
+                           background: #f8f9fa;
+                           border-radius: 10px;
+                           padding: 20px;
+                           margin-left: 20px;
+                       }}
+                       
+                       .timeline-item::before {{
+                           content: '';
+                           position: absolute;
+                           left: -30px;
+                           top: 20px;
+                           width: 12px;
+                           height: 12px;
+                           background: #3498db;
+                           border-radius: 50%;
+                       }}
+                       
+                       .timeline-date {{
+                           font-weight: bold;
+                           color: #667eea;
+                           font-size: 1.2rem;
+                           margin-bottom: 10px;
+                       }}
+                       
+                       .card-icon {{
+                           font-size: 2.5rem;
+                           text-align: center;
+                           margin-bottom: 15px;
+                       }}
                    </style>
                </head>
                <body>
@@ -721,19 +878,107 @@ class PPTTasks:
                </html>
                ```
 
-            5. Enhanced Content Type Examples:
+            5. Enhanced Content Type Examples with Visual Elements:
                
-               For bullet points with visual elements:
+               For statistical data with charts:
+               ```html
+               <div class="chart-container">
+                   <h3>Market Growth Statistics</h3>
+                   <div class="chart-visual">
+                       <div class="bar-chart">
+                           <div class="bar" style="height: 60%"><span>2020: 60%</span></div>
+                           <div class="bar" style="height: 75%"><span>2021: 75%</span></div>
+                           <div class="bar" style="height: 90%"><span>2022: 90%</span></div>
+                       </div>
+                   </div>
+               </div>
+               ```
+
+               For process flows with diagrams:
+               ```html
+               <div class="process-diagram">
+                   <h3>AI Development Process</h3>
+                   <div class="process-flow">
+                       <div class="process-step">
+                           <div class="step-icon">📊</div>
+                           <span>Data Collection</span>
+                       </div>
+                       <div class="arrow">→</div>
+                       <div class="process-step">
+                           <div class="step-icon">🤖</div>
+                           <span>Model Training</span>
+                       </div>
+                       <div class="arrow">→</div>
+                       <div class="process-step">
+                           <div class="step-icon">🎯</div>
+                           <span>Deployment</span>
+                       </div>
+                   </div>
+               </div>
+               ```
+
+               For comparative data with visual icons:
+               ```html
+               <div class="comparison-grid">
+                   <div class="comparison-item">
+                       <div class="icon-large">🚀</div>
+                       <h4>Performance</h4>
+                       <p>300% improvement</p>
+                   </div>
+                   <div class="comparison-item">
+                       <div class="icon-large">💰</div>
+                       <h4>Cost Reduction</h4>
+                       <p>40% savings</p>
+                   </div>
+                   <div class="comparison-item">
+                       <div class="icon-large">⚡</div>
+                       <h4>Speed</h4>
+                       <p>5x faster</p>
+                   </div>
+               </div>
+               ```
+
+               For timeline data:
+               ```html
+               <div class="timeline">
+                   <div class="timeline-item">
+                       <div class="timeline-date">2020</div>
+                       <div class="timeline-content">
+                           <h4>🎯 First Implementation</h4>
+                           <p>Initial AI prototype launched</p>
+                       </div>
+                   </div>
+                   <div class="timeline-item">
+                       <div class="timeline-date">2023</div>
+                       <div class="timeline-content">
+                           <h4>📈 Major Breakthrough</h4>
+                           <p>Advanced model deployment</p>
+                       </div>
+                   </div>
+               </div>
+               ```
+
+               For bullet points with minimal highlighting:
                ```html
                <ul class="bullet-points">
-                   <li><span class="visual-element">Key Point</span> Additional explanation</li>
-                   <li>Important term with context</li>
+                   <li>🔍 <span class="visual-element">Key Point</span> Additional explanation</li>
+                   <li>⚡ Important term with context</li>
+               </ul>
+               ```
+               
+               For clean bullet points without highlighting:
+               ```html
+               <ul class="bullet-points">
+                   <li>🔍 Research and Development Progress</li>
+                   <li>⚡ Implementation Strategy</li>
+                   <li>📊 Performance Metrics</li>
                </ul>
                ```
 
                For cards with important information:
                ```html
                <div class="card">
+                   <div class="card-icon">💡</div>
                    <h3>Important Concept</h3>
                    <p>Detailed explanation with emphasized terms</p>
                </div>
@@ -791,7 +1036,17 @@ class PPTTasks:
                - Use visual elements to break up text
                - Add source citations for factual content
 
-            8. CRITICAL: You MUST use the HTML template structure above INCLUDING the <style> section.
+            8. VISUAL ELEMENT USAGE REQUIREMENTS:
+               - For ANY numerical data (percentages, statistics, growth): Use bar charts
+               - For ANY process or methodology content: Use process diagrams  
+               - For ANY historical or chronological content: Use timelines
+               - For ANY comparison content: Use comparison grids
+               - For ALL key concepts: Use relevant icons INSTEAD of visual-element spans
+               - Prefer clean icons (🚀📊💡⚡🎯📈🔍💰🤖) over highlighted text
+               - Use visual-element spans SPARINGLY, only for truly critical terms
+               - Example: "🚀 Performance improvement" instead of "<span class='visual-element'>Performance</span> improvement"
+
+            9. CRITICAL: You MUST use the HTML template structure above INCLUDING the <style> section.
                Each slide should be a complete HTML file with embedded CSS styling.
 
             Format your response as a series of HTML code blocks, one for each slide:
@@ -977,13 +1232,4 @@ class PPTCrew:
         logger.info(f"🏗️ Executing final generation for: '{topic}'")
         final_result = crew.kickoff()
         logger.info(f"🎉 Presentation generation COMPLETED for: '{topic}'")
-        import subprocess
-        import os
-        subprocess.run([
-            "notify-send",
-            "--icon=dialog-information",
-            "PPT Generator",
-        ])
-
-        
         return final_result

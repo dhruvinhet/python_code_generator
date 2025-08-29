@@ -1181,7 +1181,7 @@ if PPT_AVAILABLE == True or PPT_AVAILABLE == "FALLBACK":
     @app.route('/api/ppt/themes', methods=['GET'])
     def get_themes():
         try:
-            themes = PPTThemes.get_all_themes()
+            themes = list(PPTThemes.get_all_themes().values())
             return jsonify({
                 'success': True,
                 'themes': themes
@@ -1226,7 +1226,7 @@ if PPT_AVAILABLE == True or PPT_AVAILABLE == "FALLBACK":
     @app.route('/api/ppt/projects', methods=['GET'])
     def get_all_ppt_projects():
         try:
-            projects = ppt_project_manager.get_all_projects()
+            projects = ppt_project_manager.list_projects()
             return jsonify({
                 'success': True,
                 'projects': projects
