@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DotGrid from './components/DotGrid';
+import SolarSystem from './components/SolarSystem';
 import { 
   Code, 
   Presentation, 
@@ -26,8 +27,7 @@ import {
   TrendingUp,
   Award
 } from 'lucide-react';
-
-const LandingPage = () => {
+const LandingPage = () => { 
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
 
@@ -50,54 +50,6 @@ const LandingPage = () => {
     alert(`Thanks for your interest! We'll notify you at ${email} when Synexor One launches.`);
     setEmail('');
   };
-
-  const features = [
-    {
-      id: 'codecrafter',
-      name: 'CodeCrafter',
-      icon: Code,
-      description: 'Generate production-ready code with AI-powered multi-agent system',
-      available: true,
-      color: 'from-blue-500 to-indigo-600',
-      accent: 'blue'
-    },
-    {
-      id: 'smartslides',
-      name: 'SmartSlides',
-      icon: Presentation,
-      description: 'Create stunning PowerPoint presentations with intelligent design',
-      available: true,
-      color: 'from-green-500 to-emerald-600',
-      accent: 'green'
-    },
-    {
-      id: 'datawash',
-      name: 'DataWash',
-      icon: Database,
-      description: 'Clean and preprocess your data with automated AI workflows',
-      available: true,
-      color: 'from-purple-500 to-violet-600',
-      accent: 'purple'
-    },
-    {
-      id: 'blogbot',
-      name: 'BlogBot',
-      icon: PenTool,
-      description: 'Write engaging blog content with AI-powered research and writing',
-      available: true,
-      color: 'from-orange-500 to-red-600',
-      accent: 'orange'
-    },
-    {
-      id: 'examforge',
-      name: 'ExamForge',
-      icon: GraduationCap,
-      description: 'Generate comprehensive quizzes and exams using advanced RAG',
-      available: false,
-      color: 'from-pink-500 to-rose-600',
-      accent: 'pink'
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
@@ -313,126 +265,13 @@ const LandingPage = () => {
                 to deliver professional results across every domain.
               </p>
             </div>
-
-            {/* Feature Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-              {/* Featured Tool - CodeCrafter */}
-              <div className="lg:col-span-8 group cursor-pointer" onClick={() => handleFeatureClick('codecrafter')}>
-                <div className="bg-gradient-to-br from-blue-500/10 to-indigo-500/10 backdrop-blur-xl rounded-2xl p-4 border border-blue-500/20 hover:border-blue-400/40 transition-all duration-500 h-full relative overflow-hidden">                  
-                  <div className="relative z-10">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <Code className="w-6 h-6 text-white" />
-                      </div>
-                      <span className="bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs px-2 py-1 rounded-full font-medium">
-                        AVAILABLE NOW
-                      </span>
-                    </div>
-                    
-                    <h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-300 transition-colors" style={{ color: '#ffffff' }}>
-                      CodeCrafter
-                    </h3>
-                    
-                    <p className="text-white text-base mb-3 leading-relaxed">
-                      Generate production-ready applications with our advanced multi-agent system. 
-                      From simple scripts to complex architectures.
-                    </p>
-                    
-                    <div className="flex items-center text-blue-400 font-semibold group-hover:text-blue-300 transition-colors">
-                      <span>Launch Tool</span>
-                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-2 transition-transform" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Secondary Tools */}
-              <div className="lg:col-span-4 space-y-4">
-                {features.slice(1, 3).map((feature) => {
-                  const Icon = feature.icon;
-                  return (
-                    <div 
-                      key={feature.id}
-                      onClick={() => handleFeatureClick(feature.id)}
-                      className="group bg-white/5 backdrop-blur-xl rounded-xl p-4 border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer relative overflow-hidden"
-                    >
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className={`w-10 h-10 bg-gradient-to-br ${feature.color} rounded-lg flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
-                          <Icon className="w-5 h-5 text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-base font-bold text-white group-hover:text-purple-300 transition-colors" style={{ color: '#ffffff' }}>
-                            {feature.name}
-                          </h3>
-                          <span className={`text-white text-xs px-2 py-1 rounded-full font-medium ${
-                            feature.available 
-                              ? 'bg-gradient-to-r from-green-500 to-emerald-600' 
-                              : 'bg-gradient-to-r from-orange-500 to-pink-600'
-                          }`}>
-                            {feature.available ? 'AVAILABLE NOW' : 'Coming Soon'}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <p className="text-white text-sm leading-relaxed mb-3">
-                        {feature.description}
-                      </p>
-                      
-                      <div className="flex items-center text-purple-400 font-semibold text-sm group-hover:text-purple-300 transition-colors">
-                        <span>{feature.available ? 'Launch Tool' : 'Get Notified'}</span>
-                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Bottom Row */}
-              <div className="lg:col-span-12">
-                <div className="grid lg:grid-cols-2 gap-4">
-                  {features.slice(3).map((feature) => {
-                    const Icon = feature.icon;
-                    return (
-                      <div 
-                        key={feature.id}
-                        onClick={() => handleFeatureClick(feature.id)}
-                        className="group bg-white/5 backdrop-blur-xl rounded-xl p-4 border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer"
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className={`w-12 h-12 bg-gradient-to-br ${feature.color} rounded-lg flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
-                            <Icon className="w-6 h-6 text-white" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-2">
-                              <h3 className="text-lg font-bold text-white group-hover:text-orange-300 transition-colors" style={{ color: '#ffffff' }}>
-                                {feature.name}
-                              </h3>
-                              <span className={`text-white text-xs px-2 py-1 rounded-full font-medium ${
-                                feature.available 
-                                  ? 'bg-gradient-to-r from-green-500 to-emerald-600' 
-                                  : 'bg-gradient-to-r from-orange-500 to-pink-600'
-                              }`}>
-                                {feature.available ? 'AVAILABLE NOW' : 'Coming Soon'}
-                              </span>
-                            </div>
-                            
-                            <p className="text-white leading-relaxed mb-3">
-                              {feature.description}
-                            </p>
-                            
-                            <div className="flex items-center text-orange-400 font-semibold group-hover:text-orange-300 transition-colors">
-                              <span>{feature.available ? 'Launch Tool' : 'Get Notified'}</span>
-                              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
           </div>
+        </section>
+
+
+        {/* Solar System Section */}
+        <section id="solar" className="relative">
+          <SolarSystem />
         </section>
 
         {/* How It Works Section */}
@@ -461,7 +300,7 @@ const LandingPage = () => {
               <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500/50 via-purple-500/50 to-cyan-500/50 transform -translate-y-1/2"></div>
               
               <div className="grid lg:grid-cols-4 gap-6 relative z-10">
-                {[
+                {[ 
                   {
                     step: "01",
                     title: "Planning Agent",
