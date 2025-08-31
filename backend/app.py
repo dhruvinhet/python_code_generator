@@ -58,6 +58,26 @@ except Exception as e:
     PPTThemes = None
     PPT_AVAILABLE = "FALLBACK"  # Use fallback mode
 
+# Try to import blog functionality
+try:
+    import sys
+    import os
+    sys.path.append(os.path.join(os.path.dirname(__file__), 'blog'))
+    
+    from blog.youtube_blog_generator import generate_blog_from_youtube
+    from blog.blog_main import AccuracyResearcher, InterviewBlogGenerator, quick_generate, youtube_generate
+    
+    BLOG_AVAILABLE = True
+    print("✅ Blog functionality is available")
+except ImportError as e:
+    print(f"⚠️  Blog functionality not available: {e}")
+    BLOG_AVAILABLE = False
+    generate_blog_from_youtube = None
+    AccuracyResearcher = None
+    InterviewBlogGenerator = None
+    quick_generate = None
+    youtube_generate = None
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = Config.SECRET_KEY
 CORS(app, origins="*")
@@ -1284,6 +1304,244 @@ else:
     def ppt_not_available(path):
         return jsonify({
             'error': 'PPT functionality is not available. Please install required dependencies.'
+        }), 503
+
+# Blog functionality routes
+if BLOG_AVAILABLE:
+    # Import blog routes here to avoid circular imports
+    from blog.blog_main import quick_generate as blog_quick_generate
+    from blog.blog_main import youtube_generate as blog_youtube_generate
+    
+    @app.route('/quick-generate', methods=['POST'])
+    def quick_generate():
+        """Generate detailed, research-backed blog directly without interview - for faster results"""
+        try:
+            data = request.get_json()
+            topic = data.get("topic")
+            additional_info = data.get("info", "")
+            detailed = data.get("detailed", True)  # Default to True for backward compatibility
+            
+            if not topic:
+                return jsonify({"error": "Topic is required"}), 400
+            
+            # Create generator instance with detailed flag
+            generator = InterviewBlogGenerator(detailed=detailed)
+            
+            # Research the topic for accuracy
+            print(f"🔍 Quick research for: {topic}")
+            research_data = generator.researcher_tool.research_topic(topic)
+            
+            if not research_data:
+                research_data = {"sources": [], "content": f"General information about {topic}"}
+            
+            # Create enhanced context for quick generation with research data
+            if detailed:
+                context = f"""Create a detailed, expert-level blog post about: {topic}
+
+RESEARCH DATA AVAILABLE:
+{research_data.get('content', '')}
+
+REQUIREMENTS:
+- Use research data to provide accurate, specific information with facts and statistics
+- Write as a subject matter expert with deep knowledge of {topic}
+- Provide specific, actionable information rather than generic advice
+- Include real-world examples, case studies, or practical scenarios
+- Use appropriate industry terminology and concepts
+- Make it comprehensive but accessible
+- Include step-by-step guidance where applicable
+- Add tables, lists, or structured information when relevant
+- Ensure all claims are accurate and supportable
+
+Additional user requirements: {additional_info if additional_info else 'None - cover the topic comprehensively with research-backed information'}
+
+Target length: 1000-1200 words with proper structure, formatting, and research-backed accuracy."""
+            else:
+                context = f"""Create a concise, factual blog post about: {topic}
+
+RESEARCH DATA AVAILABLE:
+{research_data.get('content', '')}
+
+REQUIREMENTS:
+- Use ONLY the research data provided - DO NOT add any information not in the research
+- Stick strictly to facts, dates, and verifiable information from the sources
+- Write in a journalistic, factual tone without creative embellishment
+- Keep it concise and focused on the available data
+- Include specific facts, statistics, and details from research sources
+- Avoid speculation, predictions, or "extra masala"
+- If research data is limited, keep the blog correspondingly brief
+
+Additional user requirements: {additional_info if additional_info else 'None - stick to research data only'}
+
+Target length: 600-800 words maximum, focused on facts from research data."""
+            
+            result = generator.blog_crew.kickoff(inputs={
+                "topic": topic,
+                "context": context
+            }, research_data=research_data)
+            
+            raw_output = result.raw if hasattr(result, "raw") else str(result)
+            clean_json = re.sub(r"```json\n|\n```|```", "", raw_output).strip()
+            
+            # More aggressive JSON cleaning
+            start_idx = clean_json.find('{')
+            end_idx = clean_json.rfind('}')
+            
+            if start_idx != -1 and end_idx != -1:
+                clean_json = clean_json[start_idx:end_idx+1]
+            
+            try:
+                data = json.loads(clean_json)
+                # Ensure all required fields exist
+                if not isinstance(data.get('blogContent'), str):
+                    raise ValueError("Invalid blogContent")
+                if not isinstance(data.get('summary'), str):
+                    data['summary'] = f"A comprehensive, research-backed guide about {topic}"
+                if not isinstance(data.get('keywords'), list):
+                    data['keywords'] = [topic.lower(), "guide", "research", "facts", "expert analysis"]
+                
+                # Clean up the blog content formatting
+                data['blogContent'] = generator.clean_blog_formatting(data['blogContent'])
+                
+                # DO NOT add source attribution to visible content - keep research internal
+                    
+            except (json.JSONDecodeError, ValueError):
+                # Clean fallback without research sources
+                cleaned_content = generator.clean_blog_formatting(f"# {topic}\n\n{raw_output}")
+                data = {
+                    "blogContent": cleaned_content,
+                    "summary": f"A comprehensive, research-backed guide about {topic}",
+                    "keywords": [topic.lower(), "guide", "research", "facts", "expert analysis"]
+                }
+            
+            print("✅ Quick research-backed blog generated!")
+            return jsonify(data)
+            
+        except Exception as e:
+            print(f"❌ Error in quick generate: {str(e)}")
+            return jsonify({
+                "blogContent": f"# Error\n\nError generating blog: {str(e)}",
+                "summary": "Error generating blog",
+                "keywords": ["error"]
+            }), 500
+
+    @app.route('/youtube-generate', methods=['POST'])
+    def youtube_generate():
+        """
+        Robust YouTube blog generation endpoint using the new robust function
+        Handles all edge cases and always returns a proper response
+        """
+        try:
+            # Get request data
+            data = request.json if request.json else {}
+            youtube_url = data.get("youtubeUrl", "").strip()
+            additional_context = data.get("additionalContext", "").strip()
+            detailed = data.get("detailed", True)  # Default to True for backward compatibility
+            
+            # Validate input
+            if not youtube_url:
+                return jsonify({
+                    "success": False,
+                    "error": "YouTube URL is required",
+                    "blogContent": None
+                }), 400
+            
+            print(f"🎥 Processing YouTube video: {youtube_url} (Detailed: {detailed})")
+            
+            # Get API keys from existing configuration
+            google_search_api_key = "AIzaSyBulaFMZql3n6-mtJnHF55371CYtJu_9R8"  # Using your existing key
+            search_engine_ids = [
+                "a65b8e8b1cf564e44",
+                "91e458efa2c6a4c49", 
+                "507e20da4ca5248b6"
+            ]
+            
+            # Call the robust blog generation function
+            result = generate_blog_from_youtube(
+                video_url=youtube_url,
+                additional_context=additional_context,
+                gemini_api_key=Config.GOOGLE_API_KEY,  # Use existing configured API key
+                google_search_api_key=google_search_api_key,
+                search_engine_id=search_engine_ids[0],  # Use first search engine
+                detailed=detailed
+            )
+            
+            # Check if generation was successful
+            if result['success']:
+                # Success case - format response to match existing frontend expectations
+                response_data = {
+                    "success": True,
+                    "blogContent": result['blog_content'],
+                    "summary": f"Blog generated from YouTube video: '{result['video_info']['title']}' by {result['video_info']['author']}",
+                    "keywords": [],  # Extract from metadata if available
+                    "source": {
+                        "type": "YouTube Video",
+                        "title": result['video_info']['title'],
+                        "author": result['video_info']['author'],
+                        "url": youtube_url,
+                        "duration": f"{result['video_info']['duration_minutes']} minutes",
+                        "views": result['video_info']['views'],
+                        "transcript_available": result['generation_info']['transcript_available'],
+                        "generation_method": result['generation_info']['method']
+                    },
+                    "generation_info": result['generation_info'],
+                    "metadata": {
+                        "generated_at": result['timestamp'],
+                        "method": result['generation_info']['method'],
+                        "research_sources": result['generation_info'].get('research_sources', 0)
+                    }
+                }
+                
+                # Save the blog to file (maintaining compatibility with existing code)
+                try:
+                    with open("latest_youtube_blog.md", "w", encoding="utf-8") as f:
+                        f.write(f"# {result['video_info']['title']}\n\n")
+                        f.write(f"**Source:** YouTube Video by {result['video_info']['author']}\n")
+                        f.write(f"**URL:** {youtube_url}\n")
+                        f.write(f"**Duration:** {result['video_info']['duration_minutes']} minutes\n")
+                        f.write(f"**Generation Method:** {result['generation_info']['method']}\n\n")
+                        f.write("---\n\n")
+                        f.write(result['blog_content'])
+                    print("💾 Blog saved to latest_youtube_blog.md")
+                except Exception as save_error:
+                    print(f"⚠️ Warning: Could not save blog to file: {save_error}")
+                
+                print(f"✅ Blog generated successfully using {result['generation_info']['method']}")
+                return jsonify(response_data), 200
+                
+            else:
+                # Error case - but still return structured response
+                error_response = {
+                    "success": False,
+                    "error": result['error'],
+                    "blogContent": None,
+                    "video_info": result.get('video_info', {}),
+                    "timestamp": result['timestamp']
+                }
+                
+                print(f"❌ Blog generation failed: {result['error']}")
+                return jsonify(error_response), 400
+        
+        except Exception as e:
+            # Ultimate fallback for any unexpected errors
+            print(f"❌ Unexpected error in YouTube endpoint: {e}")
+            return jsonify({
+                "success": False,
+                "error": f"Server error: {str(e)}",
+                "blogContent": None
+            }), 500
+
+else:
+    # Blog functionality not available routes
+    @app.route('/quick-generate', methods=['POST'])
+    def blog_not_available_quick():
+        return jsonify({
+            'error': 'Blog functionality is not available. Please check dependencies.'
+        }), 503
+    
+    @app.route('/youtube-generate', methods=['POST'])
+    def blog_not_available_youtube():
+        return jsonify({
+            'error': 'Blog functionality is not available. Please check dependencies.'
         }), 503
 
 if __name__ == '__main__':

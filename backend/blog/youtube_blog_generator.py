@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class YouTubeBlogGenerator:
-    def __init__(self, gemini_api_key=None, google_search_api_key=None, search_engine_id=None):
+    def __init__(self, gemini_api_key=None, google_search_api_key=None, search_engine_id=None, detailed=True):
         """
         Initialize the YouTube Blog Generator
         
@@ -25,12 +25,14 @@ class YouTubeBlogGenerator:
             gemini_api_key (str): Google AI Studio API key for Gemini
             google_search_api_key (str): Google Custom Search API key
             search_engine_id (str): Google Custom Search Engine ID
+            detailed (bool): Whether to generate detailed or concise blogs
         """
         if gemini_api_key:
             genai.configure(api_key=gemini_api_key)
         
         self.google_search_api_key = google_search_api_key
         self.search_engine_id = search_engine_id
+        self.detailed = detailed
     
     def extract_video_id(self, video_url):
         """
@@ -258,43 +260,80 @@ class YouTubeBlogGenerator:
             duration_text = f"{round(metadata['length'] / 60, 1)} minutes" if metadata['length'] > 0 else "Duration unknown"
             keywords_text = ', '.join(metadata.get('keywords', [])[:10]) if metadata.get('keywords') else "No keywords available"
             
-            prompt = f"""
-            Create a comprehensive, well-structured blog post based on the following YouTube video content:
+            if self.detailed:
+                prompt = f"""
+                Create a comprehensive, well-structured blog post based on the following YouTube video content:
 
-            **Video Information:**
-            - Title: {metadata['title']}
-            - Author/Channel: {metadata['author']}
-            - Duration: {duration_text}
-            - Keywords: {keywords_text}
+                **Video Information:**
+                - Title: {metadata['title']}
+                - Author/Channel: {metadata['author']}
+                - Duration: {duration_text}
+                - Keywords: {keywords_text}
 
-            **Video Description:**
-            {metadata.get('description', 'No description available')[:500]}
+                **Video Description:**
+                {metadata.get('description', 'No description available')[:500]}
 
-            **Full Video Transcript:**
-            {transcript['text']}
+                **Full Video Transcript:**
+                {transcript['text']}
 
-            **Additional Context:**
-            {additional_context}
+                **Additional Context:**
+                {additional_context}
 
-            **Instructions:**
-            1. Create a compelling blog title that captures the main topic
-            2. Write an engaging introduction that hooks the reader
-            3. Structure the content with clear headings and subheadings
-            4. Extract and expand on the key points from the video
-            5. Include relevant examples, insights, and takeaways
-            6. Add a strong conclusion with actionable points
-            7. Keep the tone professional yet engaging
-            8. Aim for 1200-1500 words
-            9. Make it SEO-friendly with good keyword usage
+                **Instructions:**
+                1. Create a compelling blog title that captures the main topic
+                2. Write an engaging introduction that hooks the reader
+                3. Structure the content with clear headings and subheadings
+                4. Extract and expand on the key points from the video
+                5. Include relevant examples, insights, and takeaways
+                6. Add a strong conclusion with actionable points
+                7. Keep the tone professional yet engaging
+                8. Aim for 1200-1500 words
+                9. Make it SEO-friendly with good keyword usage
 
-            **Format Requirements:**
-            - Use markdown formatting with ## for main headings and ### for subheadings
-            - Include bullet points where appropriate
-            - Make paragraphs well-structured and readable
-            - Include a "Key Takeaways" section at the end
+                **Format Requirements:**
+                - Use markdown formatting with ## for main headings and ### for subheadings
+                - Include bullet points where appropriate
+                - Make paragraphs well-structured and readable
+                - Include a "Key Takeaways" section at the end
 
-            Generate the blog post now:
-            """
+                Generate the blog post now:
+                """
+            else:
+                prompt = f"""
+                Create a concise, factual blog post based ONLY on the YouTube video transcript provided:
+
+                **Video Information:**
+                - Title: {metadata['title']}
+                - Author/Channel: {metadata['author']}
+                - Duration: {duration_text}
+
+                **Video Description:**
+                {metadata.get('description', 'No description available')[:300]}
+
+                **Video Transcript (use ONLY this content):**
+                {transcript['text']}
+
+                **Additional Context:**
+                {additional_context}
+
+                **CRITICAL REQUIREMENTS:**
+                1. Use ONLY information from the transcript - DO NOT add external knowledge or speculation
+                2. Create a clear, descriptive title based on the video content
+                3. Write a brief introduction summarizing what the video covers
+                4. Extract and organize key facts and points from the transcript
+                5. Keep the tone factual and journalistic
+                6. Aim for 600-800 words maximum
+                7. Include specific quotes and details from the transcript
+                8. DO NOT add creative content, predictions, or "extra masala"
+
+                **Format Requirements:**
+                - Use markdown formatting with ## for main headings
+                - Include bullet points for key facts
+                - Keep paragraphs concise and focused on transcript content
+                - End with a brief summary of the video's main points
+
+                Generate the factual blog post now:
+                """
 
             model = genai.GenerativeModel('gemini-2.0-flash-exp')
             response = model.generate_content(prompt)
@@ -348,51 +387,85 @@ class YouTubeBlogGenerator:
             duration_text = f"{round(metadata['length'] / 60, 1)} minutes" if metadata['length'] > 0 else "Duration unknown"
             keywords_text = ', '.join(metadata.get('keywords', [])[:10]) if metadata.get('keywords') else "No keywords available"
             
-            prompt = f"""
-            Create a comprehensive, well-researched blog post about the following YouTube video. Since the video transcript is not available, use the video metadata and research sources to create engaging content.
+            if self.detailed:
+                prompt = f"""
+                Create a comprehensive, well-researched blog post about the following YouTube video. Since the video transcript is not available, use the video metadata and research sources to create engaging content.
 
-            **Video Information:**
-            - Title: {metadata['title']}
-            - Author/Channel: {metadata['author']}
-            - Duration: {duration_text}
-            - Keywords: {keywords_text}
+                **Video Information:**
+                - Title: {metadata['title']}
+                - Author/Channel: {metadata['author']}
+                - Duration: {duration_text}
+                - Keywords: {keywords_text}
 
-            **Video Description:**
-            {metadata.get('description', 'No description available')[:500]}
+                **Video Description:**
+                {metadata.get('description', 'No description available')[:500]}
 
-            {research_text}
+                {research_text}
 
-            **Additional Context:**
-            {additional_context}
+                **Additional Context:**
+                {additional_context}
 
-            **Content Generation Instructions:**
-            1. Create a compelling blog title based on the video title and research
-            2. Write an engaging introduction that explains what the video likely covers
-            3. Use the research sources to provide comprehensive coverage of the topic
-            4. Structure content with clear headings and subheadings
-            5. Include insights and analysis based on the research
-            6. Provide practical takeaways and actionable advice
-            7. Write a strong conclusion that summarizes key points
-            8. Keep the tone professional yet engaging
-            9. Aim for 1200-1800 words
-            10. Make it SEO-friendly with good keyword usage
+                **Content Generation Instructions:**
+                1. Create a compelling blog title based on the video title and research
+                2. Write an engaging introduction that explains what the video likely covers
+                3. Use the research sources to provide comprehensive coverage of the topic
+                4. Structure content with clear headings and subheadings
+                5. Include insights and analysis based on the research
+                6. Provide practical takeaways and actionable advice
+                7. Write a strong conclusion that summarizes key points
+                8. Keep the tone professional yet engaging
+                9. Aim for 1200-1800 words
+                10. Make it SEO-friendly with good keyword usage
 
-            **Important Notes:**
-            - Acknowledge that this content is based on research about the video topic
-            - Don't claim to have watched the video or quote specific video content
-            - Focus on providing value around the video's topic using the research
-            - Include references to the video as a recommended resource
+                **Important Notes:**
+                - Acknowledge that this content is based on research about the video topic
+                - Don't claim to have watched the video or quote specific video content
+                - Focus on providing value around the video's topic using the research
+                - Include references to the video as a recommended resource
 
-            **Format Requirements:**
-            - Use markdown formatting with ## for main headings and ### for subheadings
-            - Include bullet points where appropriate
-            - Make paragraphs well-structured and readable
-            - Include a "Key Takeaways" section
-            - Add a reference to the original video
+                **Format Requirements:**
+                - Use markdown formatting with ## for main headings and ### for subheadings
+                - Include bullet points where appropriate
+                - Make paragraphs well-structured and readable
+                - Include a "Key Takeaways" section
+                - Add a reference to the original video
 
-            Generate the comprehensive blog post now:
-            """
+                Generate the comprehensive blog post now:
+                """
+            else:
+                prompt = f"""
+                Create a concise, factual summary about the YouTube video based ONLY on available metadata and research. DO NOT add any external information or speculation.
 
+                **Video Information:**
+                - Title: {metadata['title']}
+                - Author/Channel: {metadata['author']}
+                - Duration: {duration_text}
+                - Description: {metadata.get('description', 'No description available')[:300]}
+
+                {research_text}
+
+                **Additional Context:**
+                {additional_context}
+
+                **CRITICAL REQUIREMENTS:**
+                1. Use ONLY the video metadata and research sources provided
+                2. Create a clear title based on the video title
+                3. Write a brief introduction about what the video appears to cover
+                4. Summarize key points from the research sources related to the video topic
+                5. Keep the tone factual and objective
+                6. Aim for 400-600 words maximum
+                7. Include specific facts and details from the research
+                8. DO NOT speculate about video content or add creative elements
+
+                **Format Requirements:**
+                - Use markdown formatting with ## for main headings
+                - Include bullet points for key facts from research
+                - Keep content focused and concise
+                - End with a brief note about the video as a resource
+
+                Generate the factual summary now:
+                """
+            
             model = genai.GenerativeModel('gemini-2.0-flash-exp')
             response = model.generate_content(prompt)
             
@@ -419,7 +492,7 @@ class YouTubeBlogGenerator:
                 'error': f'AI generation failed: {str(e)}'
             }
 
-def generate_blog_from_youtube(video_url, additional_context="", gemini_api_key=None, google_search_api_key=None, search_engine_id=None):
+def generate_blog_from_youtube(video_url, additional_context="", gemini_api_key=None, google_search_api_key=None, search_engine_id=None, detailed=True):
     """
     Robust function to generate blog from YouTube video
     
@@ -429,6 +502,7 @@ def generate_blog_from_youtube(video_url, additional_context="", gemini_api_key=
         gemini_api_key (str): Google AI Studio API key
         google_search_api_key (str): Google Custom Search API key
         search_engine_id (str): Google Custom Search Engine ID
+        detailed (bool): Whether to generate detailed or concise blogs
     
     Returns:
         dict: Structured JSON response with blog content or error
@@ -465,7 +539,8 @@ def generate_blog_from_youtube(video_url, additional_context="", gemini_api_key=
         blog_generator = YouTubeBlogGenerator(
             gemini_api_key=gemini_api_key,
             google_search_api_key=google_search_api_key,
-            search_engine_id=search_engine_id
+            search_engine_id=search_engine_id,
+            detailed=detailed
         )
         
         logger.info(f"🎥 Processing YouTube video: {video_url}")

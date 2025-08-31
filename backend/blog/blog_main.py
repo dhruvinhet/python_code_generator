@@ -499,9 +499,10 @@ llm = MockLLM()
 # Blog Generator Class (Exact same structure as main.py)
 # ------------------------------
 class InterviewBlogGenerator:
-    def __init__(self):
+    def __init__(self, detailed=True):
         # Initialize research system for accuracy
         self.researcher_tool = AccuracyResearcher()
+        self.detailed = detailed
         
         self.interviewer = Agent(
             role="Content Overview Specialist",
@@ -585,7 +586,69 @@ Structure this as a detailed research brief with bullet points, facts, and compr
             agent=self.researcher
         )
         self.write_task = Task(
-            description="""Using the comprehensive research about "{topic}":
+            description=self._get_writer_prompt(),
+            expected_output="An engaging, well-structured blog post with narrative flow and specific details",
+            agent=self.writer
+        )
+        self.style_task = Task(
+            description="""Take the blog post and format it perfectly for web display:
+
+{previous_results}
+
+Your task is to transform the blog content into a professionally formatted, engaging piece that's optimized for online reading.
+
+FORMATTING REQUIREMENTS:
+1. **Title**: Create a compelling, SEO-friendly title that captures the essence of the person/topic
+2. **Structure**: Use clear Markdown hierarchy:
+   - # for main title
+   - ## for major sections (Background, Career, Expertise, etc.)
+   - ### for subsections if needed
+3. **Readability**: 
+   - Keep paragraphs short (2-4 sentences)
+   - Use line breaks generously for visual breathing room
+   - Create scannable content with clear section breaks
+4. **Emphasis**:
+   - Use **bold** for key names, achievements, positions, and important terms
+   - Use *italic* sparingly for emphasis or quotes
+   - Highlight specific numbers, dates, and statistics in **bold**
+5. **Lists**: Use bullet points (-) for achievements, skills, or key points
+6. **Flow**: Ensure smooth transitions between sections
+
+CONTENT ENHANCEMENT:
+- Make sure the introduction is engaging and sets up the entire piece
+- Ensure each section flows naturally into the next
+- Add transitional phrases between paragraphs where needed
+- Maintain an inspiring, professional tone throughout
+
+CRITICAL FORMATTING RULES:
+- NO code blocks or technical formatting (```)
+- NO JSON formatting in the content
+- Clean, readable Markdown only
+- Proper spacing and paragraph breaks
+- Professional presentation suitable for publication
+
+Return as valid JSON:
+{{
+  "blogContent": "Clean, well-formatted markdown blog with proper headings and NO code blocks",
+  "summary": "2-3 sentence summary of the blog",  
+  "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5", "keyword6", "keyword7", "keyword8"]
+}}
+
+CRITICAL: Ensure the blogContent is clean markdown suitable for web display with NO technical formatting.""",
+            expected_output="Valid JSON with clean, readable blogContent and keywords",
+            agent=self.stylist
+        )
+        self.blog_crew = Crew(
+            agents=[self.researcher, self.writer, self.stylist],
+            tasks=[self.research_task, self.write_task, self.style_task],
+            process=Process.sequential,
+            memory=False
+        )
+
+    def _get_writer_prompt(self):
+        """Get the appropriate writer prompt based on detailed flag"""
+        if self.detailed:
+            return """Using the comprehensive research about "{topic}":
 {context}
 {previous_results}
 
@@ -650,64 +713,52 @@ SPECIFIC DETAILS TO INCLUDE:
 - Quotes or notable statements (if available)
 - Interesting anecdotes or lesser-known facts
 
-Make this read like a feature article that would engage and inspire readers, not like a resume or academic paper.""",
-            expected_output="An engaging, well-structured blog post with narrative flow and specific details",
-            agent=self.writer
-        )
-        self.style_task = Task(
-            description="""Take the blog post and format it perfectly for web display:
-
+Make this read like a feature article that would engage and inspire readers, not like a resume or academic paper."""
+        else:
+            return """Using ONLY the research data provided about "{topic}":
+{context}
 {previous_results}
 
-Your task is to transform the blog content into a professionally formatted, engaging piece that's optimized for online reading.
+Write a concise, factual 600-800 word blog post about "{topic}" that sticks STRICTLY to the available research data. DO NOT add any information, speculation, or "extra masala" that is not explicitly supported by the research sources.
 
-FORMATTING REQUIREMENTS:
-1. **Title**: Create a compelling, SEO-friendly title that captures the essence of the person/topic
-2. **Structure**: Use clear Markdown hierarchy:
-   - # for main title
-   - ## for major sections (Background, Career, Expertise, etc.)
-   - ### for subsections if needed
-3. **Readability**: 
-   - Keep paragraphs short (2-4 sentences)
-   - Use line breaks generously for visual breathing room
-   - Create scannable content with clear section breaks
-4. **Emphasis**:
-   - Use **bold** for key names, achievements, positions, and important terms
-   - Use *italic* sparingly for emphasis or quotes
-   - Highlight specific numbers, dates, and statistics in **bold**
-5. **Lists**: Use bullet points (-) for achievements, skills, or key points
-6. **Flow**: Ensure smooth transitions between sections
+**TITLE**: Create a clear, descriptive title
 
-CONTENT ENHANCEMENT:
-- Make sure the introduction is engaging and sets up the entire piece
-- Ensure each section flows naturally into the next
-- Add transitional phrases between paragraphs where needed
-- Maintain an inspiring, professional tone throughout
+**INTRODUCTION** (80-100 words):
+- Briefly introduce the topic based on research data
+- State what the blog will cover from the available information
 
-CRITICAL FORMATTING RULES:
-- NO code blocks or technical formatting (```)
-- NO JSON formatting in the content
-- Clean, readable Markdown only
-- Proper spacing and paragraph breaks
-- Professional presentation suitable for publication
+**MAIN CONTENT** (3-4 sections, 100-150 words each):
+Focus ONLY on verified information from research sources:
 
-Return as valid JSON:
-{{
-  "blogContent": "Clean, well-formatted markdown blog with proper headings and NO code blocks",
-  "summary": "2-3 sentence summary of the blog",  
-  "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5", "keyword6", "keyword7", "keyword8"]
-}}
+1. **Key Facts & Background**:
+   - Report only factual information found in research
+   - Include specific dates, names, and verifiable details
+   - Avoid any speculation or assumptions
 
-CRITICAL: Ensure the blogContent is clean markdown suitable for web display with NO technical formatting.""",
-            expected_output="Valid JSON with clean, readable blogContent and keywords",
-            agent=self.stylist
-        )
-        self.blog_crew = Crew(
-            agents=[self.researcher, self.writer, self.stylist],
-            tasks=[self.research_task, self.write_task, self.style_task],
-            process=Process.sequential,
-            memory=False
-        )
+2. **Important Details & Achievements**:
+   - List concrete achievements and milestones from research
+   - Include measurable impacts and statistics if available
+   - Stick to documented information only
+
+3. **Current Status & Impact**:
+   - Report current situation based on research data
+   - Include any documented impacts or contributions
+   - Avoid future predictions or speculations
+
+**CONCLUSION** (50-80 words):
+- Summarize only the verified information covered
+- End with key takeaways from the research data
+
+CRITICAL REQUIREMENTS:
+- Use ONLY information from the provided research data
+- DO NOT add creative content, speculation, or "extra masala"
+- If research data is limited, keep the blog correspondingly brief
+- Include specific facts, dates, and verifiable details
+- Maintain factual, journalistic tone
+- Length: 600-800 words maximum
+- Focus on accuracy over engagement
+
+This should read like a factual summary, not a creative feature article."""
 
     def clean_blog_formatting(self, content):
         """Clean up blog content formatting for better UI display"""
@@ -866,6 +917,21 @@ TARGET AUDIENCE: Educated readers seeking comprehensive, accurate information
 TONE: Professional yet engaging, authoritative but accessible
 LENGTH: 1000-1500 words with proper structure"""
 
+            # Step 3: Recreate write_task with correct prompt based on detailed flag
+            self.write_task = Task(
+                description=self._get_writer_prompt(),
+                expected_output="An engaging, well-structured blog post with narrative flow and specific details",
+                agent=self.writer
+            )
+            
+            # Recreate the crew with updated task
+            self.blog_crew = Crew(
+                agents=[self.researcher, self.writer, self.stylist],
+                tasks=[self.research_task, self.write_task, self.style_task],
+                process=Process.sequential,
+                memory=False
+            )
+
             # Execute blog generation with research context
             print("✍️ Generating research-backed blog content...")
             result = self.blog_crew.kickoff(inputs={
@@ -947,19 +1013,24 @@ def quick_generate():
         data = request.get_json()
         topic = data.get("topic")
         additional_info = data.get("info", "")
+        detailed = data.get("detailed", True)  # Default to True for backward compatibility
         
         if not topic:
             return jsonify({"error": "Topic is required"}), 400
         
+        # Create generator instance with detailed flag
+        generator = InterviewBlogGenerator(detailed=detailed)
+        
         # Research the topic for accuracy
         print(f"🔍 Quick research for: {topic}")
-        research_data = blog_generator.researcher_tool.research_topic(topic)
+        research_data = generator.researcher_tool.research_topic(topic)
         
         if not research_data:
             research_data = {"sources": [], "content": f"General information about {topic}"}
         
         # Create enhanced context for quick generation with research data
-        context = f"""Create a detailed, expert-level blog post about: {topic}
+        if detailed:
+            context = f"""Create a detailed, expert-level blog post about: {topic}
 
 RESEARCH DATA AVAILABLE:
 {research_data.get('content', '')}
@@ -978,8 +1049,26 @@ REQUIREMENTS:
 Additional user requirements: {additional_info if additional_info else 'None - cover the topic comprehensively with research-backed information'}
 
 Target length: 1000-1200 words with proper structure, formatting, and research-backed accuracy."""
+        else:
+            context = f"""Create a concise, factual blog post about: {topic}
+
+RESEARCH DATA AVAILABLE:
+{research_data.get('content', '')}
+
+REQUIREMENTS:
+- Use ONLY the research data provided - DO NOT add any information not in the research
+- Stick strictly to facts, dates, and verifiable information from the sources
+- Write in a journalistic, factual tone without creative embellishment
+- Keep it concise and focused on the available data
+- Include specific facts, statistics, and details from research sources
+- Avoid speculation, predictions, or "extra masala"
+- If research data is limited, keep the blog correspondingly brief
+
+Additional user requirements: {additional_info if additional_info else 'None - stick to research data only'}
+
+Target length: 600-800 words maximum, focused on facts from research data."""
         
-        result = blog_generator.blog_crew.kickoff(inputs={
+        result = generator.blog_crew.kickoff(inputs={
             "topic": topic,
             "context": context
         }, research_data=research_data)
@@ -1005,13 +1094,13 @@ Target length: 1000-1200 words with proper structure, formatting, and research-b
                 data['keywords'] = [topic.lower(), "guide", "research", "facts", "expert analysis"]
             
             # Clean up the blog content formatting
-            data['blogContent'] = blog_generator.clean_blog_formatting(data['blogContent'])
+            data['blogContent'] = generator.clean_blog_formatting(data['blogContent'])
             
             # DO NOT add source attribution to visible content - keep research internal
                 
         except (json.JSONDecodeError, ValueError):
             # Clean fallback without research sources
-            cleaned_content = blog_generator.clean_blog_formatting(f"# {topic}\n\n{raw_output}")
+            cleaned_content = generator.clean_blog_formatting(f"# {topic}\n\n{raw_output}")
             data = {
                 "blogContent": cleaned_content,
                 "summary": f"A comprehensive, research-backed guide about {topic}",
@@ -1041,6 +1130,7 @@ def youtube_generate():
         data = request.json if request.json else {}
         youtube_url = data.get("youtubeUrl", "").strip()
         additional_context = data.get("additionalContext", "").strip()
+        detailed = data.get("detailed", True)  # Default to True for backward compatibility
         
         # Validate input
         if not youtube_url:
@@ -1050,7 +1140,7 @@ def youtube_generate():
                 "blogContent": None
             }), 400
         
-        print(f"🎥 Processing YouTube video: {youtube_url}")
+        print(f"🎥 Processing YouTube video: {youtube_url} (Detailed: {detailed})")
         
         # Get API keys from existing configuration
         google_search_api_key = "AIzaSyBulaFMZql3n6-mtJnHF55371CYtJu_9R8"  # Using your existing key
@@ -1066,7 +1156,8 @@ def youtube_generate():
             additional_context=additional_context,
             gemini_api_key=api_key,  # Use existing configured API key
             google_search_api_key=google_search_api_key,
-            search_engine_id=search_engine_ids[0]  # Use first search engine
+            search_engine_id=search_engine_ids[0],  # Use first search engine
+            detailed=detailed
         )
         
         # Check if generation was successful

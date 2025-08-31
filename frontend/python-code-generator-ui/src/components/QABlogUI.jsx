@@ -15,6 +15,7 @@ export default function QABlogUI() {
   const [activeTab, setActiveTab] = useState("topic"); // "topic" or "youtube"
   const [blogTitle, setBlogTitle] = useState("");
   const [subtopics, setSubtopics] = useState([]);
+  const [detailed, setDetailed] = useState(true); // Toggle for detailed vs concise blogs
   const blogContentRef = useRef(null);
 
   // Add CSS for animations and enhanced styling
@@ -160,26 +161,19 @@ export default function QABlogUI() {
     setConversation([]);
     
     try {
-      // First plan the blog
-      const planRes = await axios.post("http://localhost:5000/api/blog/plan", {
-        topic: topic
+      const res = await axios.post("http://localhost:5000/quick-generate", {
+        topic: topic,
+        detailed: detailed
       });
       
-      if (planRes.data.success) {
-        // Then immediately generate the blog
-        const generateRes = await axios.post("http://localhost:5000/api/blog/generate", {
-          mainTopic: topic,
-          subtopics: planRes.data.subtopics,
-          title: planRes.data.title
+      if (res.data.success !== false) {
+        setBlogResult({
+          blogContent: res.data.blogContent,
+          summary: res.data.summary,
+          keywords: res.data.keywords || []
         });
-        
-        if (generateRes.data.success) {
-          setBlogResult(generateRes.data);
-        } else {
-          alert("Error generating blog: " + generateRes.data.error);
-        }
       } else {
-        alert("Error planning blog: " + planRes.data.error);
+        alert("Error generating blog: " + (res.data.error || "Unknown error"));
       }
     } catch (error) {
       console.error("Error:", error);
@@ -202,30 +196,21 @@ export default function QABlogUI() {
     setConversation([]);
     
     try {
-      // For now, we'll generate a blog based on the YouTube URL as a topic
-      // In a full implementation, you'd want to extract YouTube transcripts
-      const topic = `Content based on YouTube video: ${youtubeUrl}${additionalContext ? '. Additional context: ' + additionalContext : ''}`;
-      
-      // First plan the blog
-      const planRes = await axios.post("http://localhost:5000/api/blog/plan", {
-        topic: topic
+      const res = await axios.post("http://localhost:5000/youtube-generate", {
+        youtubeUrl: youtubeUrl,
+        additionalContext: additionalContext,
+        detailed: detailed
       });
       
-      if (planRes.data.success) {
-        // Then generate the blog
-        const generateRes = await axios.post("http://localhost:5000/api/blog/generate", {
-          mainTopic: topic,
-          subtopics: planRes.data.subtopics,
-          title: planRes.data.title
+      if (res.data.success !== false) {
+        setBlogResult({
+          blogContent: res.data.blogContent,
+          summary: res.data.summary,
+          keywords: res.data.keywords || [],
+          source: res.data.source || null
         });
-        
-        if (generateRes.data.success) {
-          setBlogResult(generateRes.data);
-        } else {
-          alert("Error generating blog: " + generateRes.data.error);
-        }
       } else {
-        alert("Error planning blog: " + planRes.data.error);
+        alert("Error generating blog: " + (res.data.error || "Unknown error"));
       }
     } catch (error) {
       console.error("Error:", error);
@@ -246,6 +231,7 @@ export default function QABlogUI() {
     setActiveTab("topic");
     setBlogTitle("");
     setSubtopics([]);
+    setDetailed(true); // Reset to default detailed mode
   };
 
   // Format blog content in simple, clean blog format like real-world blogs
@@ -789,6 +775,72 @@ export default function QABlogUI() {
                 <span>YouTube-Based Blog</span>
               </div>
             </button>
+          </div>
+
+          {/* Detailed Toggle */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            margin: "20px 0",
+            padding: "16px",
+            background: "linear-gradient(135deg, #1e293b 0%, #334155 100%)",
+            borderRadius: "12px",
+            border: "1px solid #475569"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <span style={{
+                fontSize: "16px",
+                fontWeight: "600",
+                color: "#e2e8f0"
+              }}>
+                Blog Style:
+              </span>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  onClick={() => setDetailed(true)}
+                  style={{
+                    padding: "8px 16px",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                    background: detailed
+                      ? "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
+                      : "#475569",
+                    color: detailed ? "white" : "#cbd5e1",
+                    boxShadow: detailed
+                      ? "0 4px 12px rgba(99, 102, 241, 0.4)"
+                      : "none"
+                  }}
+                >
+                  📖 Detailed (1200+ words)
+                </button>
+                <button
+                  onClick={() => setDetailed(false)}
+                  style={{
+                    padding: "8px 16px",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                    background: !detailed
+                      ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+                      : "#475569",
+                    color: !detailed ? "white" : "#cbd5e1",
+                    boxShadow: !detailed
+                      ? "0 4px 12px rgba(16, 185, 129, 0.4)"
+                      : "none"
+                  }}
+                >
+                  📄 Concise (600 words)
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Enhanced Topic Tab Content */}
