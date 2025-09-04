@@ -499,7 +499,10 @@ llm = MockLLM()
 # Blog Generator Class (Exact same structure as main.py)
 # ------------------------------
 class InterviewBlogGenerator:
-    def __init__(self, detailed=True):
+    def __init__(self, detailed=True, session=None):
+        if session is None:
+            raise ValueError("A session object is required")
+        self.session = session
         # Initialize research system for accuracy
         self.researcher_tool = AccuracyResearcher()
         self.detailed = detailed
@@ -785,9 +788,9 @@ This should read like a factual summary, not a creative feature article."""
         return content.strip()
 
     def interview_step(self, topic, user_answer=None):
-        if "conversation" not in session:
-            session["conversation"] = []
-            session["topic"] = topic
+        if "conversation" not in self.session:
+            self.session["conversation"] = []
+            self.session["topic"] = topic
             
             # Enhanced overview with research-based preview
             overview_prompt = f"""You are an expert content strategist creating a comprehensive blog overview for: "{topic}"
@@ -835,15 +838,15 @@ Ready to proceed with research and writing?"""
             try:
                 response = self.interviewer.execute(overview_prompt, "")
                 formatted_overview = response if response and len(response) > 100 else overview_prompt
-                session["conversation"].append({"role": "agent", "content": formatted_overview})
-                session.modified = True
+                self.session["conversation"].append({"role": "agent", "content": formatted_overview})
+                self.session.modified = True
                 return formatted_overview
             except Exception as e:
                 return overview_prompt
 
         if user_answer:
-            session["conversation"].append({"role": "user", "content": user_answer})
-            session.modified = True
+            self.session["conversation"].append({"role": "user", "content": user_answer})
+            self.session.modified = True
             
             # Enhanced response that acknowledges customization
             customization_response = f"""Perfect! I've noted your specific requirements for the {topic} blog:
@@ -877,8 +880,8 @@ Click "Generate Blog" to start the research and writing process!"""
         return "Ready to create your detailed, research-based blog! Click generate to start."
 
     def generate_blog(self):
-        topic = session.get("topic")
-        conversation = session.get("conversation", [])
+        topic = self.session.get("topic")
+        conversation = self.session.get("conversation", [])
         
         # Extract user preferences from conversation
         user_preferences = ""
@@ -998,12 +1001,12 @@ LENGTH: 1000-1500 words with proper structure"""
                     "keywords": ["error"]
                 }
 
-        session.clear()
+        self.session.clear()
         print("✅ Blog generation completed!")
         return data
 
-# Create an instance of the generator
-blog_generator = InterviewBlogGenerator()
+# Note: blog_generator instances should be created with session when needed
+# blog_generator = InterviewBlogGenerator()  # Removed - causes import error
 
 
 @app.route("/quick-generate", methods=["POST"])
@@ -1019,7 +1022,7 @@ def quick_generate():
             return jsonify({"error": "Topic is required"}), 400
         
         # Create generator instance with detailed flag
-        generator = InterviewBlogGenerator(detailed=detailed)
+        generator = InterviewBlogGenerator(detailed=detailed, session=session)
         
         # Research the topic for accuracy
         print(f"🔍 Quick research for: {topic}")
