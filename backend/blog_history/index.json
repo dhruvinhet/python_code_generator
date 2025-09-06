@@ -1,0 +1,20 @@
+{
+  "blogs": [
+    {
+      "id": "621b0a43-2990-4f7d-af53-818994f284af",
+      "topic": "Ban of street dogs in india",
+      "title": "Select Subtopics for Ban of street dogs in india",
+      "summary": "India faces a critical challenge with its vast stray dog population, leading to significant public health and animal welfare concerns. A recent Supreme Court mandate orders the relocation of millions of street dogs to shelters within eight weeks in Delhi and its suburbs, driven by alarming rabies statistics and tragic incidents involving children. This directive has ignited a complex debate, highlighting the legal, logistical, ethical, and infrastructural hurdles, while urging for sustainable, humane, and scientific solutions like robust Animal Birth Control programs and public education to ensure a safer coexistence for all.",
+      "wordCount": 1878,
+      "createdAt": "2025-09-06T17:18:40.259749"
+    },
+    {
+      "id": "06e3a742-cab8-4b3a-8c27-3cb68a3414e4",
+      "topic": "The rise of apple",
+      "title": "Select Subtopics for The rise of apple",
+      "summary": "A comprehensive, research-backed guide about The rise of apple",
+      "wordCount": 1711,
+      "createdAt": "2025-09-06T15:46:38.204259"
+    }
+  ]
+}
