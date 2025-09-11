@@ -5,7 +5,6 @@ import uuid
 import os
 import threading
 import zipfile
-import asyncio
 import re
 import json
 import logging
@@ -82,6 +81,10 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = Config.SECRET_KEY
 CORS(app, origins="*")
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+
+# Import and register the exam blueprint
+from exam.app import exam_bp
+app.register_blueprint(exam_bp)
 
 # Global project manager instance
 project_manager = ProjectManager(socketio)
@@ -632,7 +635,7 @@ def blog_interview():
         import sys
         sys.path.append(os.path.join(os.path.dirname(__file__), 'blog'))
         from blog.blog_main import InterviewBlogGenerator
-        blog_generator = InterviewBlogGenerator()
+        blog_generator = InterviewBlogGenerator(session=session)
         
         data = request.get_json()
         topic = data.get('topic', '').strip()
@@ -664,7 +667,7 @@ def generate_blog():
         import sys
         sys.path.append(os.path.join(os.path.dirname(__file__), 'blog'))
         from blog.blog_main import InterviewBlogGenerator
-        blog_generator = InterviewBlogGenerator()
+        blog_generator = InterviewBlogGenerator(session=session)
         
         data = request.get_json()
         
@@ -772,7 +775,7 @@ def quick_generate_blog():
         import sys
         sys.path.append(os.path.join(os.path.dirname(__file__), 'blog'))
         from blog.blog_main import InterviewBlogGenerator
-        blog_generator = InterviewBlogGenerator()
+        blog_generator = InterviewBlogGenerator(session=session)
         
         data = request.get_json()
         topic = data.get('topic', '').strip()
@@ -807,7 +810,7 @@ def plan_blog():
         import sys
         sys.path.append(os.path.join(os.path.dirname(__file__), 'blog'))
         from blog.blog_main import InterviewBlogGenerator
-        blog_generator = InterviewBlogGenerator()
+        blog_generator = InterviewBlogGenerator(session=session)
         
         data = request.get_json()
         topic = data.get('topic', '').strip()
@@ -1562,5 +1565,6 @@ if __name__ == '__main__':
         host='0.0.0.0', 
         port=5000, 
         debug=False,  # Disabled to prevent server auto-restart
-        use_reloader=False  # Explicitly disable file watching
+        use_reloader=False,  # Explicitly disable file watching
+        allow_unsafe_werkzeug=True  # Allow running with Werkzeug
     )

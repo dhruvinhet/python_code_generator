@@ -71,6 +71,8 @@ const SolarSystem = () => {
       navigate('/data');
     } else if (feature === 'smartslides') {
       navigate('/slide');
+    } else if (feature === 'examforge') {
+      navigate('/examforge');
     } else {
       alert(`${feature} is coming soon! 🚀`);
     }
@@ -139,7 +141,7 @@ const SolarSystem = () => {
       icon: GraduationCap,
       description: 'Generate comprehensive quizzes and exams using advanced RAG technology and intelligent question generation.',
       features: ['Smart Questions', 'RAG Technology', 'Auto Grading', 'Analytics Dashboard'],
-      available: false,
+      available: true,
       color: 'from-pink-500 to-rose-600',
       glowColor: 'pink',
       orbitRadius: 430,

@@ -1,0 +1,11 @@
+Flask
+flask-cors
+opencv-python
+Pillow
+numpy
+requests
+pandas
+base64
+transformers
+torch
+# All necessary Python dependencies
