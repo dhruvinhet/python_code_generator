@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { jsPDF } from 'jspdf';
 import MarkdownIt from 'markdown-it';
+import config from './config';
 // ... other imports
 
 // The rest of your file remains the same.
@@ -42,7 +43,7 @@ const FileUpload = ({ onUploadSuccess }) => {
               formData.append('file', e.target.files[0]);
 
               try {
-                const response = await fetch("http://127.0.0.1:5000/upload", {
+                const response = await fetch(`${config.API_BASE_URL}/upload`, {
                   method: "POST",
                   body: formData,
                 });
@@ -388,7 +389,7 @@ const DocumentHistory = ({ documentsMeta, chatSessionsMeta, onSelectDocument, on
 
 const handleChatSessionDelete = async (chatId) => {
     try {
-        const response = await fetch(`http://127.0.0.1:5000/chat-sessions/${chatId}`, {
+        const response = await fetch(`${config.API_BASE_URL}/chat-sessions/${chatId}`, {
             method: 'DELETE',
         });
         if (!response.ok) {
@@ -709,10 +710,10 @@ export default function App() {
   // --- API and Logic Functions ---
   const fetchHistory = async () => {
     try {
-      const docsResponse = await fetch('http://127.0.0.1:5000/documents');
+      const docsResponse = await fetch(`${config.API_BASE_URL}/documents`);
       const docsData = await docsResponse.json();
       setDocumentsMeta(docsData);
-      const chatResponse = await fetch('http://127.0.0.1:5000/chat-sessions');
+      const chatResponse = await fetch(`${config.API_BASE_URL}/chat-sessions`);
       const chatData = await chatResponse.json();
       setChatSessionsMeta(chatData);
     } catch (err) {
@@ -723,7 +724,7 @@ export default function App() {
 
   const handleChatSessionDelete = async (chatId) => {
     try {
-        const response = await fetch(`http://127.0.0.1:5000/chat-sessions/${chatId}`, {
+        const response = await fetch(`${config.API_BASE_URL}/chat-sessions/${chatId}`, {
             method: 'DELETE',
         });
         if (!response.ok) {
@@ -767,7 +768,7 @@ export default function App() {
     setQuizResults([]);
     setCurrentQuizType(quizType);
     try {
-        const response = await fetch('http://127.0.0.1:5000/generate-quiz', {
+        const response = await fetch(`${config.API_BASE_URL}/generate-quiz`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -798,7 +799,7 @@ export default function App() {
                 setViewMode('theoretical_quiz_chat');
                 
                 // Add this block to save the initial chat session to the database.
-                await fetch('http://127.0.0.1:5000/chat-history', {
+                await fetch(`${config.API_BASE_URL}/chat-history`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -836,7 +837,7 @@ export default function App() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`http://127.0.0.1:5000/evaluate-quiz`, {
+      const response = await fetch(`${config.API_BASE_URL}/evaluate-quiz`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -880,7 +881,7 @@ export default function App() {
       setIsLoading(true);
 
       try {
-          const response = await fetch('http://127.0.0.1:5000/evaluate-answer', {
+          const response = await fetch(`${config.API_BASE_URL}/evaluate-answer`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -937,7 +938,7 @@ export default function App() {
           const messagesAfterSystem = [...messagesAfterUser, { role: 'system', content: feedbackMessage }];
           setChatMessages(messagesAfterSystem);
 
-          await fetch('http://127.0.0.1:5000/chat-history', {
+          await fetch(`${config.API_BASE_URL}/chat-history`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -963,7 +964,7 @@ export default function App() {
     }
     try {
         setIsLoading(true);
-        const response = await fetch(`http://127.0.0.1:5000/generate-revision-sheet/${quizId}`);
+        const response = await fetch(`${config.API_BASE_URL}/generate-revision-sheet/${quizId}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -995,7 +996,7 @@ export default function App() {
     setStoryExplanations([]);
     setViewMode('story');
     try {
-      const response = await fetch(`http://127.0.0.1:5000/story-mode/${docIdToUse}`);
+      const response = await fetch(`${config.API_BASE_URL}/story-mode/${docIdToUse}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -1051,7 +1052,7 @@ export default function App() {
     setLearningTopic(topic);
     try {
       console.log("Preparing request with:", { document_ids: [docIdToUse], topic: topic });
-      const response = await fetch('http://127.0.0.1:5000/learning-mode/start', {
+      const response = await fetch(`${config.API_BASE_URL}/learning-mode/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ document_ids: [docIdToUse], topic: topic }),
@@ -1086,7 +1087,7 @@ export default function App() {
     setChatMessages(messagesAfterUser);
     setIsLoading(true);
     try {
-      const response = await fetch('http://127.0.0.1:5000/learning-mode/respond', {
+      const response = await fetch(`${config.API_BASE_URL}/learning-mode/respond`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1126,7 +1127,7 @@ export default function App() {
 
   const fetchResults = async () => {
     try {
-      const response = await fetch(`http://127.0.0.1:5000/quiz-results/${currentChatSessionId}`);
+      const response = await fetch(`${config.API_BASE_URL}/quiz-results/${currentChatSessionId}`);
       if (!response.ok) {
         if (response.status === 404 && attempts < maxAttempts) {
           console.log(`Results not found, retrying... (Attempt ${attempts + 1})`);
@@ -1165,7 +1166,7 @@ export default function App() {
     setAnalysis(null);
     setQuizId(chatId);
     try {
-        const chatHistoryResponse = await fetch(`http://127.0.0.1:5000/chat-history/${chatId}`);
+        const chatHistoryResponse = await fetch(`${config.API_BASE_URL}/chat-history/${chatId}`);
         if (!chatHistoryResponse.ok) {
           throw new Error(`HTTP error! status: ${chatHistoryResponse.status}`);
         }
@@ -1173,7 +1174,7 @@ export default function App() {
         setChatMessages(chatHistoryData);
 
         if (quizTypeForSession === 'Theoretical') {
-            const docQuizzesResponse = await fetch(`http://127.0.0.1:5000/document/${documentIdForSession}/quizzes`);
+            const docQuizzesResponse = await fetch(`${config.API_BASE_URL}/document/${documentIdForSession}/quizzes`);
             if (!docQuizzesResponse.ok) {
               throw new Error(`HTTP error! status: ${docQuizzesResponse.status}`);
             }

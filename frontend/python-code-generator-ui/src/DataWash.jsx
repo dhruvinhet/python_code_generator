@@ -21,6 +21,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import config from './config';
 
 const DataWash = () => {
   const navigate = useNavigate();
@@ -70,7 +71,7 @@ const DataWash = () => {
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await fetch('http://localhost:5000/api/data/upload', {
+      const response = await fetch(`${config.API_BASE_URL}/api/data/upload`, {
         method: 'POST',
         body: formData
       });
@@ -108,7 +109,7 @@ const DataWash = () => {
       const formData = new FormData();
       formData.append('file', uploadedFile);
       
-      const response = await fetch('http://localhost:5000/api/data/analyze', {
+      const response = await fetch(`${config.API_BASE_URL}/api/data/analyze`, {
         method: 'POST',
         body: formData
       });
@@ -142,7 +143,7 @@ const DataWash = () => {
       const formData = new FormData();
       formData.append('file', uploadedFile);
       
-      const response = await fetch('http://localhost:5000/api/data/graphs', {
+      const response = await fetch(`${config.API_BASE_URL}/api/data/graphs`, {
         method: 'POST',
         body: formData
       });
@@ -178,7 +179,7 @@ const DataWash = () => {
         formData.append(key, value.toString());
       });
       
-      const response = await fetch('http://localhost:5000/api/data/clean', {
+      const response = await fetch(`${config.API_BASE_URL}/api/data/clean`, {
         method: 'POST',
         body: formData
       });
@@ -222,7 +223,7 @@ const DataWash = () => {
         }
       });
       
-      const response = await fetch('http://localhost:5000/api/data/manual-clean', {
+      const response = await fetch(`${config.API_BASE_URL}/api/data/manual-clean`, {
         method: 'POST',
         body: formData
       });

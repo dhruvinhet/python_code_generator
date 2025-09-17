@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import axios from "axios";
 import jsPDF from 'jspdf';
 import { saveAs } from 'file-saver';
+import config from '../config';
 
 export default function QABlogUI() {
   const [topic, setTopic] = useState("");
@@ -86,7 +87,7 @@ export default function QABlogUI() {
 
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:5000/api/blog/plan", {
+      const res = await axios.post(`${config.API_BASE_URL}/api/blog/plan`, {
         topic: topic
       });
       
@@ -135,7 +136,7 @@ export default function QABlogUI() {
   const generateBlog = async () => {
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:5000/api/blog/generate", {
+      const res = await axios.post(`${config.API_BASE_URL}/api/blog/generate`, {
         mainTopic: topic,
         subtopics: subtopics,
         title: blogTitle
@@ -161,7 +162,7 @@ export default function QABlogUI() {
     setConversation([]);
     
     try {
-      const res = await axios.post("http://localhost:5000/quick-generate", {
+      const res = await axios.post(`${config.API_BASE_URL}/quick-generate`, {
         topic: topic,
         detailed: detailed
       });
@@ -196,7 +197,7 @@ export default function QABlogUI() {
     setConversation([]);
     
     try {
-      const res = await axios.post("http://localhost:5000/youtube-generate", {
+      const res = await axios.post(`${config.API_BASE_URL}/youtube-generate`, {
         youtubeUrl: youtubeUrl,
         additionalContext: additionalContext,
         detailed: detailed
