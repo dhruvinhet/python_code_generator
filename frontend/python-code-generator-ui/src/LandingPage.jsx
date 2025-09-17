@@ -37,7 +37,7 @@ const LandingPage = () => {
     } else if (feature === 'blogbot') {
       navigate('/blog');
     } else if (feature === 'datawash') {
-      navigate('/data');
+      window.location.href = 'https://data-wash.vercel.app/';
     } else if (feature === 'smartslides') {
       navigate('/slide');
     } else {

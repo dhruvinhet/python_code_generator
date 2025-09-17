@@ -4,7 +4,6 @@ import LandingPage from './LandingPage';
 import CodeGenerator from './CodeGenerator';
 import SystemGraphPage from './SystemGraphPage';
 import BlogGenerator from './BlogGenerator';
-import DataWash from './DataWash';
 import SlideGenerator from './SlideGenerator';
 import ExamForge from './ExamForge';
 import './App.css';
@@ -17,7 +16,6 @@ function App() {
         <Route path="/generator" element={<CodeGenerator />} />
         <Route path="/graph" element={<SystemGraphPage />} />
         <Route path="/blog" element={<BlogGenerator />} />
-        <Route path="/data" element={<DataWash />} />
         <Route path="/slide" element={<SlideGenerator />} />
         <Route path="/examforge" element={<ExamForge />} />
       </Routes>
