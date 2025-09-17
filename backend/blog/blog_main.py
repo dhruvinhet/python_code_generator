@@ -393,7 +393,18 @@ class Agent:
         self.backstory = backstory
         self.verbose = verbose
         self.allow_delegation = allow_delegation
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        
+        # Use the specified LLM model or default
+        if llm:
+            # Extract model name from llm parameter (e.g., "gemini/gemini-2.0-flash" -> "gemini-2.0-flash")
+            if "/" in llm:
+                model_name = llm.split("/")[-1]
+            else:
+                model_name = llm
+        else:
+            model_name = 'gemini-2.0-flash'
+            
+        self.model = genai.GenerativeModel(model_name)
     
     def execute(self, task_description, context="", research_data=None):
         research_context = ""
@@ -479,7 +490,7 @@ class Crew:
 # Mock LLM class for interface compatibility
 class MockLLM:
     def __init__(self):
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.0-flash')
     
     def invoke(self, prompt):
         class Response:

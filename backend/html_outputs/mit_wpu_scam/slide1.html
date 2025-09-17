@@ -1,0 +1,318 @@
+<!-- Slide 1 -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Slide 1</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            width: 1920px;
+            height: 1080px;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            overflow: hidden;
+        }
+        
+        .slide {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            position: relative;
+        }
+        
+        .slide-content {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 60px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 1400px;
+            width: 100%;
+            position: relative;
+        }
+        
+        .slide-title {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-align: center;
+            line-height: 1.2;
+        }
+        
+        .slide-body {
+            font-size: 1.8rem;
+            line-height: 1.6;
+            color: #34495e;
+        }
+        
+        .center {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+        
+        .card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            border-left: 5px solid #3498db;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .visual-element {
+            display: inline-block;
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.6rem;
+            margin: 0 3px;
+        }
+        
+        .bullet-points {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .bullet-points li {
+            margin: 20px 0;
+            padding-left: 40px;
+            position: relative;
+            font-size: 1.6rem;
+        }
+        
+        .bullet-points li::before {
+            content: "●";
+            color: #3498db;
+            font-size: 2rem;
+            position: absolute;
+            left: 0;
+            top: -2px;
+        }
+        
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+        
+        h2 {
+            font-size: 2.5rem;
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        h3 {
+            font-size: 2rem;
+            color: #764ba2;
+            margin-bottom: 15px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .quote {
+            font-style: italic;
+            font-size: 2rem;
+            color: #555;
+            text-align: center;
+            position: relative;
+            padding: 20px;
+        }
+        
+        .quote::before {
+            content: """;
+            font-size: 4rem;
+            color: #3498db;
+            position: absolute;
+            top: -10px;
+            left: -10px;
+        }
+        
+        .source-citation {
+            text-align: right;
+            font-size: 1.2rem;
+            color: #7f8c8d;
+            margin-top: 15px;
+            font-style: normal;
+        }
+        
+        /* Chart and Visual Elements Styling */
+        .chart-container {
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .chart-visual {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .bar-chart {
+            display: flex;
+            justify-content: space-around;
+            align-items: end;
+            height: 200px;
+            padding: 20px;
+        }
+        
+        .bar {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            width: 80px;
+            border-radius: 5px 5px 0 0;
+            display: flex;
+            align-items: end;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            padding: 10px 5px;
+            font-size: 1rem;
+        }
+        
+        .process-diagram {
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .process-flow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .process-step {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px;
+            text-align: center;
+            min-width: 150px;
+            border: 2px solid #3498db;
+        }
+        
+        .step-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .arrow {
+            font-size: 2rem;
+            color: #3498db;
+            margin: 0 10px;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .comparison-item {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: transform 0.2s;
+        }
+        
+        .comparison-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .icon-large {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        .timeline {
+            margin: 30px 0;
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #3498db;
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-left: 20px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 20px;
+            width: 12px;
+            height: 12px;
+            background: #3498db;
+            border-radius: 50%;
+        }
+        
+        .timeline-date {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .card-icon {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <div class="slide-content">
+            <h1 class="slide-title">Introduction to MIT WPU Scam Allegations</h1>
+            <div class="slide-body">
+                <h2>Defining the Nature of the 'Scam'</h2>
+                <ul class="bullet-points">
+                    <li>⚖️ Refers to persistent allegations, not a legal scam.</li>
+                    <li>💬 Concerns stem from student and parent online experiences.</li>
+                    <li>⚙️ Focuses on operational practices: fees, placements, quality.</li>
+                    <li>🎓 University is legally established (2017) and UGC recognized.</li>
+                </ul>
+                <div class="source-citation">Research Basis: Background of MIT WPU Scam Allegations</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

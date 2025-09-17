@@ -1328,7 +1328,7 @@ if BLOG_AVAILABLE:
                 return jsonify({"error": "Topic is required"}), 400
             
             # Create generator instance with detailed flag
-            generator = InterviewBlogGenerator(detailed=detailed)
+            generator = InterviewBlogGenerator(detailed=detailed, session=session)
             
             # Research the topic for accuracy
             print(f"🔍 Quick research for: {topic}")
